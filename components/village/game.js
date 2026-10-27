@@ -25,14 +25,60 @@ function bed(x,z){box(scene,x,.08,z,4.1,.17,2.1,M(0x7c9d68));box(scene,x,.17,z,3
 bed(-7,2.8);bed(1,-1.2);bed(7,7);for(let i=0;i<42;i++){let x=Math.sin(i*12.3)*12,z=Math.cos(i*7.1)*11;if(Math.abs(x)<3&&z>0&&z<10)continue;flower(x,z,[m.pinks,m.yellow,m.white,m.lilac][i%4],.45+(i%3)*.1)}
 for(let i=0;i<7;i++){box(scene,-10+i*.62,.43,4.8,.12,.86,.12,m.white);if(i<6)box(scene,-9.7+i*.62,.52,4.8,.58,.12,.12,M(0xb98767))}
 function lamp(x,z){add(new THREE.CylinderGeometry(.07,.1,1.3,10),m.wood,scene,x,.65,z);box(scene,x,1.36,z,.48,.4,.48,m.cream);ball(scene,x,1.36,z,.12,.13,.12,m.gold);const l=new THREE.PointLight(0xffd69b,.5,4);l.position.set(x,1.5,z);scene.add(l)}lamp(-2,-1);lamp(3,4);lamp(-8,6);
-// 3D full-body placeholder character. A detailed GLB model can replace this group in a later update.
-const avatar=new THREE.Group();scene.add(avatar);const outfitMat=M(colors[state.outfit]||colors.lavender);
-const tunic=add(new THREE.CapsuleGeometry(.42,.62,5,10),outfitMat,avatar,0,1.35,0,.86,1,.65);
-ball(avatar,0,2.42,0,.51,.56,.47,m.skin);ball(avatar,0,2.7,-.08,.54,.36,.48,m.hair);ball(avatar,0,2.25,-.32,.48,.61,.2,m.hair);ball(avatar,-.45,2.35,-.04,.15,.38,.16,m.hair);ball(avatar,.45,2.35,-.04,.15,.38,.16,m.hair);
-for(const x of [-.18,.18]){ball(avatar,x,2.45,.42,.06,.085,.03,m.dark);ball(avatar,x-.02,2.48,.45,.017,.02,.01,m.white);ball(avatar,x*1.7,2.3,.4,.07,.035,.02,m.pink)}
-const hat=ball(avatar,-.07,3,0,.55,.15,.5,M(0xf4dfc8));hat.rotation.z=-.12;ball(avatar,.22,3.06,.02,.1,.055,.1,m.pinks);
-const limbs=[];for(const side of [-1,1]){let arm=add(new THREE.CapsuleGeometry(.12,.42,4,8),m.skin,avatar,side*.5,1.52,0);arm.rotation.z=side*-.25;limbs.push({o:arm,side,kind:"arm"});let leg=add(new THREE.CapsuleGeometry(.13,.38,4,8),M(0xf3d9c8),avatar,side*.2,.48,0);limbs.push({o:leg,side,kind:"leg"});const shoe=ball(avatar,side*.2,.15,.1,.19,.11,.3,M(0x8d6a67))}
-add(new THREE.CircleGeometry(.65,20),new THREE.MeshBasicMaterial({color:0x536d4b,transparent:true,opacity:.16}),avatar,0,.02,0).rotation.x=-Math.PI/2;
+// 업그레이드된 파스텔 3D 캐릭터: 얼굴, 앞머리, 원피스, 소매, 양말, 신발과 장식 디테일
+const avatar=new THREE.Group();scene.add(avatar);
+const outfitMat=M(colors[state.outfit]||colors.lavender);
+const skinMat=M(0xf5d4c1), hairMat=M(0x76515a), shoeMat=M(0x8d6a67), sockMat=M(0xfff0e4);
+// 다리와 양말, 둥근 신발
+const limbs=[];
+for(const side of [-1,1]){
+  const leg=new THREE.Group();avatar.add(leg);leg.position.set(side*.19,.56,0);
+  add(new THREE.CapsuleGeometry(.105,.36,5,10),sockMat,leg,0,-.12,0);
+  ball(leg,0,-.34,.1,.17,.105,.27,shoeMat);
+  limbs.push({o:leg,side,kind:"leg"});
+}
+// 원피스 실루엣과 밑단
+add(new THREE.CapsuleGeometry(.39,.58,6,12),outfitMat,avatar,0,1.28,0,.95,1,.72);
+const skirt=add(new THREE.CylinderGeometry(.32,.57,.48,24),outfitMat,avatar,0,.93,0);skirt.rotation.y=.08;
+const hem=add(new THREE.TorusGeometry(.48,.035,8,28),M(0xf7e9fa),avatar,0,.69,0);hem.rotation.x=Math.PI/2;
+// 목, 얼굴, 귀
+ball(avatar,0,1.91,.02,.16,.19,.16,skinMat);
+ball(avatar,0,2.36,.015,.47,.51,.42,skinMat);
+for(const side of [-1,1])ball(avatar,side*.455,2.34,.015,.095,.13,.08,skinMat);
+// 뒷머리와 둥근 머리 윗부분
+ball(avatar,0,2.48,-.12,.51,.54,.47,hairMat);
+ball(avatar,0,2.16,-.32,.45,.48,.19,hairMat);
+// 앞머리 조각으로 헤어스타일을 더 풍성하게
+for(let i=0;i<5;i++){
+  const x=(i-2)*.16;
+  const bang=ball(avatar,x,2.57+(.04-Math.abs(x)*.12),.34,.13,.22,.12,hairMat);
+  bang.rotation.z=-x*.5;
+}
+// 얼굴 표정: 반짝이는 눈, 볼터치, 작은 미소
+for(const side of [-1,1]){
+  ball(avatar,side*.17,2.37,.405,.043,.065,.025,m.dark);
+  ball(avatar,side*.155,2.395,.428,.012,.018,.008,m.white);
+  ball(avatar,side*.285,2.25,.365,.075,.035,.018,m.pink);
+}
+const smile=add(new THREE.TorusGeometry(.07,.012,6,16,Math.PI),m.dark,avatar,0,2.25,.408);smile.rotation.z=Math.PI;
+// 작은 리본 머리핀
+ball(avatar,-.36,2.65,.22,.105,.07,.045,m.pinks);ball(avatar,-.25,2.65,.22,.105,.07,.045,m.pinks);ball(avatar,-.305,2.65,.25,.045,.045,.035,m.gold);
+// 팔과 소매, 손
+for(const side of [-1,1]){
+  const arm=new THREE.Group();avatar.add(arm);arm.position.set(side*.43,1.55,0);arm.rotation.z=side*-.12;
+  add(new THREE.CapsuleGeometry(.105,.32,5,9),outfitMat,arm,side*.025,-.06,0);
+  add(new THREE.CapsuleGeometry(.085,.28,5,9),skinMat,arm,side*.07,-.31,.015);
+  ball(arm,side*.07,-.48,.035,.095,.09,.09,skinMat);
+  limbs.push({o:arm,side,kind:"arm"});
+}
+// 원피스 칼라와 작은 단추, 허리 리본
+const collar=add(new THREE.TorusGeometry(.17,.035,8,24),M(0xfff4e9),avatar,0,1.75,.12);collar.rotation.x=Math.PI/2;
+ball(avatar,0,1.42,.29,.045,.045,.035,m.gold);ball(avatar,0,1.29,.31,.06,.045,.035,m.pinks);
+// 챙이 있는 크림색 베레모
+const hat=ball(avatar,-.04,2.87,-.025,.5,.14,.43,M(0xf4dfc8));hat.rotation.z=-.08;
+ball(avatar,.19,2.93,.01,.12,.07,.1,m.pinks);
+// 부드러운 그림자
+add(new THREE.CircleGeometry(.65,24),new THREE.MeshBasicMaterial({color:0x536d4b,transparent:true,opacity:.16}),avatar,0,.025,0).rotation.x=-Math.PI/2;
 const pet=new THREE.Group();scene.add(pet);ball(pet,0,.42,0,.45,.36,.4,m.white);ball(pet,0,.78,-.02,.34,.32,.32,m.white);for(const x of [-.21,.21]){ball(pet,x,1.02,-.02,.12,.22,.12,M(0xe5c4bd));ball(pet,x*.6,.8,.28,.03,.04,.02,m.dark);ball(pet,x*.9,.69,.28,.06,.035,.02,m.pink)}ball(pet,0,.72,.3,.045,.035,.02,M(0x9d777a));
 const shell=new THREE.Group();scene.add(shell);shell.position.set(8,.15,5);ball(shell,0,.1,0,.22,.11,.17,M(0xf4d6a2));for(let i=-1;i<=1;i++){let q=add(new THREE.TorusGeometry(.09,.01,5,12,Math.PI),m.white,shell,i*.06,.14,0);q.rotation.x=Math.PI/2}
 const $sceneStatus=$("sceneStatus");
