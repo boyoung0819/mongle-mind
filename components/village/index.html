@@ -1,62 +1,9 @@
 <div class="mongle-game">
-  <div class="game-topbar">
-    <div class="brand"><span class="brand-mark">✿</span><div><strong>몽글마음</strong><small>천천히, 나만의 속도로</small></div></div>
-    <div class="top-stats"><span>🪙 <b id="coins">30</b></span><span>✨ Lv.<b id="level">1</b></span><span>🌱 <b id="xp">0</b>/100</span></div>
-  </div>
-  <div class="game-layout">
-    <div class="scene-wrap">
-      <canvas id="world" width="960" height="620" aria-label="몽글마을 게임 화면"></canvas>
-      <div class="scene-hint"><span class="keycap">W A S D</span> 또는 방향키로 이동 <span class="hint-dot">•</span> <span class="keycap">E</span> 상호작용</div>
-      <div class="toast" id="toast" role="status"></div>
-      <div class="dialog" id="dialog" hidden>
-        <button class="dialog-close" id="closeDialog" aria-label="닫기">×</button>
-        <div class="dialog-name" id="dialogName">몽글 친구</div>
-        <div id="dialogText">안녕!</div>
-        <div id="dialogActions" class="dialog-actions"></div>
-      </div>
-    </div>
-    <aside class="side-panel">
-      <div class="welcome-card">
-        <div class="welcome-eyebrow">오늘의 작은 쉼</div>
-        <h2>마음이 머물다 가는 곳</h2>
-        <p>잘해야 하는 일은 없어요.<br>오늘은 천천히 둘러봐요.</p>
-      </div>
-      <section class="panel-section">
-        <div class="section-heading"><span>나의 캐릭터</span><span class="soft-pill" id="outfitLabel">라벤더 룩</span></div>
-        <div class="outfit-grid">
-          <button class="outfit active" data-outfit="lavender"><span class="outfit-swatch lavender"></span><span>라벤더</span></button>
-          <button class="outfit" data-outfit="peach"><span class="outfit-swatch peach"></span><span>피치</span></button>
-          <button class="outfit" data-outfit="mint"><span class="outfit-swatch mint"></span><span>민트</span></button>
-        </div>
-      </section>
-      <section class="panel-section">
-        <div class="section-heading"><span>오늘의 마음</span><span class="tiny-label">선택 사항</span></div>
-        <p class="section-note">지금 기분과 가까운 색을 골라 봐요.</p>
-        <div class="mood-row">
-          <button class="mood" data-mood="calm" title="차분해요">🌿<small>차분</small></button>
-          <button class="mood" data-mood="happy" title="기뻐요">☀️<small>기쁨</small></button>
-          <button class="mood" data-mood="tired" title="지쳤어요">🌙<small>지침</small></button>
-          <button class="mood" data-mood="worried" title="걱정돼요">☁️<small>걱정</small></button>
-        </div>
-        <div class="mood-saved" id="moodSaved">기분을 기록하지 않아도 괜찮아요.</div>
-      </section>
-      <section class="panel-section">
-        <div class="section-heading"><span>잠깐 쉬어가기</span><span class="tiny-label">30초</span></div>
-        <p class="section-note">원할 때만 시작해요. 언제든 멈출 수 있어요.</p>
-        <button class="rest-button" id="breathBtn"><span class="breath-orb">◌</span><span id="breathLabel">함께 천천히 호흡하기</span><span class="button-arrow">→</span></button>
-        <div class="breath-box" id="breathBox" hidden><div class="breath-circle" id="breathCircle"><span id="breathText">편안한 자세로</span></div><p id="breathInstruction">준비되면 시작해요.</p><button class="text-button" id="stopBreath">그만하기</button></div>
-      </section>
-      <div class="inventory-card">
-        <div><span class="inventory-icon">🌷</span><span>모은 꽃</span></div><strong id="flowers">0</strong>
-        <div class="inventory-caption">꽃은 정원과 마을 친구에게 선물할 수 있어요.</div>
-      </div>
-    </aside>
-  </div>
-  <div class="bottom-nav">
-    <button class="nav-item active" data-nav="village"><span>⌂</span>마을</button>
-    <button class="nav-item" data-nav="garden"><span>❀</span>정원</button>
-    <button class="nav-item" data-nav="room"><span>▦</span>내 방</button>
-    <button class="nav-item" data-nav="journal"><span>♡</span>마음 기록</button>
-  </div>
-  <div class="footer-note">몽글마음은 잠시 쉬어 가는 공간이에요. 모든 활동은 선택할 수 있어요.</div>
-</div>
+<header class="game-topbar"><div class="brand"><span class="brand-mark">✿</span><div><strong>몽글마음</strong><small>천천히, 나만의 속도로</small></div></div><div class="top-stats"><span>🪙 <b id="coins">30</b></span><span>✨ Lv.<b id="level">1</b></span><span>🌱 <b id="xp">0</b>/100</span></div></header>
+<div class="game-layout"><main class="scene-wrap"><div id="world" aria-label="3D 몽글마을"></div><div class="scene-title">🌼 작은 꽃마을 <small id="sceneStatus">나만의 속도로 산책해요</small></div><div class="scene-hint"><span class="keycap">W A S D</span> 또는 방향키 이동 · <span class="keycap">E</span> 상호작용</div><div class="toast" id="toast" role="status"></div><div class="dialog" id="dialog" hidden><button class="dialog-close" id="closeDialog">×</button><div class="dialog-name" id="dialogName">몽글 친구</div><div id="dialogText">안녕!</div><div id="dialogActions" class="dialog-actions"></div></div><div class="touch-pad"><button data-k="ArrowUp">▲</button><div><button data-k="ArrowLeft">◀</button><button data-k="ArrowDown">▼</button><button data-k="ArrowRight">▶</button></div></div></main>
+<aside class="side-panel"><section class="welcome-card"><div class="welcome-eyebrow">오늘의 작은 쉼</div><h2>마음이 머물다 가는 곳</h2><p>잘해야 하는 일은 없어요.<br>오늘은 천천히 둘러봐요.</p><span class="welcome-flower">✿</span></section>
+<section class="panel-section"><div class="section-heading"><span>나의 캐릭터</span><span class="soft-pill" id="outfitLabel">라벤더 룩</span></div><div class="outfit-grid"><button class="outfit active" data-outfit="lavender"><span class="outfit-swatch lavender"></span>라벤더</button><button class="outfit" data-outfit="peach"><span class="outfit-swatch peach"></span>피치</button><button class="outfit" data-outfit="mint"><span class="outfit-swatch mint"></span>민트</button></div></section>
+<section class="panel-section"><div class="section-heading"><span>오늘의 마음</span><span class="tiny-label">선택 사항</span></div><p class="section-note">지금 기분과 가까운 색을 골라 봐요.</p><div class="mood-row"><button class="mood" data-mood="calm">🌿<small>차분</small></button><button class="mood" data-mood="happy">☀️<small>기쁨</small></button><button class="mood" data-mood="tired">🌙<small>지침</small></button><button class="mood" data-mood="worried">☁️<small>걱정</small></button></div><div class="mood-saved" id="moodSaved">기분을 기록하지 않아도 괜찮아요.</div></section>
+<section class="panel-section"><div class="section-heading"><span>잠깐 쉬어가기</span><span class="tiny-label">30초</span></div><p class="section-note">원할 때만 시작해요. 언제든 멈출 수 있어요.</p><button class="rest-button" id="breathBtn"><span class="breath-orb">◌</span><span id="breathLabel">함께 천천히 호흡하기</span><span class="button-arrow">→</span></button><div class="breath-box" id="breathBox" hidden><div class="breath-circle" id="breathCircle"><span id="breathText">편안한 자세로</span></div><p id="breathInstruction">준비되면 시작해요.</p><button class="text-button" id="stopBreath">그만하기</button></div></section>
+<section class="inventory-card"><div class="inventory-top"><span>🌷 모은 꽃</span><strong id="flowers">0</strong></div><div class="inventory-caption">꽃은 정원과 마을 친구에게 선물할 수 있어요.</div></section><div class="side-tip">✧ 오늘은 천천히 걸어도 괜찮아요.</div></aside></div>
+<nav class="bottom-nav"><button class="nav-item active" data-nav="village"><span>⌂</span>마을</button><button class="nav-item" data-nav="garden"><span>❀</span>정원</button><button class="nav-item" data-nav="room"><span>▦</span>내 방</button><button class="nav-item" data-nav="journal"><span>♡</span>마음 기록</button></nav><div class="footer-note">몽글마음은 잠시 쉬어 가는 공간이에요. 모든 활동은 선택할 수 있어요.</div></div>
