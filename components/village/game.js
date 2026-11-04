@@ -10,7 +10,8 @@ const $ = id => document.getElementById(id);
 const defaults = {
   x: 0, z: 4, coins: 30, xp: 0, level: 1,
   flowers: 0, outfit: "lavender", mood: null,
-  watered: false, foundShell: false, nav: "village"
+  watered: false, foundShell: false, nav: "home",
+  roomDecor: "lavender", journalText: "", journalDate: "", questClaims: []
 };
 
 let state = { ...defaults };
@@ -21,6 +22,9 @@ try {
 
 if (typeof state.x !== "number" || Math.abs(state.x) > 20) state.x = 0;
 if (typeof state.z !== "number" || Math.abs(state.z) > 20) state.z = 4;
+if (!Array.isArray(state.questClaims)) state.questClaims = [];
+if (typeof state.journalText !== "string") state.journalText = "";
+if (!state.roomDecor) state.roomDecor = "lavender";
 
 let keys = {};
 let toastTimer, breathTimer, breathStep = 0, breathing = false, last = 0;
@@ -453,6 +457,12 @@ function updateUI() {
   $("level").textContent = state.level;
   $("xp").textContent = state.xp;
   $("flowers").textContent = state.flowers;
+  const gardenCoins = $("gardenCoins");
+  if (gardenCoins) gardenCoins.textContent = state.coins;
+  const waterStatus = $("waterStatus");
+  if (waterStatus) waterStatus.textContent = state.watered ? "돌봄 완료" : "아직 안 했어요";
+  const roomPreview = $("roomPreview");
+  if (roomPreview) roomPreview.dataset.theme = state.roomDecor || "lavender";
   $("outfitLabel").textContent = names[state.outfit] || names.lavender;
 
   document.querySelectorAll(".outfit").forEach(b =>
@@ -470,6 +480,18 @@ function updateUI() {
   document.querySelectorAll(".nav-item").forEach(b =>
     b.classList.toggle("active", b.dataset.nav === state.nav)
   );
+  document.querySelectorAll("[data-room-decor]").forEach(b =>
+    b.classList.toggle("active", b.dataset.roomDecor === state.roomDecor)
+  );
+  const journal = $("journalText");
+  if (journal && journal.value !== state.journalText) journal.value = state.journalText;
+  const roomLabel = $("roomDecorLabel");
+  if (roomLabel) roomLabel.textContent = ({lavender:"라벤더 포근방", peach:"피치 햇살방", mint:"민트 숲속방"})[state.roomDecor] || "나만의 방";
+  document.querySelectorAll("[data-claim-quest]").forEach(b => {
+    const done = state.questClaims.includes(b.dataset.claimQuest);
+    b.disabled = done;
+    b.textContent = done ? "보상 받음 ✓" : "보상 받기";
+  });
 }
 
 function toast(s) {
@@ -599,10 +621,9 @@ function interact() {
       {
         label: "정원 둘러보기",
         action: () => {
-          state.nav = "garden";
           avatar.position.set(-7, 0, 2.8);
-          save();
           closeDialog();
+          showPage("garden");
         }
       },
       {
@@ -631,22 +652,82 @@ document.querySelectorAll(".mood").forEach(b => {
   };
 });
 
-document.querySelectorAll(".nav-item").forEach(b => {
-  b.onclick = () => {
-    state.nav = b.dataset.nav;
-    save();
-
-    if (state.nav === "garden") avatar.position.set(-7, 0, 2.8);
-    if (state.nav === "village") avatar.position.set(0, 0, 4);
-
-    toast(({
-      village: "마을을 천천히 둘러봐요.",
-      garden: "정원에 도착했어요.",
-      room: "내 방 꾸미기는 다음 단계에서 확장할게요.",
-      journal: "오늘의 마음을 오른쪽에서 기록할 수 있어요."
-    })[state.nav]);
+function showPage(page) {
+  const allowed = ["home", "village", "dress", "garden", "room", "journal", "quests"];
+  if (!allowed.includes(page)) page = "home";
+  state.nav = page;
+  document.querySelectorAll("[data-screen]").forEach(el => {
+    el.hidden = el.dataset.screen !== page;
+  });
+  const titles = {
+    home: "나만의 작은 쉼", village: "몽글마을 산책", dress: "캐릭터 꾸미기",
+    garden: "나만의 정원", room: "나만의 방", journal: "마음 돌보기", quests: "오늘의 작은 퀘스트"
   };
+  const title = $("pageTitle");
+  if (title) title.textContent = titles[page];
+  document.querySelectorAll(".nav-item").forEach(b =>
+    b.classList.toggle("active", b.dataset.nav === page)
+  );
+  save();
+  if (page === "village") requestAnimationFrame(() => resize());
+  if (page === "home") window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+document.querySelectorAll("[data-page]").forEach(b => {
+  b.addEventListener("click", () => showPage(b.dataset.page));
 });
+document.querySelectorAll(".nav-item").forEach(b => {
+  b.addEventListener("click", () => showPage(b.dataset.nav));
+});
+document.querySelectorAll("[data-home]").forEach(b => {
+  b.addEventListener("click", () => showPage("home"));
+});
+
+// 정원: 물 주기와 꽃 수집은 공통 코인/경험치에 연결됩니다.
+const gardenWater = $("gardenWater");
+if (gardenWater) gardenWater.addEventListener("click", () => {
+  state.watered = true;
+  state.flowers += 1;
+  state.coins += 5;
+  xp(10);
+  save();
+  toast("꽃을 돌봤어요! 꽃 +1 · 코인 +5 · 경험치 +10");
+});
+
+// 방: 선택한 인테리어 테마를 저장합니다.
+document.querySelectorAll("[data-room-decor]").forEach(b => {
+  b.addEventListener("click", () => {
+    state.roomDecor = b.dataset.roomDecor;
+    save();
+    toast("방 분위기를 바꿨어요.");
+  });
+});
+
+// 마음 기록: 감정 선택과 짧은 메모를 이 기기 브라우저에 저장합니다.
+const journalInput = $("journalText");
+const journalSave = $("journalSave");
+if (journalInput) journalInput.value = state.journalText || "";
+if (journalSave) journalSave.addEventListener("click", () => {
+  state.journalText = journalInput ? journalInput.value.slice(0, 1200) : "";
+  state.journalDate = new Date().toLocaleDateString("ko-KR");
+  save();
+  toast("오늘의 마음을 기록했어요.");
+});
+
+// 퀘스트 보상은 한 번만 받을 수 있습니다.
+document.querySelectorAll("[data-claim-quest]").forEach(b => {
+  b.addEventListener("click", () => {
+    const id = b.dataset.claimQuest;
+    if (state.questClaims.includes(id)) return;
+    state.questClaims.push(id);
+    state.coins += 5;
+    xp(10);
+    save();
+    toast("작은 퀘스트 완료! 코인 +5 · 경험치 +10");
+  });
+});
+
+showPage("home");
 
 function stopBreath() {
   breathing = false;
