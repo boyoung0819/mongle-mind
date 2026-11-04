@@ -1,4 +1,3 @@
-
 import * as THREE from "three";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js";
 
@@ -359,6 +358,39 @@ const avatarShadow = add(
 );
 avatarShadow.rotation.x = -Math.PI / 2;
 
+// GLB가 로딩되지 않거나 네트워크가 느려도 캐릭터가 사라지지 않도록
+// 기본 캐릭터를 먼저 표시하고, GLB 로딩 성공 시에만 교체합니다.
+const fallbackCharacter = new THREE.Group();
+avatar.add(fallbackCharacter);
+const fallbackSkin = M(0xf5d4c1);
+const fallbackHair = M(0x76515a);
+const fallbackDark = M(0x43343b);
+const fallbackShoe = M(0x8a6871);
+
+// 다리와 신발
+add(new THREE.CapsuleGeometry(0.105, 0.43, 4, 8), fallbackSkin, fallbackCharacter, -0.17, 0.43, 0, 1, 1, 1);
+add(new THREE.CapsuleGeometry(0.105, 0.43, 4, 8), fallbackSkin, fallbackCharacter, 0.17, 0.43, 0, 1, 1, 1);
+ball(fallbackCharacter, -0.17, 0.16, 0.07, 0.16, 0.09, 0.23, fallbackShoe);
+ball(fallbackCharacter, 0.17, 0.16, 0.07, 0.16, 0.09, 0.23, fallbackShoe);
+
+// 원피스 형태의 몸통
+add(new THREE.CapsuleGeometry(0.34, 0.48, 5, 12), outfitMat, fallbackCharacter, 0, 1.12, 0, 1, 1.12, 0.78);
+add(new THREE.ConeGeometry(0.48, 0.62, 16), outfitMat, fallbackCharacter, 0, 0.78, 0, 1, 1, 0.82);
+
+// 팔
+add(new THREE.CapsuleGeometry(0.09, 0.43, 4, 8), fallbackSkin, fallbackCharacter, -0.42, 1.16, 0, 1, 1, 1).rotation.z = -0.22;
+add(new THREE.CapsuleGeometry(0.09, 0.43, 4, 8), fallbackSkin, fallbackCharacter, 0.42, 1.16, 0, 1, 1, 1).rotation.z = 0.22;
+
+// 머리와 머리카락
+ball(fallbackCharacter, 0, 2.02, 0, 0.43, 0.48, 0.39, fallbackSkin);
+ball(fallbackCharacter, 0, 2.22, -0.045, 0.45, 0.34, 0.41, fallbackHair);
+ball(fallbackCharacter, -0.34, 2.03, 0.02, 0.15, 0.27, 0.17, fallbackHair);
+ball(fallbackCharacter, 0.34, 2.03, 0.02, 0.15, 0.27, 0.17, fallbackHair);
+// 얼굴의 눈과 작은 입
+ball(fallbackCharacter, -0.145, 2.02, 0.365, 0.035, 0.055, 0.025, fallbackDark);
+ball(fallbackCharacter, 0.145, 2.02, 0.365, 0.035, 0.055, 0.025, fallbackDark);
+ball(fallbackCharacter, 0, 1.88, 0.385, 0.035, 0.018, 0.018, M(0xb8797c));
+
 const characterLoader = new GLTFLoader();
 const characterUrl = "https://raw.githubusercontent.com/boyoung0819/mongle-mind/main/components/village/character.glb";
 let loadedCharacter = null;
@@ -407,6 +439,7 @@ characterLoader.load(
     loadedCharacter.traverse(obj => {
       if (!obj.isMesh) return;
 
+      obj.visible = true;
       obj.castShadow = true;
       obj.receiveShadow = true;
 
@@ -440,12 +473,14 @@ characterLoader.load(
     });
 
     avatar.add(loadedCharacter);
+    fallbackCharacter.visible = false;
     applyOutfitColor(state.outfit);
   },
   undefined,
   error => {
-    console.error("character.glb를 불러오지 못했어요.", error);
-    toast("캐릭터 파일을 불러오지 못했어요. 잠시 후 새로고침해 주세요.");
+    console.error("character.glb를 불러오지 못했어요. 기본 캐릭터를 표시합니다.", error);
+    fallbackCharacter.visible = true;
+    toast("캐릭터 모델 연결이 지연되어 기본 캐릭터를 표시했어요.");
   }
 );
 
