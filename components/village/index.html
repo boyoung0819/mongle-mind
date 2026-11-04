@@ -1,9 +1,75 @@
 <div class="mongle-game">
-<header class="game-topbar"><div class="brand"><span class="brand-mark">✿</span><div><strong>몽글마음</strong><small>천천히, 나만의 속도로</small></div></div><div class="top-stats"><span>🪙 <b id="coins">30</b></span><span>✨ Lv.<b id="level">1</b></span><span>🌱 <b id="xp">0</b>/100</span></div></header>
-<div class="game-layout"><main class="scene-wrap"><div id="world" aria-label="3D 몽글마을"></div><div class="scene-title">🌼 작은 꽃마을 <small id="sceneStatus">나만의 속도로 산책해요</small></div><div class="scene-hint"><span class="keycap">W A S D</span> 또는 방향키 이동 · <span class="keycap">E</span> 상호작용</div><div class="toast" id="toast" role="status"></div><div class="dialog" id="dialog" hidden><button class="dialog-close" id="closeDialog">×</button><div class="dialog-name" id="dialogName">몽글 친구</div><div id="dialogText">안녕!</div><div id="dialogActions" class="dialog-actions"></div></div><div class="touch-pad"><button data-k="ArrowUp">▲</button><div><button data-k="ArrowLeft">◀</button><button data-k="ArrowDown">▼</button><button data-k="ArrowRight">▶</button></div></div></main>
-<aside class="side-panel"><section class="welcome-card"><div class="welcome-eyebrow">오늘의 작은 쉼</div><h2>마음이 머물다 가는 곳</h2><p>잘해야 하는 일은 없어요.<br>오늘은 천천히 둘러봐요.</p><span class="welcome-flower">✿</span></section>
-<section class="panel-section"><div class="section-heading"><span>나의 캐릭터</span><span class="soft-pill" id="outfitLabel">라벤더 룩</span></div><div class="outfit-grid"><button class="outfit active" data-outfit="lavender"><span class="outfit-swatch lavender"></span>라벤더</button><button class="outfit" data-outfit="peach"><span class="outfit-swatch peach"></span>피치</button><button class="outfit" data-outfit="mint"><span class="outfit-swatch mint"></span>민트</button></div></section>
-<section class="panel-section"><div class="section-heading"><span>오늘의 마음</span><span class="tiny-label">선택 사항</span></div><p class="section-note">지금 기분과 가까운 색을 골라 봐요.</p><div class="mood-row"><button class="mood" data-mood="calm">🌿<small>차분</small></button><button class="mood" data-mood="happy">☀️<small>기쁨</small></button><button class="mood" data-mood="tired">🌙<small>지침</small></button><button class="mood" data-mood="worried">☁️<small>걱정</small></button></div><div class="mood-saved" id="moodSaved">기분을 기록하지 않아도 괜찮아요.</div></section>
-<section class="panel-section"><div class="section-heading"><span>잠깐 쉬어가기</span><span class="tiny-label">30초</span></div><p class="section-note">원할 때만 시작해요. 언제든 멈출 수 있어요.</p><button class="rest-button" id="breathBtn"><span class="breath-orb">◌</span><span id="breathLabel">함께 천천히 호흡하기</span><span class="button-arrow">→</span></button><div class="breath-box" id="breathBox" hidden><div class="breath-circle" id="breathCircle"><span id="breathText">편안한 자세로</span></div><p id="breathInstruction">준비되면 시작해요.</p><button class="text-button" id="stopBreath">그만하기</button></div></section>
-<section class="inventory-card"><div class="inventory-top"><span>🌷 모은 꽃</span><strong id="flowers">0</strong></div><div class="inventory-caption">꽃은 정원과 마을 친구에게 선물할 수 있어요.</div></section><div class="side-tip">✧ 오늘은 천천히 걸어도 괜찮아요.</div></aside></div>
-<nav class="bottom-nav"><button class="nav-item active" data-nav="village"><span>⌂</span>마을</button><button class="nav-item" data-nav="garden"><span>❀</span>정원</button><button class="nav-item" data-nav="room"><span>▦</span>내 방</button><button class="nav-item" data-nav="journal"><span>♡</span>마음 기록</button></nav><div class="footer-note">몽글마음은 잠시 쉬어 가는 공간이에요. 모든 활동은 선택할 수 있어요.</div></div>
+  <header class="game-topbar">
+    <button class="brand brand-button" data-home aria-label="홈으로">
+      <span class="brand-mark">✿</span><span><strong>몽글마음</strong><small>천천히, 나만의 속도로</small></span>
+    </button>
+    <div class="top-stats"><span>🪙 <b id="coins">30</b></span><span>✨ Lv.<b id="level">1</b></span><span>🌱 <b id="xp">0</b>/100</span></div>
+  </header>
+  <div class="toast global-toast" id="toast" role="status"></div>
+  <div class="page-heading"><span class="eyebrow">MONGLE MIND</span><h1 id="pageTitle">나만의 작은 쉼</h1><p>마음이 머물다 가는 작은 세계</p></div>
+
+  <main class="screen home-screen" data-screen="home">
+    <section class="home-hero">
+      <div class="hero-copy"><span class="hero-tag">오늘도 잘 찾아왔어요</span><h2>마음이 지친 날,<br>잠시 쉬어 가도 괜찮아요.</h2><p>하고 싶은 공간을 골라 나만의 속도로 둘러봐요.</p><button class="primary-button" data-page="village">마을 산책 시작하기 <b>→</b></button></div>
+      <div class="hero-art"><div class="sun-disc"></div><div class="hero-flower f1">✿</div><div class="hero-flower f2">❀</div><div class="hero-caption">a little pause<br><b>for your mind</b></div></div>
+    </section>
+    <div class="section-title"><div><span class="eyebrow">YOUR LITTLE WORLD</span><h2>어디로 가볼까요?</h2></div><span class="muted">원하는 공간을 선택해요</span></div>
+    <section class="feature-grid">
+      <button class="feature-card village-card" data-page="village"><span class="feature-icon">🏡</span><span class="feature-name">몽글마을</span><span class="feature-desc">3D 마을을 산책하고 친구를 만나요</span><b class="feature-arrow">↗</b></button>
+      <button class="feature-card dress-card" data-page="dress"><span class="feature-icon">🧸</span><span class="feature-name">캐릭터 꾸미기</span><span class="feature-desc">마음에 드는 색으로 나를 표현해요</span><b class="feature-arrow">↗</b></button>
+      <button class="feature-card garden-card" data-page="garden"><span class="feature-icon">🌷</span><span class="feature-name">나만의 정원</span><span class="feature-desc">꽃을 돌보고 작은 정원을 가꿔요</span><b class="feature-arrow">↗</b></button>
+      <button class="feature-card room-card" data-page="room"><span class="feature-icon">🪟</span><span class="feature-name">나만의 방</span><span class="feature-desc">포근한 공간의 분위기를 바꿔요</span><b class="feature-arrow">↗</b></button>
+      <button class="feature-card journal-card" data-page="journal"><span class="feature-icon">☁️</span><span class="feature-name">마음 돌보기</span><span class="feature-desc">호흡하고 오늘의 감정을 기록해요</span><b class="feature-arrow">↗</b></button>
+      <button class="feature-card quest-card" data-page="quests"><span class="feature-icon">📮</span><span class="feature-name">퀘스트와 보상</span><span class="feature-desc">작은 활동을 완료하고 보상을 모아요</span><b class="feature-arrow">↗</b></button>
+    </section>
+    <div class="home-note">✧ 모든 활동은 선택 사항이에요. 아무것도 하지 않고 쉬어도 괜찮아요.</div>
+  </main>
+
+  <main class="screen scene-screen" data-screen="village" hidden>
+    <div class="screen-toolbar"><button class="back-button" data-home>← 홈으로</button><span>W A S D / 방향키 이동 · E 상호작용 · 땅 클릭 이동</span></div>
+    <div class="scene-wrap"><div id="world" aria-label="3D 몽글마을"></div><div class="scene-title">🌼 작은 꽃마을 <small id="sceneStatus">나만의 속도로 산책해요</small></div><div class="scene-hint"><span class="keycap">W A S D</span> 또는 방향키 이동 · <span class="keycap">E</span> 상호작용</div><div class="dialog" id="dialog" hidden><button class="dialog-close" id="closeDialog">×</button><div class="dialog-name" id="dialogName">몽글 친구</div><div id="dialogText">안녕!</div><div id="dialogActions" class="dialog-actions"></div></div><div class="touch-pad"><button data-k="ArrowUp">▲</button><div><button data-k="ArrowLeft">◀</button><button data-k="ArrowDown">▼</button><button data-k="ArrowRight">▶</button></div></div></div>
+    <div class="scene-footer"><span>🐾 포근이가 곁에서 함께 걷고 있어요.</span><span>천천히 둘러봐도 좋아요.</span></div>
+  </main>
+
+  <main class="screen content-screen" data-screen="dress" hidden>
+    <div class="screen-toolbar"><button class="back-button" data-home>← 홈으로</button><span>나만의 색을 골라 보세요</span></div>
+    <section class="content-hero dress-hero"><div><span class="eyebrow">MY CHARACTER</span><h2>오늘은 어떤 모습으로<br>마을을 거닐까요?</h2><p>의상 색상을 선택하면 마을 속 캐릭터에도 적용돼요.</p></div><div class="big-emoji">🧸</div></section>
+    <section class="content-card"><div class="section-title"><div><span class="eyebrow">OUTFIT COLLECTION</span><h2>의상 색상</h2></div><span class="soft-pill" id="outfitLabel">라벤더 룩</span></div><div class="outfit-grid"><button class="outfit active" data-outfit="lavender"><span class="outfit-swatch lavender"></span>라벤더 룩</button><button class="outfit" data-outfit="peach"><span class="outfit-swatch peach"></span>피치 룩</button><button class="outfit" data-outfit="mint"><span class="outfit-swatch mint"></span>민트 룩</button></div><p class="helper-text">현재 3D 모델의 의상으로 인식되는 재질에 색상을 적용해요. 모델 구조에 따라 색이 바뀌는 범위는 다를 수 있어요.</p></section>
+    <section class="content-card"><div class="section-title"><div><span class="eyebrow">YOUR COMPANION</span><h2>동물 친구</h2></div><span class="soft-pill">함께 산책 중</span></div><div class="companion-row"><span class="companion-face">🐰</span><div><b>포근이</b><p>언제나 곁에서 함께하는 작은 친구</p></div></div></section>
+  </main>
+
+  <main class="screen content-screen" data-screen="garden" hidden>
+    <div class="screen-toolbar"><button class="back-button" data-home>← 홈으로</button><span>꽃을 돌보며 천천히 쉬어 가요</span></div>
+    <section class="content-hero garden-hero"><div><span class="eyebrow">MY GARDEN</span><h2>작은 정원에<br>오늘의 마음을 심어요.</h2><p>꽃을 돌보면 코인과 경험치를 얻을 수 있어요.</p></div><div class="big-emoji">🌼</div></section>
+    <section class="garden-stat-grid"><div class="garden-stat"><span>🌷 모은 꽃</span><b id="flowers">0</b></div><div class="garden-stat"><span>🪙 보유 코인</span><b id="gardenCoins">30</b></div><div class="garden-stat"><span>🌱 오늘의 돌봄</span><b id="waterStatus">아직 안 했어요</b></div></section>
+    <section class="content-card garden-action-card"><div class="garden-illustration">🌱　🌼　🌷　🌱</div><h2>꽃에게 물을 주세요</h2><p>작은 돌봄 하나가 정원을 조금 더 풍성하게 만들어요.</p><button class="primary-button" id="gardenWater">물 주기 · 꽃 +1 · 코인 +5</button></section>
+  </main>
+
+  <main class="screen content-screen" data-screen="room" hidden>
+    <div class="screen-toolbar"><button class="back-button" data-home>← 홈으로</button><span>마음이 편안해지는 나만의 공간</span></div>
+    <section class="content-hero room-hero"><div><span class="eyebrow">MY LITTLE ROOM</span><h2>나만의 포근한 방</h2><p>좋아하는 분위기를 골라 방의 테마를 바꿔 보세요.</p></div><div class="big-emoji">🪴</div></section>
+    <section class="room-preview" id="roomPreview"><div class="room-window">☀️</div><div class="room-bed">▰▰▰</div><div class="room-plant">🪴</div><div class="room-lamp">💡</div><div class="room-rug"></div></section>
+    <section class="content-card"><div class="section-title"><div><span class="eyebrow">ROOM THEME</span><h2>방 분위기 선택</h2></div><span class="soft-pill" id="roomDecorLabel">라벤더 포근방</span></div><div class="outfit-grid room-themes"><button data-room-decor="lavender"><span class="outfit-swatch lavender"></span>라벤더</button><button data-room-decor="peach"><span class="outfit-swatch peach"></span>피치</button><button data-room-decor="mint"><span class="outfit-swatch mint"></span>민트</button></div><p class="helper-text">선택한 테마는 이 브라우저에 저장돼요. 가구 배치 기능은 이후 확장할 수 있어요.</p></section>
+  </main>
+
+  <main class="screen content-screen" data-screen="journal" hidden>
+    <div class="screen-toolbar"><button class="back-button" data-home>← 홈으로</button><span>정답은 없어요. 지금 마음 그대로</span></div>
+    <section class="content-hero journal-hero"><div><span class="eyebrow">MIND CARE</span><h2>오늘의 마음을<br>가만히 들여다봐요.</h2><p>기록하지 않아도 괜찮고, 언제든 멈춰도 괜찮아요.</p></div><div class="big-emoji">☁️</div></section>
+    <section class="content-card"><div class="section-title"><div><span class="eyebrow">HOW DO YOU FEEL?</span><h2>지금 기분은 어떤가요?</h2></div><span class="tiny-label">선택 사항</span></div><div class="mood-row"><button class="mood" data-mood="calm">🌿<small>차분</small></button><button class="mood" data-mood="happy">☀️<small>기쁨</small></button><button class="mood" data-mood="tired">🌙<small>지침</small></button><button class="mood" data-mood="worried">☁️<small>걱정</small></button></div><div class="mood-saved" id="moodSaved">기분을 기록하지 않아도 괜찮아요.</div></section>
+    <section class="content-card"><div class="section-title"><div><span class="eyebrow">A LITTLE NOTE</span><h2>마음 한 줄 남기기</h2></div></div><textarea id="journalText" class="journal-input" maxlength="1200" placeholder="오늘 어떤 일이 있었나요? 한 단어만 적어도 좋아요."></textarea><button class="primary-button" id="journalSave">마음 기록 저장하기</button></section>
+    <section class="content-card breath-card"><div class="section-title"><div><span class="eyebrow">TAKE A BREATH</span><h2>30초 호흡 쉬어가기</h2></div><span class="soft-pill">원할 때만</span></div><p class="helper-text">편안한 만큼만 따라 해요. 불편하면 언제든 멈춰도 괜찮아요.</p><button class="rest-button" id="breathBtn"><span class="breath-orb">◌</span><span id="breathLabel">함께 천천히 호흡하기</span><span class="button-arrow">→</span></button><div class="breath-box" id="breathBox" hidden><div class="breath-circle" id="breathCircle"><span id="breathText">편안한 자세로</span></div><p id="breathInstruction">준비되면 시작해요.</p><button class="text-button" id="stopBreath">그만하기</button></div></section>
+  </main>
+
+  <main class="screen content-screen" data-screen="quests" hidden>
+    <div class="screen-toolbar"><button class="back-button" data-home>← 홈으로</button><span>작은 활동도 충분히 멋진 일이에요</span></div>
+    <section class="content-hero quest-hero"><div><span class="eyebrow">TODAY'S QUEST</span><h2>오늘의 작은 퀘스트</h2><p>하고 싶은 활동을 골라 완료해 보세요.</p></div><div class="big-emoji">📮</div></section>
+    <section class="quest-list">
+      <article class="quest-card-item"><span class="quest-icon">🌷</span><div><b>꽃에게 물 주기</b><p>정원에서 꽃을 돌봐 주세요.</p><small>보상 · 코인 5 / 경험치 10</small></div><button data-claim-quest="flower">보상 받기</button></article>
+      <article class="quest-card-item"><span class="quest-icon">🐰</span><div><b>포근이에게 인사하기</b><p>마을에서 포근이와 인사해요.</p><small>보상 · 코인 5 / 경험치 10</small></div><button data-claim-quest="pet">보상 받기</button></article>
+      <article class="quest-card-item"><span class="quest-icon">☁️</span><div><b>나의 마음 살펴보기</b><p>마음 돌보기 화면에서 감정을 골라요.</p><small>보상 · 코인 5 / 경험치 10</small></div><button data-claim-quest="mind">보상 받기</button></article>
+    </section>
+  </main>
+
+  <nav class="bottom-nav"><button class="nav-item active" data-nav="home"><span>⌂</span>홈</button><button class="nav-item" data-nav="village"><span>🏡</span>마을</button><button class="nav-item" data-nav="garden"><span>🌷</span>정원</button><button class="nav-item" data-nav="journal"><span>♡</span>마음 돌보기</button><button class="nav-item" data-nav="quests"><span>✧</span>퀘스트</button></nav>
+  <div class="footer-note">몽글마음은 일상 속 휴식과 자기 이해를 돕는 공간이에요. 모든 활동은 선택할 수 있어요.</div>
+</div>
