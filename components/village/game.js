@@ -344,12 +344,9 @@ for (let i = 0; i < 22; i++) {
   rock.rotation.y = a;
 }
 
-// 캐릭터
+// 캐릭터: 사용자가 제공한 원본 character.glb를 직접 불러옵니다.
 const avatar = new THREE.Group();
 scene.add(avatar);
-
-const outfitMat = M(colors[state.outfit] || colors.lavender);
-const limbs = [];
 
 const avatarShadow = add(
   new THREE.CircleGeometry(0.65, 24),
@@ -358,131 +355,86 @@ const avatarShadow = add(
 );
 avatarShadow.rotation.x = -Math.PI / 2;
 
-// GLB가 로딩되지 않거나 네트워크가 느려도 캐릭터가 사라지지 않도록
-// 기본 캐릭터를 먼저 표시하고, GLB 로딩 성공 시에만 교체합니다.
-const fallbackCharacter = new THREE.Group();
-avatar.add(fallbackCharacter);
-const fallbackSkin = M(0xf5d4c1);
-const fallbackHair = M(0x76515a);
-const fallbackDark = M(0x43343b);
-const fallbackShoe = M(0x8a6871);
-
-// 다리와 신발
-add(new THREE.CapsuleGeometry(0.105, 0.43, 4, 8), fallbackSkin, fallbackCharacter, -0.17, 0.43, 0, 1, 1, 1);
-add(new THREE.CapsuleGeometry(0.105, 0.43, 4, 8), fallbackSkin, fallbackCharacter, 0.17, 0.43, 0, 1, 1, 1);
-ball(fallbackCharacter, -0.17, 0.16, 0.07, 0.16, 0.09, 0.23, fallbackShoe);
-ball(fallbackCharacter, 0.17, 0.16, 0.07, 0.16, 0.09, 0.23, fallbackShoe);
-
-// 원피스 형태의 몸통
-add(new THREE.CapsuleGeometry(0.34, 0.48, 5, 12), outfitMat, fallbackCharacter, 0, 1.12, 0, 1, 1.12, 0.78);
-add(new THREE.ConeGeometry(0.48, 0.62, 16), outfitMat, fallbackCharacter, 0, 0.78, 0, 1, 1, 0.82);
-
-// 팔
-add(new THREE.CapsuleGeometry(0.09, 0.43, 4, 8), fallbackSkin, fallbackCharacter, -0.42, 1.16, 0, 1, 1, 1).rotation.z = -0.22;
-add(new THREE.CapsuleGeometry(0.09, 0.43, 4, 8), fallbackSkin, fallbackCharacter, 0.42, 1.16, 0, 1, 1, 1).rotation.z = 0.22;
-
-// 머리와 머리카락
-ball(fallbackCharacter, 0, 2.02, 0, 0.43, 0.48, 0.39, fallbackSkin);
-ball(fallbackCharacter, 0, 2.22, -0.045, 0.45, 0.34, 0.41, fallbackHair);
-ball(fallbackCharacter, -0.34, 2.03, 0.02, 0.15, 0.27, 0.17, fallbackHair);
-ball(fallbackCharacter, 0.34, 2.03, 0.02, 0.15, 0.27, 0.17, fallbackHair);
-// 얼굴의 눈과 작은 입
-ball(fallbackCharacter, -0.145, 2.02, 0.365, 0.035, 0.055, 0.025, fallbackDark);
-ball(fallbackCharacter, 0.145, 2.02, 0.365, 0.035, 0.055, 0.025, fallbackDark);
-ball(fallbackCharacter, 0, 1.88, 0.385, 0.035, 0.018, 0.018, M(0xb8797c));
-
 const characterLoader = new GLTFLoader();
-const characterUrl = "https://raw.githubusercontent.com/boyoung0819/mongle-mind/main/components/village/character.glb";
+const characterUrls = [
+  "https://cdn.jsdelivr.net/gh/boyoung0819/mongle-mind@main/components/village/character.glb",
+  "https://raw.githubusercontent.com/boyoung0819/mongle-mind/main/components/village/character.glb"
+];
+
 let loadedCharacter = null;
-const outfitMeshes = new Set();
+let characterLoadIndex = 0;
 
 function applyOutfitColor(outfit) {
-  const color = colors[outfit] || colors.lavender;
-  outfitMat.color.setHex(color);
-
-  if (!loadedCharacter) return;
-
-  outfitMeshes.forEach(mesh => {
-    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-
-    mats.forEach(mat => {
-      if (mat && mat.color && mat.userData.mongleOriginalColor !== undefined) {
-        mat.color.setHex(color);
-      }
-    });
-  });
+  // 현재 제공된 GLB는 몸과 의상이 하나의 메시/재질로 합쳐져 있어
+  // 전체 캐릭터를 물들이지 않도록 원본 텍스처를 그대로 보존합니다.
+  // 의상별 색상 적용은 의상 메시가 분리된 모델이 준비되면 연결합니다.
 }
 
-characterLoader.load(
-  characterUrl,
-  gltf => {
-    loadedCharacter = gltf.scene;
-
-    const bounds = new THREE.Box3().setFromObject(loadedCharacter);
-    const size = bounds.getSize(new THREE.Vector3());
-    const center = bounds.getCenter(new THREE.Vector3());
-    const height = Math.max(size.y, 0.001);
-
-    loadedCharacter.scale.setScalar(3 / height);
-
-    loadedCharacter.position.set(
-      -center.x * loadedCharacter.scale.x,
-      -bounds.min.y * loadedCharacter.scale.y,
-      -center.z * loadedCharacter.scale.z
-    );
-
-    // 걷기 모션을 위한 기본 자세 저장
-    loadedCharacter.userData.walkBaseY = loadedCharacter.position.y;
-    loadedCharacter.userData.walkBaseRotationX = loadedCharacter.rotation.x;
-    loadedCharacter.userData.walkBaseRotationZ = loadedCharacter.rotation.z;
-
-    loadedCharacter.traverse(obj => {
-      if (!obj.isMesh) return;
-
-      obj.visible = true;
-      obj.castShadow = true;
-      obj.receiveShadow = true;
-
-      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-      const label = `${obj.name || ""} ${mats.map(mat => mat?.name || "").join(" ")}`.toLowerCase();
-
-      const meshBounds = new THREE.Box3().setFromObject(obj);
-      const centerY = ((meshBounds.min.y + meshBounds.max.y) / 2) /
-        Math.max(size.y * loadedCharacter.scale.y, 0.001);
-
-      const clothingName =
-        /dress|outfit|cloth|clothing|skirt|shirt|coat|jacket|sleeve|uniform|fabric|衣服|원피스|의상|옷|치마|상의|소매/.test(label);
-
-      const protectedName =
-        /hair|face|skin|eye|eyebrow|mouth|lip|teeth|head|hand|finger|shoe|sock|머리|얼굴|피부|눈|입|손|신발|양말/.test(label);
-
-      // 이름이 명확한 의상 재질은 우선 선택하고,
-      // 이름이 없는 모델은 몸통과 옷이 있을 법한 영역을 후보로 잡음.
-      const clothingZone = centerY > 0.18 && centerY < 0.78;
-
-      if (clothingName || (!protectedName && clothingZone)) {
-        mats.forEach(mat => {
-          if (mat && mat.color) {
-            if (mat.userData.mongleOriginalColor === undefined) {
-              mat.userData.mongleOriginalColor = mat.color.getHex();
-            }
-            outfitMeshes.add(obj);
-          }
-        });
-      }
-    });
-
-    avatar.add(loadedCharacter);
-    fallbackCharacter.visible = false;
-    applyOutfitColor(state.outfit);
-  },
-  undefined,
-  error => {
-    console.error("character.glb를 불러오지 못했어요. 기본 캐릭터를 표시합니다.", error);
-    fallbackCharacter.visible = true;
-    toast("캐릭터 모델 연결이 지연되어 기본 캐릭터를 표시했어요.");
+function loadOriginalCharacter() {
+  if (characterLoadIndex >= characterUrls.length) {
+    console.error("원본 character.glb를 모든 주소에서 불러오지 못했습니다.");
+    toast("원본 캐릭터를 불러오지 못했어요. GitHub의 components/village/character.glb 위치를 확인해 주세요.");
+    return;
   }
-);
+
+  const url = characterUrls[characterLoadIndex++];
+
+  characterLoader.load(
+    url,
+    gltf => {
+      loadedCharacter = gltf.scene;
+      loadedCharacter.visible = true;
+      loadedCharacter.updateMatrixWorld(true);
+
+      // 원본 모델의 크기와 중심을 계산해 마을 바닥에 자연스럽게 배치합니다.
+      const bounds = new THREE.Box3().setFromObject(loadedCharacter);
+      const size = bounds.getSize(new THREE.Vector3());
+      const center = bounds.getCenter(new THREE.Vector3());
+      const height = Math.max(size.y, 0.001);
+      const scale = 3.0 / height;
+
+      loadedCharacter.scale.setScalar(scale);
+      loadedCharacter.position.set(
+        -center.x * scale,
+        -bounds.min.y * scale,
+        -center.z * scale
+      );
+
+      loadedCharacter.userData.walkBaseY = loadedCharacter.position.y;
+      loadedCharacter.userData.walkBaseRotationX = loadedCharacter.rotation.x;
+      loadedCharacter.userData.walkBaseRotationZ = loadedCharacter.rotation.z;
+
+      loadedCharacter.traverse(obj => {
+        if (!obj.isMesh) return;
+        obj.visible = true;
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+
+        // 원본 GLB의 색상과 내장 텍스처를 그대로 보존합니다.
+        // 하나로 합쳐진 메시이므로 전체 재질에 의상 색을 덮어씌우지 않습니다.
+        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+        materials.forEach(material => {
+          if (material) material.needsUpdate = true;
+        });
+      });
+
+      avatar.add(loadedCharacter);
+      loadedCharacter.updateMatrixWorld(true);
+      console.info("원본 character.glb 로딩 완료:", url);
+    },
+    progress => {
+      if (progress.total > 0) {
+        console.info(`캐릭터 로딩 중: ${Math.round(progress.loaded / progress.total * 100)}%`);
+      }
+    },
+    error => {
+      console.warn(`캐릭터 주소 로딩 실패: ${url}`, error);
+      loadOriginalCharacter();
+    }
+  );
+}
+
+loadOriginalCharacter();
 
 // 반려동물
 const pet = new THREE.Group();
@@ -690,7 +642,7 @@ document.querySelectorAll(".outfit").forEach(b => {
     state.outfit = b.dataset.outfit;
     applyOutfitColor(state.outfit);
     save();
-    toast(names[state.outfit] + "을 선택했어요.");
+    toast("의상 선택을 저장했어요. 현재 캐릭터 모델은 원본 색상을 유지해요.");
   };
 });
 
@@ -899,12 +851,14 @@ function animate(t) {
     const baseRotX = loadedCharacter.userData.walkBaseRotationX ?? 0;
     const baseRotZ = loadedCharacter.userData.walkBaseRotationZ ?? 0;
 
-    const bounce = Math.abs(Math.sin(walkPhase * 2)) * 0.055 * walkBlend;
-    const idle = Math.sin(t * 0.0018) * 0.009 * (1 - walkBlend);
+    // 제공된 GLB는 뼈대/걷기 애니메이션이 없는 단일 메시입니다.
+    // 원본 외형을 유지하면서 이동 시 가벼운 통통 튀는 움직임만 적용합니다.
+    const bounce = Math.abs(Math.sin(walkPhase * 2)) * 0.045 * walkBlend;
+    const idle = Math.sin(t * 0.0018) * 0.008 * (1 - walkBlend);
 
     loadedCharacter.position.y = baseY + bounce + idle;
-    loadedCharacter.rotation.x = baseRotX - 0.018 * walkBlend;
-    loadedCharacter.rotation.z = baseRotZ + Math.sin(walkPhase) * 0.025 * walkBlend;
+    loadedCharacter.rotation.x = baseRotX - 0.012 * walkBlend;
+    loadedCharacter.rotation.z = baseRotZ + Math.sin(walkPhase) * 0.018 * walkBlend;
   }
 
   // 캐릭터 그림자가 바닥에서 들뜨지 않도록 고정
