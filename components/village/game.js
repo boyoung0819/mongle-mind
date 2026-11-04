@@ -344,9 +344,12 @@ for (let i = 0; i < 22; i++) {
   rock.rotation.y = a;
 }
 
-// 캐릭터: 사용자가 제공한 원본 character.glb를 직접 불러옵니다.
+// 캐릭터
 const avatar = new THREE.Group();
 scene.add(avatar);
+
+const outfitMat = M(colors[state.outfit] || colors.lavender);
+const limbs = [];
 
 const avatarShadow = add(
   new THREE.CircleGeometry(0.65, 24),
@@ -360,76 +363,50 @@ const characterUrls = [
   "https://cdn.jsdelivr.net/gh/boyoung0819/mongle-mind@main/components/village/character.glb",
   "https://raw.githubusercontent.com/boyoung0819/mongle-mind/main/components/village/character.glb"
 ];
-
 let loadedCharacter = null;
-let characterLoadIndex = 0;
 
-function applyOutfitColor(outfit) {
-  // 현재 제공된 GLB는 몸과 의상이 하나의 메시/재질로 합쳐져 있어
-  // 전체 캐릭터를 물들이지 않도록 원본 텍스처를 그대로 보존합니다.
-  // 의상별 색상 적용은 의상 메시가 분리된 모델이 준비되면 연결합니다.
-}
-
-function loadOriginalCharacter() {
-  if (characterLoadIndex >= characterUrls.length) {
-    console.error("원본 character.glb를 모든 주소에서 불러오지 못했습니다.");
-    toast("원본 캐릭터를 불러오지 못했어요. GitHub의 components/village/character.glb 위치를 확인해 주세요.");
+// 원본 GLB의 색상과 텍스처를 그대로 보존합니다.
+function loadOriginalCharacter(urlIndex = 0) {
+  if (urlIndex >= characterUrls.length) {
+    console.error("모든 주소에서 character.glb를 불러오지 못했습니다.");
+    toast("캐릭터 파일을 불러오지 못했어요. 잠시 후 새로고침해 주세요.");
     return;
   }
 
-  const url = characterUrls[characterLoadIndex++];
-
   characterLoader.load(
-    url,
+    characterUrls[urlIndex],
     gltf => {
       loadedCharacter = gltf.scene;
-      loadedCharacter.visible = true;
-      loadedCharacter.updateMatrixWorld(true);
 
-      // 원본 모델의 크기와 중심을 계산해 마을 바닥에 자연스럽게 배치합니다.
       const bounds = new THREE.Box3().setFromObject(loadedCharacter);
       const size = bounds.getSize(new THREE.Vector3());
       const center = bounds.getCenter(new THREE.Vector3());
       const height = Math.max(size.y, 0.001);
-      const scale = 3.0 / height;
 
-      loadedCharacter.scale.setScalar(scale);
+      loadedCharacter.scale.setScalar(3 / height);
       loadedCharacter.position.set(
-        -center.x * scale,
-        -bounds.min.y * scale,
-        -center.z * scale
+        -center.x * loadedCharacter.scale.x,
+        -bounds.min.y * loadedCharacter.scale.y,
+        -center.z * loadedCharacter.scale.z
       );
 
+      // 관절이 없는 원본 모델이므로 전체 모델의 작은 움직임으로 걷는 느낌을 줍니다.
       loadedCharacter.userData.walkBaseY = loadedCharacter.position.y;
       loadedCharacter.userData.walkBaseRotationX = loadedCharacter.rotation.x;
       loadedCharacter.userData.walkBaseRotationZ = loadedCharacter.rotation.z;
 
       loadedCharacter.traverse(obj => {
         if (!obj.isMesh) return;
-        obj.visible = true;
         obj.castShadow = true;
         obj.receiveShadow = true;
-
-        // 원본 GLB의 색상과 내장 텍스처를 그대로 보존합니다.
-        // 하나로 합쳐진 메시이므로 전체 재질에 의상 색을 덮어씌우지 않습니다.
-        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-        materials.forEach(material => {
-          if (material) material.needsUpdate = true;
-        });
       });
 
       avatar.add(loadedCharacter);
-      loadedCharacter.updateMatrixWorld(true);
-      console.info("원본 character.glb 로딩 완료:", url);
     },
-    progress => {
-      if (progress.total > 0) {
-        console.info(`캐릭터 로딩 중: ${Math.round(progress.loaded / progress.total * 100)}%`);
-      }
-    },
+    undefined,
     error => {
-      console.warn(`캐릭터 주소 로딩 실패: ${url}`, error);
-      loadOriginalCharacter();
+      console.warn(`캐릭터 주소 ${urlIndex + 1} 로드 실패. 다음 주소를 시도합니다.`, error);
+      loadOriginalCharacter(urlIndex + 1);
     }
   );
 }
@@ -642,7 +619,7 @@ document.querySelectorAll(".outfit").forEach(b => {
     state.outfit = b.dataset.outfit;
     applyOutfitColor(state.outfit);
     save();
-    toast("의상 선택을 저장했어요. 현재 캐릭터 모델은 원본 색상을 유지해요.");
+    toast(names[state.outfit] + "을 선택했어요.");
   };
 });
 
@@ -851,14 +828,12 @@ function animate(t) {
     const baseRotX = loadedCharacter.userData.walkBaseRotationX ?? 0;
     const baseRotZ = loadedCharacter.userData.walkBaseRotationZ ?? 0;
 
-    // 제공된 GLB는 뼈대/걷기 애니메이션이 없는 단일 메시입니다.
-    // 원본 외형을 유지하면서 이동 시 가벼운 통통 튀는 움직임만 적용합니다.
-    const bounce = Math.abs(Math.sin(walkPhase * 2)) * 0.045 * walkBlend;
-    const idle = Math.sin(t * 0.0018) * 0.008 * (1 - walkBlend);
+    const bounce = Math.abs(Math.sin(walkPhase * 2)) * 0.055 * walkBlend;
+    const idle = Math.sin(t * 0.0018) * 0.009 * (1 - walkBlend);
 
     loadedCharacter.position.y = baseY + bounce + idle;
-    loadedCharacter.rotation.x = baseRotX - 0.012 * walkBlend;
-    loadedCharacter.rotation.z = baseRotZ + Math.sin(walkPhase) * 0.018 * walkBlend;
+    loadedCharacter.rotation.x = baseRotX - 0.018 * walkBlend;
+    loadedCharacter.rotation.z = baseRotZ + Math.sin(walkPhase) * 0.025 * walkBlend;
   }
 
   // 캐릭터 그림자가 바닥에서 들뜨지 않도록 고정
