@@ -1,3 +1,4 @@
+
 import * as THREE from "three";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js";
 
@@ -24,6 +25,8 @@ if (typeof state.z !== "number" || Math.abs(state.z) > 20) state.z = 4;
 
 let keys = {};
 let toastTimer, breathTimer, breathStep = 0, breathing = false, last = 0;
+let walkBlend = 0;
+let walkPhase = 0;
 
 const colors = {
   lavender: 0xb7a5e5,
@@ -395,6 +398,11 @@ characterLoader.load(
       -bounds.min.y * loadedCharacter.scale.y,
       -center.z * loadedCharacter.scale.z
     );
+
+    // 걷기 모션을 위한 기본 자세 저장
+    loadedCharacter.userData.walkBaseY = loadedCharacter.position.y;
+    loadedCharacter.userData.walkBaseRotationX = loadedCharacter.rotation.x;
+    loadedCharacter.userData.walkBaseRotationZ = loadedCharacter.rotation.z;
 
     loadedCharacter.traverse(obj => {
       if (!obj.isMesh) return;
@@ -806,6 +814,8 @@ function animate(t) {
   const dt = Math.min((t - last) / 1000 || 0, 0.05);
   last = t;
 
+  let moving = false;
+
   if ($("dialog").hidden) {
     let dx = 0, dz = 0;
 
@@ -831,6 +841,7 @@ function animate(t) {
       const len = Math.hypot(dx, dz);
       dx /= len;
       dz /= len;
+      moving = true;
 
       avatar.position.x = THREE.MathUtils.clamp(avatar.position.x + dx * dt * 4, -13, 13);
       avatar.position.z = THREE.MathUtils.clamp(avatar.position.z + dz * dt * 4, -13, 13);
@@ -844,7 +855,25 @@ function animate(t) {
     }
   }
 
-  avatar.position.y = Math.sin(t * 0.0025) * 0.035;
+  // 뼈대가 없는 GLB 모델을 위한 부드러운 몸통 움직임
+  walkBlend = THREE.MathUtils.damp(walkBlend, moving ? 1 : 0, 8, dt);
+  if (moving) walkPhase += dt * 8;
+
+  if (loadedCharacter) {
+    const baseY = loadedCharacter.userData.walkBaseY ?? loadedCharacter.position.y;
+    const baseRotX = loadedCharacter.userData.walkBaseRotationX ?? 0;
+    const baseRotZ = loadedCharacter.userData.walkBaseRotationZ ?? 0;
+
+    const bounce = Math.abs(Math.sin(walkPhase * 2)) * 0.055 * walkBlend;
+    const idle = Math.sin(t * 0.0018) * 0.009 * (1 - walkBlend);
+
+    loadedCharacter.position.y = baseY + bounce + idle;
+    loadedCharacter.rotation.x = baseRotX - 0.018 * walkBlend;
+    loadedCharacter.rotation.z = baseRotZ + Math.sin(walkPhase) * 0.025 * walkBlend;
+  }
+
+  // 캐릭터 그림자가 바닥에서 들뜨지 않도록 고정
+  avatar.position.y = 0;
 
   pet.position.set(
     avatar.position.x + 0.9,
