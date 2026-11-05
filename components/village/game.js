@@ -1,3 +1,83 @@
+/* =========================================================
+   몽글마음 - 페이지 이동 안전장치
+   3D 코드에 문제가 생겨도 메뉴 이동은 작동하도록 함
+========================================================= */
+
+(() => {
+  const go = page => {
+    document.querySelectorAll("[data-screen]").forEach(screen => {
+      screen.hidden = screen.dataset.screen !== page;
+    });
+
+    const title = document.getElementById("pageTitle");
+
+    const titles = {
+      home: "나만의 작은 쉼",
+      village: "몽글마을 산책",
+      dress: "나의 펫 꾸미기",
+      garden: "나만의 정원",
+      room: "나만의 방",
+      journal: "마음 돌보기",
+      quests: "오늘의 작은 퀘스트"
+    };
+
+    if (title) {
+      title.textContent = titles[page] || titles.home;
+    }
+
+    document.querySelectorAll(".nav-item").forEach(button => {
+      button.classList.toggle(
+        "active",
+        button.dataset.nav === page
+      );
+    });
+
+    try {
+      const save = JSON.parse(
+        localStorage.getItem("mongleMindSave") || "{}"
+      );
+
+      save.nav = page;
+
+      localStorage.setItem(
+        "mongleMindSave",
+        JSON.stringify(save)
+      );
+    } catch (error) {
+      console.warn("저장 실패:", error);
+    }
+
+    if (page === "home") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  document.addEventListener("click", event => {
+    const button = event.target.closest(
+      "[data-page], [data-nav], [data-home]"
+    );
+
+    if (!button) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    let page = "home";
+
+    if (button.dataset.page) {
+      page = button.dataset.page;
+    } else if (button.dataset.nav) {
+      page = button.dataset.nav;
+    }
+
+    go(page);
+  }, true);
+
+  window.mongleSafeGo = go;
+})();
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js";
 
