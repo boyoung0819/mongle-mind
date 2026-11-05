@@ -1,6 +1,8 @@
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js";
+
 /* =========================================================
    몽글마음 - 페이지 이동 안전장치
-   3D 코드에 문제가 생겨도 메뉴 이동은 작동하도록 함
 ========================================================= */
 
 (() => {
@@ -55,33 +57,33 @@
     }
   };
 
-  document.addEventListener("click", event => {
-    const button = event.target.closest(
-      "[data-page], [data-nav], [data-home]"
-    );
+  document.addEventListener(
+    "click",
+    event => {
+      const button = event.target.closest(
+        "[data-page], [data-nav], [data-home]"
+      );
 
-    if (!button) return;
+      if (!button) return;
 
-    event.preventDefault();
-    event.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
 
-    let page = "home";
+      let page = "home";
 
-    if (button.dataset.page) {
-      page = button.dataset.page;
-    } else if (button.dataset.nav) {
-      page = button.dataset.nav;
-    }
+      if (button.dataset.page) {
+        page = button.dataset.page;
+      } else if (button.dataset.nav) {
+        page = button.dataset.nav;
+      }
 
-    go(page);
-  }, true);
+      go(page);
+    },
+    true
+  );
 
   window.mongleSafeGo = go;
 })();
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js";
-
-(() => {
   const root = document.getElementById("world");
   if (!root || root.dataset.ready === "1") return;
 
