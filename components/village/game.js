@@ -38,6 +38,7 @@ const defaults = {
   gardenSeeds: {},
   selectedGardenSeed: null,
   fertilizer: 3,
+  gardenStarterGiftClaimed: false,
 
   /* 활동 통계 */
   stats: {
@@ -158,24 +159,65 @@ if (!state.selectedPetAccessory) {
   };
 }
 
-if (!Array.isArray(state.gardenPlots) || state.gardenPlots.length !== 6) {
-  state.gardenPlots = Array.from({ length: 6 }, (_, i) => ({
-    id: i,
-    seedId: null,
-    plantedAt: 0,
-    growthBonus: 0,
-    waterCount: 0,
-    fertilizerCount: 0,
-    lastWateredAt: 0
-  }));
-}
+const previousGardenPlots =
+  Array.isArray(state.gardenPlots)
+    ? state.gardenPlots
+    : [];
+
+state.gardenPlots = Array.from(
+  { length: 8 },
+  (_, i) => {
+    const oldPlot = previousGardenPlots[i] || {};
+
+    return {
+      id: i,
+      seedId:
+        typeof oldPlot.seedId === "string"
+          ? oldPlot.seedId
+          : null,
+      plantedAt: Number(oldPlot.plantedAt) || 0,
+      growthBonus: Math.max(
+        0,
+        Number(oldPlot.growthBonus) || 0
+      ),
+      waterCount: Math.max(
+        0,
+        Number(oldPlot.waterCount) || 0
+      ),
+      fertilizerCount: Math.max(
+        0,
+        Number(oldPlot.fertilizerCount) || 0
+      ),
+      lastWateredAt: Number(oldPlot.lastWateredAt) || 0
+    };
+  }
+);
 
 if (!state.gardenSeeds || typeof state.gardenSeeds !== "object") {
   state.gardenSeeds = {};
 }
 
+Object.keys(state.gardenSeeds).forEach(id => {
+  state.gardenSeeds[id] = Math.max(
+    0,
+    Math.floor(Number(state.gardenSeeds[id]) || 0)
+  );
+});
+
 if (typeof state.fertilizer !== "number") {
   state.fertilizer = 3;
+}
+
+if (typeof state.gardenStarterGiftClaimed !== "boolean") {
+  state.gardenStarterGiftClaimed = false;
+}
+
+/* 처음 시작하는 플레이어에게 데이지 모종 2개를 선물 */
+if (!state.gardenStarterGiftClaimed) {
+  state.gardenSeeds.daisy =
+    (state.gardenSeeds.daisy || 0) + 2;
+  state.selectedGardenSeed = "daisy";
+  state.gardenStarterGiftClaimed = true;
 }
 
 if (typeof state.x !== "number" || Math.abs(state.x) > 20) {
@@ -474,64 +516,125 @@ if (typeof state.stats.petDraws !== "number") {
 ========================================================= */
 
 const PLANTS = {
+  daisy: {
+    id: "daisy",
+    name: "구름데이지",
+    icon: "🌼",
+    price: 8,
+    growthSeconds: 180,
+    reward: 16,
+    xp: 8,
+    description: "처음 정원을 가꾸는 친구에게 추천해요."
+  },
+
   tulip: {
     id: "tulip",
-    name: "튤립",
+    name: "봄빛 튤립",
     icon: "🌷",
-    price: 10,
-    growth: 30,
-    reward: 20,
-    xp: 10
+    price: 12,
+    growthSeconds: 300,
+    reward: 22,
+    xp: 10,
+    description: "따뜻한 봄기운을 담은 꽃이에요."
   },
 
-  sunflower: {
-    id: "sunflower",
-    name: "해바라기",
-    icon: "🌻",
-    price: 15,
-    growth: 45,
-    reward: 28,
-    xp: 13
-  },
-
-  lavender: {
-    id: "lavender",
-    name: "라벤더",
-    icon: "💜",
-    price: 20,
-    growth: 55,
-    reward: 35,
-    xp: 16
-  },
-
-  strawberry: {
-    id: "strawberry",
-    name: "딸기",
-    icon: "🍓",
-    price: 25,
-    growth: 65,
-    reward: 45,
-    xp: 20
+  clover: {
+    id: "clover",
+    name: "행운 클로버",
+    icon: "🍀",
+    price: 14,
+    growthSeconds: 360,
+    reward: 25,
+    xp: 11,
+    description: "작은 행운이 자라는 초록 식물이에요."
   },
 
   mint: {
     id: "mint",
-    name: "민트",
+    name: "싱그러운 민트",
     icon: "🌿",
-    price: 18,
-    growth: 50,
-    reward: 32,
-    xp: 15
+    price: 16,
+    growthSeconds: 420,
+    reward: 29,
+    xp: 13,
+    description: "보기만 해도 산뜻한 향기가 날 것 같아요."
+  },
+
+  lavender: {
+    id: "lavender",
+    name: "보랏빛 라벤더",
+    icon: "🪻",
+    price: 20,
+    growthSeconds: 480,
+    reward: 35,
+    xp: 15,
+    description: "차분한 보랏빛으로 정원을 채워요."
+  },
+
+  sunflower: {
+    id: "sunflower",
+    name: "햇살 해바라기",
+    icon: "🌻",
+    price: 22,
+    growthSeconds: 540,
+    reward: 40,
+    xp: 17,
+    description: "햇빛을 향해 고개를 드는 커다란 꽃이에요."
+  },
+
+  strawberry: {
+    id: "strawberry",
+    name: "달콤 딸기",
+    icon: "🍓",
+    price: 25,
+    growthSeconds: 600,
+    reward: 48,
+    xp: 20,
+    description: "꽃이 피고 나면 빨간 열매를 맺어요."
+  },
+
+  cosmos: {
+    id: "cosmos",
+    name: "가을 코스모스",
+    icon: "🌸",
+    price: 28,
+    growthSeconds: 660,
+    reward: 54,
+    xp: 22,
+    description: "바람에 살랑이는 가벼운 꽃잎이 예뻐요."
+  },
+
+  bluebell: {
+    id: "bluebell",
+    name: "하늘종꽃",
+    icon: "🩵",
+    price: 32,
+    growthSeconds: 720,
+    reward: 62,
+    xp: 24,
+    description: "맑은 하늘색 꽃이 방울처럼 피어나요."
+  },
+
+  rose: {
+    id: "rose",
+    name: "분홍 장미",
+    icon: "🌹",
+    price: 36,
+    growthSeconds: 840,
+    reward: 72,
+    xp: 27,
+    description: "정성껏 돌보면 아름다운 꽃을 피워요."
   },
 
   moonflower: {
     id: "moonflower",
     name: "달빛꽃",
     icon: "🌙",
-    price: 40,
-    growth: 80,
-    reward: 75,
-    xp: 30
+    price: 45,
+    growthSeconds: 960,
+    reward: 88,
+    xp: 32,
+    description: "오래 기다린 뒤 만나는 신비로운 꽃이에요."
   }
 };
 
@@ -548,6 +651,10 @@ let last = 0;
 
 let walkBlend = 0;
 let walkPhase = 0;
+
+const GARDEN_PLOT_COUNT = 8;
+let gardenRoot = null;
+let gardenGrowthTimer = null;
 
 const colors = {
   lavender: 0xb7a5e5,
@@ -791,7 +898,258 @@ const r1 = box(
 );
 
 r1.rotation.z = 0.52;
+const r2 = box(
+  house,
+  1.3,
+  2.45,
+  0,
+  3.2,
+  0.2,
+  4.8,
+  m.roof2
+);
 
+r2.rotation.z = -0.52;
+
+box(
+  house,
+  0,
+  0.85,
+  2.04,
+  1,
+  1.65,
+  0.15,
+  m.wood
+);
+
+ball(
+  house,
+  0.3,
+  0.85,
+  2.15,
+  0.06,
+  0.06,
+  0.04,
+  m.gold
+);
+
+for (const x of [-1.6, 1.6]) {
+  box(
+    house,
+    x,
+    1.35,
+    2.05,
+    0.8,
+    0.7,
+    0.12,
+    M(0x9cced8)
+  );
+
+  box(
+    house,
+    x,
+    1.35,
+    2.12,
+    0.07,
+    0.7,
+    0.04,
+    m.white
+  );
+
+  box(
+    house,
+    x,
+    1.35,
+    2.12,
+    0.8,
+    0.07,
+    0.04,
+    m.white
+  );
+}
+
+/* 나무 */
+
+function tree(x, z, s = 1) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+  g.scale.setScalar(s);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.2,
+      0.28,
+      1.5,
+      10
+    ),
+    m.wood,
+    g,
+    0,
+    0.75,
+    0
+  );
+
+  ball(
+    g,
+    0,
+    1.95,
+    0,
+    0.95,
+    1.05,
+    0.9,
+    m.leaf
+  );
+
+  ball(
+    g,
+    -0.52,
+    1.75,
+    0.02,
+    0.7,
+    0.75,
+    0.7,
+    m.leaf2
+  );
+
+  ball(
+    g,
+    0.55,
+    1.8,
+    -0.03,
+    0.7,
+    0.8,
+    0.7,
+    m.leaf3
+  );
+
+  ball(
+    g,
+    -0.15,
+    2.48,
+    0.1,
+    0.62,
+    0.68,
+    0.6,
+    m.leaf2
+  );
+}
+
+[
+  [-10, -8, 1.2],
+  [-9, 1, 0.9],
+  [-10, 7, 1.1],
+  [10, -8, 1.2],
+  [11, -2, 0.95],
+  [10, 8, 1.1],
+  [4, -10, 0.8],
+  [-2, -12, 0.8]
+].forEach(a => tree(...a));
+
+/* 꽃 */
+
+const flowerGroups = [];
+
+function flower(
+  x,
+  z,
+  color,
+  scale = 1
+) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+  g.scale.setScalar(scale);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.025,
+      0.04,
+      0.42,
+      7
+    ),
+    M(0x6f9d68),
+    g,
+    0,
+    0.22,
+    0
+  );
+
+  for (let i = 0; i < 5; i++) {
+    const a =
+      i * Math.PI * 2 / 5;
+
+    ball(
+      g,
+      Math.cos(a) * 0.14,
+      0.46,
+      Math.sin(a) * 0.14,
+      0.12,
+      0.08,
+      0.12,
+      color
+    );
+  }
+
+  ball(
+    g,
+    0,
+    0.48,
+    0,
+    0.075,
+    0.07,
+    0.075,
+    m.gold
+  );
+
+  flowerGroups.push(g);
+}
+
+function bed(x, z) {
+  box(
+    scene,
+    x,
+    0.08,
+    z,
+    4.1,
+    0.17,
+    2.1,
+    M(0x7c9d68)
+  );
+
+  box(
+    scene,
+    x,
+    0.17,
+    z,
+    3.8,
+    0.1,
+    1.8,
+    M(0x80624c)
+  );
+
+  const cs = [
+    m.pinks,
+    m.yellow,
+    m.white,
+    m.lilac
+  ];
+
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 2; j++) {
+      flower(
+        x - 1.5 + i * 0.75,
+        z - 0.45 + j * 0.85,
+        cs[(i + j) % 4],
+        0.72
+      );
+    }
+  }
+}
 const r2 = box(
   house,
   1.3,
@@ -1691,7 +2049,456 @@ function createPetModel(petId) {
     0.02,
     m.pink
   );
+  );
 
+  o.rotation.y = rot;
+}
+
+for (let i = 0; i < 7; i++) {
+  steppingStone(
+    -2.6 + i * 0.78,
+    7.2 + Math.sin(i * 0.55) * 0.18,
+    i * 0.2
+  );
+
+  steppingStone(
+    3.1 + i * 0.65,
+    -4.2 + Math.sin(i * 0.7) * 0.22,
+    i * 0.17
+  );
+}
+
+/* 버섯 */
+
+function mushroom(x, z, s = 1) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+  g.scale.setScalar(s);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.12,
+      0.16,
+      0.42,
+      10
+    ),
+    M(0xffefdc),
+    g,
+    0,
+    0.21,
+    0
+  );
+
+  ball(
+    g,
+    0,
+    0.45,
+    0,
+    0.36,
+    0.19,
+    0.35,
+    M(0xe995a7)
+  );
+}
+
+mushroom(-8, 4, 0.8);
+mushroom(-4, -3, 0.7);
+mushroom(9, -3, 0.9);
+mushroom(5, 8, 0.65);
+
+/* 우편함 */
+
+function mailbox(x, z) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.055,
+      0.07,
+      1.1,
+      8
+    ),
+    m.wood,
+    g,
+    0,
+    0.55,
+    0
+  );
+
+  box(
+    g,
+    0,
+    1.15,
+    0,
+    0.65,
+    0.48,
+    0.42,
+    M(0xd58c9a)
+  );
+
+  box(
+    g,
+    0,
+    1.18,
+    0.22,
+    0.3,
+    0.08,
+    0.025,
+    m.cream
+  );
+}
+
+mailbox(-2.8, -4.2);
+
+/* 표지판 */
+
+function signpost(
+  x,
+  z,
+  labelColor = 0xe9b6c6
+) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.06,
+      0.08,
+      1.5,
+      8
+    ),
+    m.wood,
+    g,
+    0,
+    0.75,
+    0
+  );
+
+  box(
+    g,
+    0,
+    1.35,
+    0,
+    0.95,
+    0.48,
+    0.13,
+    M(labelColor)
+  );
+}
+
+signpost(3.6, -3.7);
+signpost(-8, 0, 0xb8c9e8);
+
+/* =========================================================
+   캐릭터
+========================================================= */
+
+const avatar = new THREE.Group();
+scene.add(avatar);
+
+const limbs = [];
+
+const avatarShadow = add(
+  new THREE.CircleGeometry(0.65, 24),
+  new THREE.MeshBasicMaterial({
+    color: 0x536d4b,
+    transparent: true,
+    opacity: 0.16
+  }),
+  avatar,
+  0,
+  0.025,
+  0
+);
+
+avatarShadow.rotation.x = -Math.PI / 2;
+
+const characterLoader = new GLTFLoader();
+
+const characterUrls = [
+  "https://cdn.jsdelivr.net/gh/boyoung0819/mongle-mind@main/components/village/character.glb",
+  "https://raw.githubusercontent.com/boyoung0819/mongle-mind/main/components/village/character.glb"
+];
+
+let loadedCharacter = null;
+
+function loadOriginalCharacter(urlIndex = 0) {
+  if (urlIndex >= characterUrls.length) {
+    console.error(
+      "모든 주소에서 character.glb를 불러오지 못했습니다."
+    );
+
+    toast(
+      "캐릭터 파일을 불러오지 못했어요."
+    );
+
+    return;
+  }
+
+  characterLoader.load(
+    characterUrls[urlIndex],
+    gltf => {
+      loadedCharacter = gltf.scene;
+
+      const bounds =
+        new THREE.Box3().setFromObject(
+          loadedCharacter
+        );
+
+      const size =
+        bounds.getSize(
+          new THREE.Vector3()
+        );
+
+      const center =
+        bounds.getCenter(
+          new THREE.Vector3()
+        );
+
+      const height =
+        Math.max(size.y, 0.001);
+
+      loadedCharacter.scale.setScalar(
+        3 / height
+      );
+
+      loadedCharacter.position.set(
+        -center.x *
+          loadedCharacter.scale.x,
+
+        -bounds.min.y *
+          loadedCharacter.scale.y,
+
+        -center.z *
+          loadedCharacter.scale.z
+      );
+
+      loadedCharacter.userData.walkBaseY =
+        loadedCharacter.position.y;
+
+      loadedCharacter.userData.walkBaseRotationX =
+        loadedCharacter.rotation.x;
+
+      loadedCharacter.userData.walkBaseRotationZ =
+        loadedCharacter.rotation.z;
+
+      loadedCharacter.traverse(obj => {
+        if (!obj.isMesh) return;
+
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      });
+
+      avatar.add(loadedCharacter);
+    },
+
+    undefined,
+
+    error => {
+      console.warn(
+        "캐릭터 로드 실패",
+        error
+      );
+
+      loadOriginalCharacter(
+        urlIndex + 1
+      );
+    }
+  );
+}
+
+loadOriginalCharacter();
+
+/* =========================================================
+   펫 3D 모델
+========================================================= */
+
+const pet = new THREE.Group();
+scene.add(pet);
+
+let petBodyGroup = null;
+
+function clearGroup(group) {
+  while (group.children.length) {
+    const child = group.children.pop();
+
+    child.traverse(obj => {
+      if (obj.geometry) {
+        obj.geometry.dispose();
+      }
+
+      if (obj.material) {
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach(m => m.dispose());
+        } else {
+          obj.material.dispose();
+        }
+      }
+    });
+  }
+}
+
+function createPetModel(petId) {
+  clearGroup(pet);
+
+  const data =
+    PETS[petId] || PETS.bunny;
+
+  petBodyGroup =
+    new THREE.Group();
+
+  pet.add(petBodyGroup);
+
+  const bodyMat =
+    M(data.color);
+
+  const earMat =
+    M(data.earColor);
+
+  /* 몸 */
+
+  ball(
+    petBodyGroup,
+    0,
+    0.42,
+    0,
+    0.45,
+    0.36,
+    0.4,
+    bodyMat
+  );
+
+  /* 머리 */
+
+  ball(
+    petBodyGroup,
+    0,
+    0.78,
+    -0.02,
+    0.34,
+    0.32,
+    0.32,
+    bodyMat
+  );
+
+  /* 귀 */
+
+  if (petId === "cat") {
+    for (const x of [-0.21, 0.21]) {
+      const ear = add(
+        new THREE.ConeGeometry(
+          0.14,
+          0.38,
+          4
+        ),
+        earMat,
+        petBodyGroup,
+        x,
+        1.05,
+        -0.02
+      );
+
+      ear.rotation.z =
+        x < 0 ? -0.25 : 0.25;
+    }
+  } else if (petId === "fox") {
+    for (const x of [-0.22, 0.22]) {
+      const ear = add(
+        new THREE.ConeGeometry(
+          0.16,
+          0.45,
+          5
+        ),
+        earMat,
+        petBodyGroup,
+        x,
+        1.05,
+        -0.02
+      );
+
+      ear.rotation.z =
+        x < 0 ? -0.2 : 0.2;
+    }
+  } else if (petId === "star") {
+    for (let i = 0; i < 5; i++) {
+      const a =
+        i * Math.PI * 2 / 5;
+
+      ball(
+        petBodyGroup,
+        Math.cos(a) * 0.25,
+        0.82 +
+          Math.sin(a) * 0.25,
+        -0.03,
+        0.13,
+        0.13,
+        0.13,
+        bodyMat
+      );
+    }
+  } else {
+    for (const x of [-0.21, 0.21]) {
+      ball(
+        petBodyGroup,
+        x,
+        1.02,
+        -0.02,
+        0.12,
+        0.22,
+        0.12,
+        earMat
+      );
+    }
+  }
+
+  /* 눈 */
+
+  for (const x of [-0.12, 0.12]) {
+    ball(
+      petBodyGroup,
+      x,
+      0.8,
+      0.28,
+      0.035,
+      0.045,
+      0.025,
+      m.dark
+    );
+  }
+
+  /* 볼 */
+
+  ball(
+    petBodyGroup,
+    -0.18,
+    0.69,
+    0.27,
+    0.055,
+    0.035,
+    0.02,
+    m.pink
+  );
+
+  ball(
+    petBodyGroup,
+    0.18,
+    0.69,
+    0.27,
+    0.055,
+    0.035,
+    0.02,
+    m.pink
+  );
   /* 꼬리 */
 
   if (petId !== "star") {
@@ -2492,6 +3299,90 @@ function renderPetUI() {
 
             ${
               h.price > 0
+                ? `<div class="mm-accessory-name">
+                    🪙 ${h.price}
+                  </div>`
+                : ""
+            }
+          </div>
+        `).join("")}
+      </div>
+
+      <div style="
+        font-weight:800;
+        font-size:13px;
+        margin:15px 0 7px;
+      ">
+        👕 옷
+      </div>
+
+      <div class="mm-pet-accessory-grid">
+        ${Object.values(PET_OUTFITS).map(o => `
+          <div
+            class="mm-accessory ${
+              acc.outfit === o.id
+                ? "active"
+                : ""
+            }"
+            data-pet-action="outfit"
+            data-accessory="${o.id}"
+          >
+            <div class="mm-accessory-icon">
+              ${o.icon}
+            </div>
+
+            <div class="mm-accessory-name">
+              ${o.name}
+            </div>
+
+            ${
+              o.price > 0
+                ? `<div class="mm-accessory-name">
+                    🪙 ${o.price}
+                  </div>`
+                : ""
+            }
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="mm-pet-section">
+      <div class="mm-pet-title">
+        <h3>🧩 펫 조각</h3>
+      </div>
+
+      ${PET_LIST.map(p => {
+        const count =
+          Number(state.petFragments[p.id] || 0);
+
+        const need =
+          p.fragmentNeed;
+
+        return `
+          <div class="mm-fragment">
+            <div>
+              ${p.icon} ${p.name}
+              <div style="font-size:11px;opacity:.65;">
+                ${count} / ${need}
+              </div>
+            </div>
+
+            <button
+              class="mm-pet-button secondary"
+              data-pet-action="craft"
+              data-pet-id="${p.id}"
+              ${count < need || owned.has(p.id) ? "disabled" : ""}
+            >
+              ${owned.has(p.id) ? "보유 중" : "조합하기"}
+            </button>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+              h.price > 0
                 ? `<div style="
                     font-size:10px;
                     opacity:.55;
@@ -2891,7 +3782,6 @@ function equipPetHat(id) {
   createPetModel(
     state.selectedPet
   );
-
   save();
 
   toast(
@@ -3253,6 +4143,700 @@ function claimQuest(id) {
 }
 
 /* =========================================================
+   나만의 정원 - 모종, 성장, 물 주기, 비료, 수확
+========================================================= */
+
+function injectGardenStyles() {
+  if ($("mongleGardenStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "mongleGardenStyles";
+  style.textContent = `
+    .mm-garden-ui {
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      margin-top:16px;
+    }
+
+    .mm-garden-landscape {
+      position:relative;
+      min-height:205px;
+      overflow:hidden;
+      isolation:isolate;
+      border:1px solid #e2eddf;
+      border-radius:24px;
+      padding:24px 26px;
+      background:linear-gradient(180deg,#dff1fb 0%,#f5f8e9 62%,#c7dfb5 63%,#b5d69f 100%);
+      box-shadow:0 12px 28px rgba(92,126,91,.12);
+    }
+
+    .mm-garden-landscape::before,
+    .mm-garden-landscape::after {
+      content:"";
+      position:absolute;
+      z-index:-1;
+      border-radius:50%;
+      pointer-events:none;
+    }
+
+    .mm-garden-landscape::before {
+      width:330px;
+      height:155px;
+      right:-30px;
+      bottom:24px;
+      background:#a9cf9b;
+      box-shadow:-180px 35px 0 12px #b8d9a8;
+    }
+
+    .mm-garden-landscape::after {
+      width:230px;
+      height:110px;
+      right:70px;
+      bottom:10px;
+      background:#8fc18a;
+      box-shadow:-240px 35px 0 12px #a5cd91;
+    }
+
+    .mm-garden-sun {
+      position:absolute;
+      top:20px;
+      right:28px;
+      width:56px;
+      height:56px;
+      display:grid;
+      place-items:center;
+      border-radius:50%;
+      background:radial-gradient(circle,#fff8cb 0 48%,#f6dc9c 72%);
+      color:#e3ae62;
+      font-size:26px;
+      box-shadow:0 0 0 10px rgba(255,248,214,.22),0 0 32px rgba(255,229,164,.45);
+      animation:mmGardenSun 5s ease-in-out infinite;
+    }
+
+    .mm-garden-cloud {
+      position:absolute;
+      color:#fff;
+      font-size:35px;
+      opacity:.8;
+      animation:mmGardenCloud 24s linear infinite;
+      pointer-events:none;
+    }
+
+    .mm-garden-cloud.one { top:24px; left:48%; }
+    .mm-garden-cloud.two { top:75px; right:22%; font-size:25px; animation-duration:31s; }
+
+    .mm-garden-banner-copy {
+      position:relative;
+      z-index:1;
+      max-width:66%;
+    }
+
+    .mm-garden-eyebrow {
+      color:#789d79;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:1.7px;
+    }
+
+    .mm-garden-banner-copy h2 {
+      margin:8px 0 6px;
+      color:#466a4d;
+      font-size:24px;
+      line-height:1.35;
+      letter-spacing:-.7px;
+    }
+
+    .mm-garden-banner-copy p {
+      max-width:390px;
+      margin:0;
+      color:#66836b;
+      font-size:11px;
+      line-height:1.7;
+    }
+
+    .mm-garden-butterfly {
+      position:absolute;
+      right:16%;
+      bottom:38px;
+      z-index:1;
+      font-size:32px;
+      filter:drop-shadow(0 5px 7px #557c5830);
+      animation:mmGardenButterfly 4.8s ease-in-out infinite;
+    }
+
+    .mm-garden-stat-row {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:9px;
+    }
+
+    .mm-garden-stat {
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:12px 13px;
+      border:1px solid #edf0e7;
+      border-radius:16px;
+      background:rgba(255,255,255,.92);
+      box-shadow:0 5px 15px rgba(78,103,74,.045);
+    }
+
+    .mm-garden-stat-icon {
+      width:36px;
+      height:36px;
+      flex:0 0 36px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background:#f0f7eb;
+      font-size:19px;
+    }
+
+    .mm-garden-stat small {
+      display:block;
+      color:#9a9c8c;
+      font-size:10px;
+    }
+
+    .mm-garden-stat b {
+      display:block;
+      margin-top:2px;
+      color:#526d50;
+      font-size:16px;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .mm-garden-panel {
+      padding:17px;
+      border:1px solid #eaece3;
+      border-radius:21px;
+      background:rgba(255,255,255,.94);
+      box-shadow:0 8px 24px rgba(81,100,75,.055);
+    }
+
+    .mm-garden-panel-head {
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:13px;
+    }
+
+    .mm-garden-panel-head h3 {
+      margin:0;
+      color:#526d50;
+      font-size:17px;
+    }
+
+    .mm-garden-panel-head p {
+      margin:4px 0 0;
+      color:#9a9d91;
+      font-size:10px;
+      line-height:1.5;
+    }
+
+    .mm-garden-hint {
+      color:#90a184;
+      font-size:10px;
+      text-align:right;
+    }
+
+    .mm-garden-plot-grid {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:11px;
+    }
+
+    .mm-garden-plot {
+      position:relative;
+      min-width:0;
+      min-height:248px;
+      overflow:hidden;
+      padding:12px;
+      border:1px solid #e6eddd;
+      border-radius:18px;
+      background:linear-gradient(180deg,#f3f8ed 0%,#e9f3e2 60%,#d8e8ca 100%);
+      transition:transform .18s,border-color .18s,box-shadow .18s;
+    }
+
+    .mm-garden-plot:hover {
+      transform:translateY(-2px);
+      border-color:#c7dcba;
+      box-shadow:0 9px 18px rgba(82,119,76,.11);
+    }
+
+    .mm-garden-plot::before {
+      content:"";
+      position:absolute;
+      left:-12%;
+      right:-12%;
+      bottom:78px;
+      height:74px;
+      border-radius:50% 50% 0 0;
+      background:linear-gradient(180deg,#c1dda9,#a7ca91);
+      opacity:.82;
+      pointer-events:none;
+    }
+
+    .mm-garden-plot-number {
+      position:relative;
+      z-index:1;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:25px;
+      height:25px;
+      padding:0 7px;
+      border-radius:99px;
+      background:rgba(255,255,255,.82);
+      color:#819478;
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .mm-garden-plot-art {
+      position:relative;
+      z-index:1;
+      height:106px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding-bottom:9px;
+    }
+
+    .mm-garden-soil {
+      position:absolute;
+      left:13%;
+      right:13%;
+      bottom:6px;
+      height:28px;
+      border-radius:50%;
+      background:radial-gradient(ellipse at 50% 35%,#9d7257 0 40%,#815e49 72%,#6d513f 100%);
+      box-shadow:0 5px 0 rgba(91,112,68,.12);
+    }
+
+    .mm-garden-plant-emoji {
+      position:relative;
+      z-index:2;
+      display:inline-block;
+      font-size:49px;
+      line-height:1;
+      transform-origin:50% 100%;
+      filter:drop-shadow(0 7px 5px rgba(65,91,54,.15));
+      animation:mmGardenSway 3.4s ease-in-out infinite;
+    }
+
+    .mm-garden-plant-emoji.stage-seed { font-size:30px; }
+    .mm-garden-plant-emoji.stage-sprout { font-size:37px; }
+    .mm-garden-plant-emoji.stage-growing { font-size:45px; }
+    .mm-garden-plant-emoji.stage-bud { font-size:53px; }
+    .mm-garden-plot-empty .mm-garden-plot-art { align-items:center; }
+
+    .mm-garden-empty-mark {
+      display:grid;
+      place-items:center;
+      width:76px;
+      height:76px;
+      border:2px dashed #bad1ad;
+      border-radius:50%;
+      color:#91af82;
+      background:#f7fbf2a8;
+      font-size:30px;
+    }
+
+    .mm-garden-plot-info {
+      position:relative;
+      z-index:1;
+      margin-top:2px;
+      text-align:center;
+    }
+
+    .mm-garden-plot-info strong {
+      display:block;
+      color:#52694f;
+      font-size:13px;
+    }
+
+    .mm-garden-plot-info small {
+      display:block;
+      min-height:16px;
+      margin-top:3px;
+      color:#87947e;
+      font-size:10px;
+    }
+
+    .mm-garden-progress {
+      height:7px;
+      overflow:hidden;
+      margin:9px 0 5px;
+      border-radius:99px;
+      background:#dce8d5;
+    }
+
+    .mm-garden-progress > span {
+      display:block;
+      height:100%;
+      border-radius:99px;
+      background:linear-gradient(90deg,#a9cc8b,#6fae78);
+      transition:width .5s ease;
+    }
+
+    .mm-garden-progress-label {
+      color:#94a08a;
+      font-size:9px;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .mm-garden-plot-actions {
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:5px;
+      margin-top:9px;
+    }
+
+    .mm-garden-action {
+      min-width:0;
+      border:1px solid #dfe9d8;
+      border-radius:9px;
+      padding:8px 3px;
+      background:#fff;
+      color:#688061;
+      font-size:10px;
+      font-weight:800;
+      cursor:pointer;
+      transition:background .16s,transform .16s;
+    }
+
+    .mm-garden-action:hover:not(:disabled) {
+      transform:translateY(-1px);
+      background:#f3f9ed;
+    }
+
+    .mm-garden-action.primary {
+      grid-column:1/-1;
+      border-color:#9fbe91;
+      background:linear-gradient(135deg,#8fb77e,#a8ca91);
+      color:white;
+    }
+
+    .mm-garden-action:disabled {
+      opacity:.43;
+      cursor:default;
+    }
+
+    .mm-garden-watering-can {
+      position:absolute;
+      top:15px;
+      right:18px;
+      z-index:5;
+      display:none;
+      font-size:27px;
+      transform-origin:70% 75%;
+      filter:drop-shadow(0 4px 3px #4f765533);
+      pointer-events:none;
+    }
+
+    .mm-garden-water-drops {
+      position:absolute;
+      top:48px;
+      right:20px;
+      z-index:5;
+      display:none;
+      color:#55b8e8;
+      font-size:17px;
+      letter-spacing:3px;
+      pointer-events:none;
+    }
+
+    .mm-garden-plot.mm-watering-active .mm-garden-watering-can {
+      display:block;
+      animation:mmGardenPour .75s ease-in-out 2;
+    }
+
+    .mm-garden-plot.mm-watering-active .mm-garden-water-drops {
+      display:block;
+      animation:mmGardenDrops .8s ease-in 2;
+    }
+
+    .mm-garden-plot.mm-fertilizing-active .mm-garden-plant-emoji {
+      animation:mmGardenSparkle .9s ease-in-out 2;
+    }
+
+    .mm-garden-plot.mm-fertilizing-active .mm-garden-plot-art::after {
+      content:"✨ ✨";
+      position:absolute;
+      top:18px;
+      color:#e6bd64;
+      font-size:17px;
+      animation:mmGardenSparkle .9s ease-in-out 2;
+    }
+
+    .mm-garden-inventory {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    <section class="mm-garden-stat-row">
+      <div class="mm-garden-stat"><span class="mm-garden-stat-icon">🪙</span><span><small>보유 코인</small><b>${state.coins}</b></span></div>
+      <div class="mm-garden-stat"><span class="mm-garden-stat-icon">🌱</span><span><small>모종 보관함</small><b>${seedTotal}개</b></span></div>
+      <div class="mm-garden-stat"><span class="mm-garden-stat-icon">🧺</span><span><small>보유 비료</small><b>${state.fertilizer}개</b></span></div>
+      <div class="mm-garden-stat"><span class="mm-garden-stat-icon">🌼</span><span><small>수확 준비</small><b>${ready}개</b></span></div>
+    </section>
+
+    <section class="mm-garden-panel">
+      <div class="mm-garden-panel-head">
+        <div><h3>🌿 나의 화단</h3><p>빈 화단에 모종을 심고 각 식물을 직접 돌봐 주세요.</p></div>
+        <span class="mm-garden-hint">총 ${GARDEN_PLOT_COUNT}개 화단 · ${growing.length}개 성장 중</span>
+      </div>
+      <div class="mm-garden-plot-grid">
+        ${state.gardenPlots.map(plot => renderGardenPlot(plot, now)).join("")}
+      </div>
+    </section>
+
+    <section class="mm-garden-panel">
+      <div class="mm-garden-panel-head">
+        <div><h3>🎒 나의 모종 보관함</h3><p>심고 싶은 모종을 선택한 다음 빈 화단의 심기 버튼을 눌러 주세요.</p></div>
+        <span class="mm-garden-hint">선택한 모종으로 심기</span>
+      </div>
+      <div class="mm-garden-inventory">
+        ${inventory || `<div class="mm-garden-empty-note">아직 보유한 모종이 없어요.<br>아래 모종 상점에서 마음에 드는 모종을 구매해 보세요.</div>`}
+      </div>
+    </section>
+
+    <section class="mm-garden-panel">
+      <div class="mm-garden-panel-head">
+        <div><h3>🪴 모종 상점</h3><p>다양한 꽃과 식물의 모종을 코인으로 구매할 수 있어요.</p></div>
+        <span class="mm-garden-hint">현재 코인 ${state.coins}</span>
+      </div>
+      <div class="mm-garden-shop-grid">${shops}</div>
+    </section>
+
+    <section class="mm-garden-panel">
+      <div class="mm-garden-panel-head">
+        <div><h3>🌾 정원 관리 도구</h3><p>비료는 식물 한 그루에 한 번 사용할 수 있어요.</p></div>
+      </div>
+      <div class="mm-garden-fertilizer-row">
+        <div><strong>🌿 성장 비료 묶음</strong><p>5개 구매 · 식물의 남은 성장 시간을 줄여 줘요.</p></div>
+        <button data-garden-action="buy-fertilizer" type="button" ${state.coins < 25 ? "disabled" : ""}>🪙 25 코인 · 구매</button>
+      </div>
+    </section>
+
+    <p class="mm-garden-footnote">식물은 화면을 닫아도 시간이 지나면 자라요. 물과 비료를 주면 더 빨리 자라고, 다 자란 식물은 수확할 수 있어요. 🌱</p>
+  `;
+}
+
+function playGardenAnimation(plotId, type) {
+  if (!gardenRoot) return;
+  const card = gardenRoot.querySelector(`.mm-garden-plot[data-plot-id="${plotId}"]`);
+  if (!card) return;
+
+  const className = type === "watering"
+    ? "mm-watering-active"
+    : "mm-fertilizing-active";
+
+  card.classList.remove("mm-watering-active", "mm-fertilizing-active");
+  void card.offsetWidth;
+  card.classList.add(className);
+
+  setTimeout(() => {
+    card.classList.remove(className);
+  }, 1800);
+}
+
+function handleGardenClick(event) {
+  const button = event.target.closest("[data-garden-action]");
+  if (!button || button.disabled) return;
+
+  const action = button.dataset.gardenAction;
+  const plotId = Number(button.dataset.plotId);
+  const plot = Number.isInteger(plotId)
+    ? state.gardenPlots[plotId]
+    : null;
+
+  if (action === "buy-seed") {
+    const plant = PLANTS[button.dataset.seedId];
+    if (!plant) return;
+
+    if (state.coins < plant.price) {
+      toast("코인이 부족해요. 마을에서 활동하고 코인을 모아 보세요.");
+      return;
+    }
+
+    state.coins -= plant.price;
+    state.gardenSeeds[plant.id] =
+      Number(state.gardenSeeds[plant.id] || 0) + 1;
+    state.selectedGardenSeed = plant.id;
+    state.stats.seedsBought++;
+    save();
+    toast(`${plant.name} 모종을 보관함에 넣었어요.`);
+    return;
+  }
+
+  if (action === "select-seed") {
+    const plantId = button.dataset.seedId;
+    if (!PLANTS[plantId] || Number(state.gardenSeeds[plantId] || 0) <= 0) {
+      toast("선택할 수 있는 모종이 없어요.");
+      return;
+    }
+    state.selectedGardenSeed = plantId;
+    save();
+    return;
+  }
+
+  if (action === "buy-fertilizer") {
+    const price = 25;
+    if (state.coins < price) {
+      toast("비료를 구매할 코인이 부족해요.");
+      return;
+    }
+    state.coins -= price;
+    state.fertilizer += 5;
+    save();
+    toast("성장 비료 5개를 구매했어요.");
+    return;
+  }
+
+  if (!plot) return;
+
+  if (action === "plant") {
+    const seedId = state.selectedGardenSeed;
+    const plant = PLANTS[seedId];
+    if (plot.seedId) {
+      toast("이미 식물이 자라고 있는 화단이에요.");
+      return;
+    }
+    if (!plant || Number(state.gardenSeeds[seedId] || 0) <= 0) {
+      toast("먼저 모종 상점에서 모종을 구매하거나 보관함에서 골라 주세요.");
+      return;
+    }
+
+    state.gardenSeeds[seedId]--;
+    if (state.gardenSeeds[seedId] <= 0) {
+      delete state.gardenSeeds[seedId];
+      if (state.selectedGardenSeed === seedId) {
+        state.selectedGardenSeed =
+          Object.keys(PLANTS).find(id => Number(state.gardenSeeds[id] || 0) > 0) || null;
+      }
+    }
+
+    plot.seedId = seedId;
+    plot.plantedAt = Date.now();
+    plot.growthBonus = 0;
+    plot.waterCount = 0;
+    plot.fertilizerCount = 0;
+    plot.lastWateredAt = 0;
+    state.stats.seedsPlanted++;
+    save();
+    toast(`${plant.name} 모종을 심었어요. 이제 조금씩 자랄 거예요!`);
+    return;
+  }
+
+  const progress = getGardenProgress(plot);
+  const plant = progress.plant;
+
+  if (!plant) {
+    toast("먼저 빈 화단에 모종을 심어 주세요.");
+    return;
+  }
+
+  if (action === "water") {
+    if (progress.ready) {
+      toast("식물이 다 자랐어요. 수확해 주세요!");
+      return;
+    }
+    if (Number(plot.waterCount || 0) >= 3) {
+      toast("이 식물은 물 주기를 충분히 받았어요.");
+      return;
+    }
+    const cooldown = 45000 - (Date.now() - (Number(plot.lastWateredAt) || 0));
+    if (cooldown > 0) {
+      toast(`${Math.ceil(cooldown / 1000)}초 뒤에 다시 물을 줄 수 있어요.`);
+      return;
+    }
+
+    plot.growthBonus =
+      (Number(plot.growthBonus) || 0) +
+      Math.round(plant.growthSeconds * 1000 * 0.12);
+    plot.waterCount = Number(plot.waterCount || 0) + 1;
+    plot.lastWateredAt = Date.now();
+    state.stats.waters++;
+    state.watered = true;
+    xp(2);
+    save();
+    playGardenAnimation(plotId, "watering");
+    toast(`${plant.name}에 물을 주었어요. 💧 잎이 촉촉해졌어요!`);
+    return;
+  }
+
+  if (action === "fertilize") {
+    if (progress.ready) {
+      toast("이미 다 자란 식물이에요. 수확해 주세요!");
+      return;
+    }
+    if (Number(plot.fertilizerCount || 0) >= 1) {
+      toast("이 식물에는 이미 비료를 주었어요.");
+      return;
+    }
+    if (state.fertilizer <= 0) {
+      toast("비료가 부족해요. 정원 관리 도구에서 구매해 주세요.");
+      return;
+    }
+
+    state.fertilizer--;
+    plot.fertilizerCount = 1;
+    plot.growthBonus =
+      (Number(plot.growthBonus) || 0) +
+      Math.round(plant.growthSeconds * 1000 * 0.22);
+    state.stats.fertilizers++;
+    xp(3);
+    save();
+    playGardenAnimation(plotId, "fertilizing");
+    toast(`${plant.name}에 영양분을 주었어요. ✨ 더 건강하게 자랄 거예요!`);
+    return;
+  }
+
+  if (action === "harvest") {
+    if (!progress.ready) {
+      toast("조금만 더 기다리면 수확할 수 있어요.");
+      return;
+    }
+
+    state.flowers++;
+    state.coins += plant.reward;
+    state.stats.harvests++;
+    xp(plant.xp);
+
+    state.gardenPlots[plotId] = {
+      id: plotId,
+      seedId: null,
+      plantedAt: 0,
+      growthBonus: 0,
+      waterCount: 0,
+      fertilizerCount: 0,
+      lastWateredAt: 0
+    };
+
+    save();
+    toast(`${plant.name} 수확 완료! 코인 +${plant.reward} · 경험치 +${plant.xp}`);
+  }
+}
+
+function startGardenGrowthTicker() {
+  if (gardenGrowthTimer) return;
+
+  gardenGrowthTimer = setInterval(() => {
+    const screen = document.querySelector('[data-screen="garden"]');
+    if (screen && !screen.hidden) {
+      renderGardenUI();
+    }
+  }, 1000);
+}
+
+/* =========================================================
    UI
 ========================================================= */
 
@@ -3387,6 +4971,7 @@ function updateUI() {
 
   renderPetUI();
   renderQuestUI();
+  renderGardenUI();
 }
 
 /* =========================================================
@@ -3745,6 +5330,10 @@ function showPage(page) {
     );
   }
 
+  if (page === "garden") {
+    requestAnimationFrame(() => renderGardenUI());
+  }
+
   if (
     page === "home"
   ) {
@@ -3792,743 +5381,5 @@ document
 /* =========================================================
    정원
 ========================================================= */
-
-const gardenWater =
-  $("gardenWater");
-
-if (gardenWater) {
-  gardenWater.addEventListener(
-    "click",
-    () => {
-      showPage(
-        "garden"
-      );
-    }
-  );
-}
-
-/* =========================================================
-   방
-========================================================= */
-
-document
-  .querySelectorAll(
-    "[data-room-decor]"
-  )
-  .forEach(b => {
-    b.addEventListener(
-      "click",
-      () => {
-        state.roomDecor =
-          b.dataset.roomDecor;
-
-        save();
-
-        toast(
-          "방 분위기를 바꿨어요."
-        );
-      }
-    );
-  });
-
-/* =========================================================
-   마음 기록
-========================================================= */
-
-const journalInput =
-  $("journalText");
-
-const journalSave =
-  $("journalSave");
-
-if (journalInput) {
-  journalInput.value =
-    state.journalText ||
-    "";
-}
-
-if (journalSave) {
-  journalSave.addEventListener(
-    "click",
-    () => {
-      state.journalText =
-        journalInput
-          ? journalInput.value.slice(
-              0,
-              1200
-            )
-          : "";
-
-      state.journalDate =
-        new Date().toLocaleDateString(
-          "ko-KR"
-        );
-
-      state.stats.journals++;
-
-      save();
-
-      toast(
-        "오늘의 마음을 기록했어요."
-      );
-    }
-  );
-}
-
-/* =========================================================
-   호흡
-========================================================= */
-
-showPage(
-  state.nav || "home"
-);
-
-function stopBreath() {
-  breathing =
-    false;
-
-  clearTimeout(
-    breathTimer
-  );
-
-  const box =
-    $("breathBox");
-
-  if (box) {
-    box.hidden = true;
-  }
-
-  const label =
-    $("breathLabel");
-
-  if (label) {
-    label.textContent =
-      "함께 천천히 호흡하기";
-  }
-
-  const circle =
-    $("breathCircle");
-
-  if (circle) {
-    circle.classList.remove(
-      "expand"
-    );
-  }
-}
-
-const breathBtn =
-  $("breathBtn");
-
-if (breathBtn) {
-  breathBtn.onclick =
-    () => {
-      if (breathing) {
-        stopBreath();
-        return;
-      }
-
-      breathing =
-        true;
-
-      breathStep =
-        0;
-
-      $("breathBox").hidden =
-        false;
-
-      $("breathLabel").textContent =
-        "호흡 활동 진행 중";
-
-      $("breathInstruction").textContent =
-        "편안한 만큼만 따라 해요. 언제든 그만할 수 있어요.";
-
-      const c =
-        $("breathCircle");
-
-      const t =
-        $("breathText");
-
-      const steps = [
-        [
-          "천천히 들이쉬어요",
-          true
-        ],
-
-        [
-          "편안하게 내쉬어요",
-          false
-        ]
-      ];
-
-      function tick() {
-        if (!breathing) return;
-
-        const s =
-          steps[
-            breathStep++ %
-              2
-          ];
-
-        t.textContent =
-          s[0];
-
-        c.classList.toggle(
-          "expand",
-          s[1]
-        );
-
-        breathTimer =
-          setTimeout(
-            tick,
-            4000
-          );
-      }
-
-      tick();
-
-      breathTimer =
-        setTimeout(
-          () => {
-            if (!breathing) {
-              return;
-            }
-
-            state.stats.breaths++;
-
-            save();
-
-            stopBreath();
-
-            toast(
-              "호흡 활동을 끝까지 완료했어요. ✨ 별빛 퀘스트에 반영됐어요!"
-            );
-          },
-          30000
-        );
-    };
-}
-
-const stopBreathButton =
-  $("stopBreath");
-
-if (stopBreathButton) {
-  stopBreathButton.onclick =
-    stopBreath;
-}
-
-/* =========================================================
-   키보드 이동
-========================================================= */
-
-window.addEventListener(
-  "keydown",
-  e => {
-    keys[
-      e.key.toLowerCase()
-    ] = true;
-
-    if (
-      [
-        "ArrowUp",
-        "ArrowDown",
-        "ArrowLeft",
-        "ArrowRight",
-        " "
-      ].includes(e.key)
-    ) {
-      e.preventDefault();
-    }
-
-    if (
-      e.key.toLowerCase() ===
-        "e" &&
-      $("dialog").hidden
-    ) {
-      interact();
-    }
-
-    if (
-      e.key === "Escape"
-    ) {
-      closeDialog();
-    }
-  }
-);
-
-window.addEventListener(
-  "keyup",
-  e =>
-    keys[
-      e.key.toLowerCase()
-    ] = false
-);
-
-window.addEventListener(
-  "blur",
-  () =>
-    keys = {}
-);
-
-/* =========================================================
-   화면 이동 버튼
-========================================================= */
-
-document
-  .querySelectorAll(
-    ".touch-pad button"
-  )
-  .forEach(b => {
-    const k =
-      b.dataset.k.toLowerCase();
-
-    const start = e => {
-      e.preventDefault();
-      keys[k] = true;
-    };
-
-    const end = e => {
-      e.preventDefault();
-      keys[k] = false;
-    };
-
-    b.addEventListener(
-      "pointerdown",
-      start
-    );
-
-    b.addEventListener(
-      "pointerup",
-      end
-    );
-
-    b.addEventListener(
-      "pointerleave",
-      end
-    );
-
-    b.addEventListener(
-      "pointercancel",
-      end
-    );
-  });
-
-/* =========================================================
-   마우스 클릭 이동
-========================================================= */
-
-renderer.domElement.addEventListener(
-  "pointerdown",
-  e => {
-    const r =
-      renderer.domElement.getBoundingClientRect();
-
-    const ray =
-      new THREE.Raycaster();
-
-    ray.setFromCamera(
-      new THREE.Vector2(
-        (e.clientX - r.left) /
-            r.width *
-            2 -
-          1,
-
-        -(
-          (e.clientY - r.top) /
-            r.height *
-            2 -
-          1
-        )
-      ),
-      camera
-    );
-
-    const p =
-      new THREE.Vector3();
-
-    if (
-      ray.ray.intersectPlane(
-        new THREE.Plane(
-          new THREE.Vector3(
-            0,
-            1,
-            0
-          ),
-          0
-        ),
-        p
-      )
-    ) {
-      avatar.userData.dest =
-        new THREE.Vector3(
-          THREE.MathUtils.clamp(
-            p.x,
-            -13,
-            13
-          ),
-          0,
-          THREE.MathUtils.clamp(
-            p.z,
-            -13,
-            13
-          )
-        );
-    }
-  }
-);
-
-/* =========================================================
-   초기 위치
-========================================================= */
-
-avatar.position.set(
-  THREE.MathUtils.clamp(
-    state.x,
-    -13,
-    13
-  ),
-  0,
-  THREE.MathUtils.clamp(
-    state.z,
-    -13,
-    13
-  )
-);
-
-if (state.foundShell) {
-  shell.visible =
-    false;
-}
-
-updateUI();
-
-/* =========================================================
-   화면 크기
-========================================================= */
-
-function resize() {
-  const w =
-    Math.max(
-      root.clientWidth,
-      320
-    );
-
-  const h =
-    Math.max(
-      root.clientHeight,
-      320
-    );
-
-  renderer.setSize(
-    w,
-    h,
-    false
-  );
-
-  camera.aspect =
-    w / h;
-
-  camera.updateProjectionMatrix();
-}
-
-new ResizeObserver(
-  resize
-).observe(root);
-
-resize();
-
-/* =========================================================
-   자동 UI 갱신
-========================================================= */
-
-setInterval(() => {
-  if (
-    state.nav ===
-      "dress" ||
-    state.nav ===
-      "quests"
-  ) {
-    updateUI();
-  }
-}, 2000);
-
-/* =========================================================
-   게임 루프
-========================================================= */
-
-function animate(t) {
-  requestAnimationFrame(
-    animate
-  );
-
-  const dt =
-    Math.min(
-      (t - last) / 1000 || 0,
-      0.05
-    );
-
-  last = t;
-
-  let moving =
-    false;
-
-  if (
-    $("dialog").hidden
-  ) {
-    let dx = 0;
-    let dz = 0;
-
-    if (
-      keys.arrowleft ||
-      keys.a
-    ) {
-      dx--;
-    }
-
-    if (
-      keys.arrowright ||
-      keys.d
-    ) {
-      dx++;
-    }
-
-    if (
-      keys.arrowup ||
-      keys.w
-    ) {
-      dz--;
-    }
-
-    if (
-      keys.arrowdown ||
-      keys.s
-    ) {
-      dz++;
-    }
-
-    if (
-      avatar.userData.dest
-    ) {
-      const v =
-        avatar.userData.dest
-          .clone()
-          .sub(
-            avatar.position
-          );
-
-      v.y = 0;
-
-      if (
-        v.length() < 0.2
-      ) {
-        avatar.userData.dest =
-          null;
-      } else {
-        v.normalize();
-
-        dx = v.x;
-        dz = v.z;
-      }
-    }
-
-    if (dx || dz) {
-      const len =
-        Math.hypot(
-          dx,
-          dz
-        );
-
-      dx /= len;
-      dz /= len;
-
-      moving =
-        true;
-
-      avatar.position.x =
-        THREE.MathUtils.clamp(
-          avatar.position.x +
-            dx * dt * 4,
-          -13,
-          13
-        );
-
-      avatar.position.z =
-        THREE.MathUtils.clamp(
-          avatar.position.z +
-            dz * dt * 4,
-          -13,
-          13
-        );
-
-      avatar.rotation.y =
-        Math.atan2(
-          dx,
-          dz
-        );
-
-      limbs.forEach(
-        l => {
-          l.o.rotation.x =
-            Math.sin(
-              t * 0.012
-            ) *
-            (
-              l.kind ===
-              "leg"
-                ? 0.45
-                : 0.22
-            ) *
-            l.side;
-        }
-      );
-    } else {
-      limbs.forEach(
-        l =>
-          l.o.rotation.x =
-            0
-      );
-    }
-  }
-
-  /* 캐릭터 걷기 */
-
-  walkBlend =
-    THREE.MathUtils.damp(
-      walkBlend,
-      moving ? 1 : 0,
-      8,
-      dt
-    );
-
-  if (moving) {
-    walkPhase +=
-      dt * 8;
-  }
-
-  if (loadedCharacter) {
-    const baseY =
-      loadedCharacter
-        .userData
-        .walkBaseY ??
-      loadedCharacter.position.y;
-
-    const baseRotX =
-      loadedCharacter
-        .userData
-        .walkBaseRotationX ??
-      0;
-
-    const baseRotZ =
-      loadedCharacter
-        .userData
-        .walkBaseRotationZ ??
-      0;
-
-    const bounce =
-      Math.abs(
-        Math.sin(
-          walkPhase * 2
-        )
-      ) *
-      0.055 *
-      walkBlend;
-
-    const idle =
-      Math.sin(
-        t * 0.0018
-      ) *
-      0.009 *
-      (1 - walkBlend);
-
-    loadedCharacter.position.y =
-      baseY +
-      bounce +
-      idle;
-
-    loadedCharacter.rotation.x =
-      baseRotX -
-      0.018 *
-        walkBlend;
-
-    loadedCharacter.rotation.z =
-      baseRotZ +
-      Math.sin(
-        walkPhase
-      ) *
-      0.025 *
-      walkBlend;
-  }
-
-  avatar.position.y =
-    0;
-
-  /* 펫 따라오기 */
-
-  pet.position.set(
-    avatar.position.x +
-      0.9,
-
-    Math.abs(
-      Math.sin(
-        t * 0.003
-      )
-    ) *
-      0.05,
-
-    avatar.position.z +
-      1
-  );
-
-  pet.rotation.y =
-    Math.sin(
-      t * 0.001
-    ) *
-    0.15;
-
-  /* 카메라 */
-
-  camera.position.lerp(
-    new THREE.Vector3(
-      avatar.position.x,
-      6.5,
-      avatar.position.z +
-        27
-    ),
-    0.055
-  );
-
-  camera.lookAt(
-    avatar.position.x,
-    1.45,
-    avatar.position.z -
-      1
-  );
-
-  const near =
-    target();
-
-  if (sceneStatus) {
-    sceneStatus.textContent =
-      near
-        ? `E · ${near.label}`
-        : "나만의 속도로 산책해요";
-  }
-
-  /* 저장 */
-
-  state.x =
-    avatar.position.x;
-
-  state.z =
-    avatar.position.z;
-
-  renderer.render(
-    scene,
-    camera
-  );
-}
-
-requestAnimationFrame(
-  animate
-);
 
 })();
