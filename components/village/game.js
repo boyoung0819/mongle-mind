@@ -3081,10 +3081,7 @@ function renderQuestUI() {
           )
         );
 
-      const claimed =
-        state.questClaims.includes(
-          q.id
-        );
+     const claimed = false;
 
       const completed =
         progress >= q.goal;
