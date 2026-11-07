@@ -3793,20 +3793,1790 @@ document
    정원
 ========================================================= */
 
+const GARDEN_PLANTS = {
+  tulip: {
+    name: "튤립",
+    icon: "🌷",
+    price: 10,
+    growth: 30,
+    reward: 20,
+    xp: 10
+  },
+
+  sunflower: {
+    name: "해바라기",
+    icon: "🌻",
+    price: 15,
+    growth: 45,
+    reward: 28,
+    xp: 13
+  },
+
+  lavender: {
+    name: "라벤더",
+    icon: "💜",
+    price: 20,
+    growth: 55,
+    reward: 35,
+    xp: 16
+  },
+
+  strawberry: {
+    name: "딸기",
+    icon: "🍓",
+    price: 25,
+    growth: 65,
+    reward: 45,
+    xp: 20
+  },
+
+  mint: {
+    name: "민트",
+    icon: "🌿",
+    price: 18,
+    growth: 50,
+    reward: 32,
+    xp: 15
+  },
+
+  moonflower: {
+    name: "달빛꽃",
+    icon: "🌙",
+    price: 40,
+    growth: 80,
+    reward: 75,
+    xp: 30
+  },
+
+  daisy: {
+    name: "데이지",
+    icon: "🌼",
+    price: 8,
+    growth: 25,
+    reward: 16,
+    xp: 8
+  },
+
+  cosmos: {
+    name: "코스모스",
+    icon: "🌸",
+    price: 22,
+    growth: 60,
+    reward: 42,
+    xp: 18
+  },
+
+  hydrangea: {
+    name: "수국",
+    icon: "🪻",
+    price: 30,
+    growth: 70,
+    reward: 55,
+    xp: 24
+  },
+
+  tomato: {
+    name: "방울토마토",
+    icon: "🍅",
+    price: 28,
+    growth: 75,
+    reward: 60,
+    xp: 26
+  },
+
+  clover: {
+    name: "네잎클로버",
+    icon: "☘️",
+    price: 45,
+    growth: 90,
+    reward: 90,
+    xp: 35
+  }
+};
+
+
+/* =========================================================
+   정원 기본 상태
+========================================================= */
+
+const GARDEN_PLOT_COUNT = 8;
+
+if (!Array.isArray(state.gardenPlots)) {
+  state.gardenPlots = [];
+}
+
+while (
+  state.gardenPlots.length <
+  GARDEN_PLOT_COUNT
+) {
+  state.gardenPlots.push({
+    id:
+      state.gardenPlots.length,
+    plant: null,
+    plantedAt: 0,
+    watered: 0,
+    fertilized: false
+  });
+}
+
+if (
+  typeof state.gardenSeeds !==
+  "object" ||
+  state.gardenSeeds === null
+) {
+  state.gardenSeeds = {};
+}
+
+if (
+  typeof state.fertilizer !==
+  "number"
+) {
+  state.fertilizer = 3;
+}
+
+
+/* =========================================================
+   정원 스타일
+========================================================= */
+
+function installGardenStyle() {
+
+  if (
+    document.getElementById(
+      "mongleGardenStyle"
+    )
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+  style.id =
+    "mongleGardenStyle";
+
+  style.textContent = `
+
+    .mongle-garden {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 22px;
+      border-radius: 28px;
+      background:
+        linear-gradient(
+          180deg,
+          #f9fff5 0%,
+          #f1f8ec 100%
+        );
+      border: 1px solid #e0ead9;
+      box-shadow:
+        0 18px 50px
+        rgba(74, 103, 63, .10);
+    }
+
+    .garden-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .garden-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #3e5137;
+    }
+
+    .garden-subtitle {
+      margin-top: 5px;
+      color: #7b8975;
+      font-size: 14px;
+    }
+
+    .garden-resource {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .garden-pill {
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid #e0e8da;
+      font-weight: 700;
+      color: #52634b;
+    }
+
+    .garden-shop {
+      margin-bottom: 22px;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid #e4eadf;
+    }
+
+    .garden-shop-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #46563f;
+      margin-bottom: 13px;
+    }
+
+    .garden-seeds {
+      display: grid;
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(135px, 1fr)
+        );
+      gap: 10px;
+    }
+
+    .garden-seed-card {
+      border: 1px solid #e2e9de;
+      background: #fff;
+      border-radius: 18px;
+      padding: 13px;
+      cursor: pointer;
+      transition:
+        transform .16s ease,
+        box-shadow .16s ease,
+        border-color .16s ease;
+    }
+
+    .garden-seed-card:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 20px
+        rgba(65, 89, 57, .10);
+      border-color: #b8caa9;
+    }
+
+    .garden-seed-icon {
+      font-size: 30px;
+      margin-bottom: 5px;
+    }
+
+    .garden-seed-name {
+      font-weight: 800;
+      color: #485743;
+    }
+
+    .garden-seed-info {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #899384;
+      line-height: 1.5;
+    }
+
+    .garden-seed-buy {
+      width: 100%;
+      margin-top: 9px;
+      border: 0;
+      border-radius: 11px;
+      padding: 8px;
+      background: #eef5e9;
+      color: #52664a;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .garden-field {
+      padding: 20px;
+      border-radius: 24px;
+      background:
+        linear-gradient(
+          145deg,
+          #dbeccf,
+          #c8dfb8
+        );
+      border: 1px solid #bfd5af;
+    }
+
+    .garden-field-title {
+      font-weight: 800;
+      color: #52664a;
+      margin-bottom: 14px;
+    }
+
+    .garden-plots {
+      display: grid;
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(180px, 1fr)
+        );
+      gap: 14px;
+    }
+
+    .garden-plot {
+      min-height: 210px;
+      padding: 15px;
+      border-radius: 21px;
+      background:
+        linear-gradient(
+          180deg,
+          #a9794f,
+          #93643e
+        );
+      border: 3px solid
+        rgba(255,255,255,.35);
+      box-shadow:
+        inset 0 4px 0
+        rgba(255,255,255,.08),
+        0 8px 18px
+        rgba(72, 61, 43, .15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .garden-plot.empty {
+      cursor: pointer;
+    }
+
+    .garden-plot.empty:hover {
+      transform: translateY(-2px);
+    }
+
+    .garden-plot-number {
+      color: rgba(255,255,255,.72);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .garden-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: rgba(255,255,255,.82);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .garden-plant {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .garden-plant-icon {
+      font-size: 58px;
+      filter:
+        drop-shadow(
+          0 5px 5px
+          rgba(0,0,0,.16)
+        );
+      transition:
+        transform .25s ease;
+    }
+
+    .garden-plot:hover
+    .garden-plant-icon {
+      transform:
+        translateY(-3px)
+        rotate(-2deg);
+    }
+
+    .garden-plant-name {
+      color: white;
+      font-weight: 800;
+      margin-top: 3px;
+    }
+
+    .garden-progress {
+      width: 100%;
+      height: 8px;
+      margin-top: 8px;
+      border-radius: 999px;
+      background:
+        rgba(255,255,255,.28);
+      overflow: hidden;
+    }
+
+    .garden-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: #f7ffd9;
+      transition:
+        width .5s ease;
+    }
+
+    .garden-time {
+      color: rgba(255,255,255,.85);
+      font-size: 11px;
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    .garden-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .garden-action {
+      flex: 1;
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 5px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      background: white;
+      color: #53634c;
+    }
+
+    .garden-action:hover {
+      transform: translateY(-1px);
+    }
+
+    .garden-action:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .garden-ready {
+      animation:
+        gardenReady 1.4s
+        ease-in-out infinite;
+    }
+
+    @keyframes gardenReady {
+      0%,100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    .garden-water-animation {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 35px;
+      opacity: 0;
+      z-index: 5;
+    }
+
+    .garden-water-animation.play {
+      animation:
+        gardenWater .8s
+        ease-out;
+    }
+
+    @keyframes gardenWater {
+      0% {
+        opacity: 0;
+        transform:
+          translateY(-35px)
+          scale(.7);
+      }
+
+      25% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform:
+          translateY(35px)
+          scale(1.15);
+      }
+    }
+
+    .garden-fertilizer-animation {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      opacity: 0;
+      z-index: 5;
+    }
+
+    .garden-fertilizer-animation.play {
+      animation:
+        gardenFertilizer .9s
+        ease-out;
+    }
+
+    @keyframes gardenFertilizer {
+      0% {
+        opacity: 0;
+        transform: scale(.5);
+      }
+
+      30% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.4);
+      }
+    }
+
+    .garden-tip {
+      margin-top: 16px;
+      padding: 13px 15px;
+      border-radius: 15px;
+      background: rgba(255,255,255,.65);
+      color: #6d7967;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media(max-width:700px) {
+
+      .mongle-garden {
+        padding: 15px;
+      }
+
+      .garden-plots {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .garden-plot {
+        min-height: 190px;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(
+    style
+  );
+}
+
+
+/* =========================================================
+   정원 상태 정리
+========================================================= */
+
+function normalizeGarden() {
+
+  if (
+    !Array.isArray(
+      state.gardenPlots
+    )
+  ) {
+    state.gardenPlots = [];
+  }
+
+  while (
+    state.gardenPlots.length <
+    GARDEN_PLOT_COUNT
+  ) {
+
+    state.gardenPlots.push({
+      id:
+        state.gardenPlots.length,
+      plant: null,
+      plantedAt: 0,
+      watered: 0,
+      fertilized: false
+    });
+
+  }
+
+  state.gardenPlots =
+    state.gardenPlots
+      .slice(
+        0,
+        GARDEN_PLOT_COUNT
+      )
+      .map(
+        (plot, index) => ({
+          id: index,
+          plant:
+            plot &&
+            plot.plant
+              ? plot.plant
+              : null,
+          plantedAt:
+            Number(
+              plot &&
+              plot.plantedAt
+            ) || 0,
+          watered:
+            Number(
+              plot &&
+              plot.watered
+            ) || 0,
+          fertilized:
+            !!(
+              plot &&
+              plot.fertilized
+            )
+        })
+      );
+
+  if (
+    typeof state.gardenSeeds !==
+    "object" ||
+    state.gardenSeeds === null
+  ) {
+    state.gardenSeeds = {};
+  }
+
+  if (
+    typeof state.fertilizer !==
+    "number"
+  ) {
+    state.fertilizer = 3;
+  }
+}
+
+
+/* =========================================================
+   성장 계산
+========================================================= */
+
+function gardenProgress(
+  plot,
+  now = Date.now()
+) {
+
+  if (
+    !plot ||
+    !plot.plant
+  ) {
+    return {
+      percent: 0,
+      ready: false,
+      remaining: 0
+    };
+  }
+
+  const plant =
+    GARDEN_PLANTS[
+      plot.plant
+    ];
+
+  if (!plant) {
+    return {
+      percent: 0,
+      ready: false,
+      remaining: 0
+    };
+  }
+
+  let seconds =
+    plant.growth;
+
+  /*
+    물을 줄 때마다
+    성장 시간이 조금씩 감소
+  */
+
+  seconds -=
+    plot.watered * 5;
+
+  /*
+    비료를 사용하면
+    성장 시간이 추가 감소
+  */
+
+  if (plot.fertilized) {
+    seconds -= 10;
+  }
+
+  seconds =
+    Math.max(
+      10,
+      seconds
+    );
+
+  const elapsed =
+    Math.max(
+      0,
+      (now -
+        plot.plantedAt) /
+        1000
+    );
+
+  const percent =
+    Math.min(
+      100,
+      Math.floor(
+        elapsed /
+        seconds *
+        100
+      )
+    );
+
+  return {
+    percent,
+    ready:
+      percent >= 100,
+    remaining:
+      Math.max(
+        0,
+        Math.ceil(
+          seconds -
+          elapsed
+        )
+      )
+  };
+}
+
+
+/* =========================================================
+   시간 표시
+========================================================= */
+
+function gardenTimeText(
+  seconds
+) {
+
+  if (
+    seconds <= 0
+  ) {
+    return "수확할 수 있어요! 🌸";
+  }
+
+  const m =
+    Math.floor(
+      seconds / 60
+    );
+
+  const s =
+    seconds % 60;
+
+  if (m > 0) {
+    return (
+      `${m}분 ${s}초 후 성장`
+    );
+  }
+
+  return (
+    `${s}초 후 성장`
+  );
+}
+
+
+/* =========================================================
+   정원 화면 만들기
+========================================================= */
+
+function ensureGardenUI() {
+
+  let screen =
+    document.querySelector(
+      '[data-screen="garden"]'
+    );
+
+  if (!screen) {
+    return null;
+  }
+
+  let root =
+    document.getElementById(
+      "mongleGarden"
+    );
+
+  if (root) {
+    return root;
+  }
+
+  root =
+    document.createElement(
+      "div"
+    );
+
+  root.id =
+    "mongleGarden";
+
+  root.className =
+    "mongle-garden";
+
+  screen.appendChild(
+    root
+  );
+
+  return root;
+}
+
+
+/* =========================================================
+   정원 렌더링
+========================================================= */
+
+function renderGardenUI() {
+
+  normalizeGarden();
+  installGardenStyle();
+
+  const root =
+    ensureGardenUI();
+
+  if (!root) {
+    return;
+  }
+
+  const seedTypes =
+    Object.keys(
+      GARDEN_PLANTS
+    );
+
+  const seeds =
+    seedTypes
+      .map(id => {
+
+        const plant =
+          GARDEN_PLANTS[id];
+
+        const count =
+          Number(
+            state.gardenSeeds[id]
+          ) || 0;
+
+        return `
+          <div
+            class="garden-seed-card"
+          >
+
+            <div
+              class="garden-seed-icon"
+            >
+              ${plant.icon}
+            </div>
+
+            <div
+              class="garden-seed-name"
+            >
+              ${plant.name}
+            </div>
+
+            <div
+              class="garden-seed-info"
+            >
+              🌱 ${count}개 보유<br>
+              ⏰ 약 ${plant.growth}초<br>
+              🪙 ${plant.price} 코인
+            </div>
+
+            <button
+              class="garden-seed-buy"
+              data-garden-buy="${id}"
+            >
+              씨앗 구매
+            </button>
+
+          </div>
+        `;
+
+      })
+      .join("");
+
+
+  const plots =
+    state.gardenPlots
+      .map(
+        (plot, index) => {
+
+          if (!plot.plant) {
+
+            return `
+              <div
+                class="garden-plot empty"
+              >
+
+                <div
+                  class="garden-plot-number"
+                >
+                  밭 ${index + 1}
+                </div>
+
+                <div
+                  class="garden-empty"
+                >
+                  🌱<br>
+                  씨앗을 골라<br>
+                  이곳에 심어 보세요
+                </div>
+
+              </div>
+            `;
+
+          }
+
+          const plant =
+            GARDEN_PLANTS[
+              plot.plant
+            ];
+
+          if (!plant) {
+            return "";
+          }
+
+          const progress =
+            gardenProgress(
+              plot
+            );
+
+          const ready =
+            progress.ready;
+
+          return `
+            <div
+              class="
+                garden-plot
+                ${ready
+                  ? "garden-ready"
+                  : ""}
+              "
+              data-garden-plot="${index}"
+            >
+
+              <div
+                class="garden-plot-number"
+              >
+                밭 ${index + 1}
+              </div>
+
+              <div
+                class="garden-plant"
+              >
+
+                <div
+                  class="garden-plant-icon"
+                >
+                  ${plant.icon}
+                </div>
+
+                <div
+                  class="garden-plant-name"
+                >
+                  ${plant.name}
+                </div>
+
+                <div
+                  class="garden-progress"
+                >
+                  <div
+                    class="garden-progress-fill"
+                    style="
+                      width:
+                      ${progress.percent}%
+                    "
+                  ></div>
+                </div>
+
+                <div
+                  class="garden-time"
+                >
+                  ${
+                    ready
+                      ? "✨ 다 자랐어요!"
+                      : gardenTimeText(
+                          progress.remaining
+                        )
+                  }
+                </div>
+
+              </div>
+
+              <div
+                class="
+                  garden-water-animation
+                "
+                id="gardenWaterFx${index}"
+              >
+                💧💧💧
+              </div>
+
+              <div
+                class="
+                  garden-fertilizer-animation
+                "
+                id="gardenFertilizerFx${index}"
+              >
+                ✨🌱✨
+              </div>
+
+              <div
+                class="garden-actions"
+              >
+
+                <button
+                  class="garden-action"
+                  data-garden-water="${index}"
+                  ${
+                    ready
+                      ? "disabled"
+                      : ""
+                  }
+                >
+                  💧 물주기
+                </button>
+
+                <button
+                  class="garden-action"
+                  data-garden-fertilize="${index}"
+                  ${
+                    ready ||
+                    plot.fertilized ||
+                    state.fertilizer <= 0
+                      ? "disabled"
+                      : ""
+                  }
+                >
+                  ✨ 비료
+                </button>
+
+                <button
+                  class="garden-action"
+                  data-garden-harvest="${index}"
+                  ${
+                    ready
+                      ? ""
+                      : "disabled"
+                  }
+                >
+                  🧺 수확
+                </button>
+
+              </div>
+
+            </div>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  root.innerHTML = `
+
+    <div
+      class="garden-header"
+    >
+
+      <div>
+
+        <div
+          class="garden-title"
+        >
+          🌱 나만의 정원
+        </div>
+
+        <div
+          class="garden-subtitle"
+        >
+          씨앗을 심고 물과 비료를 주며
+          천천히 키워 보세요.
+        </div>
+
+      </div>
+
+      <div
+        class="garden-resource"
+      >
+
+        <div
+          class="garden-pill"
+        >
+          🪙 ${state.coins}
+        </div>
+
+        <div
+          class="garden-pill"
+        >
+          ✨ 비료 ${state.fertilizer}
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="garden-shop"
+    >
+
+      <div
+        class="garden-shop-title"
+      >
+        🌼 씨앗 상점
+      </div>
+
+      <div
+        class="garden-seeds"
+      >
+        ${seeds}
+      </div>
+
+    </div>
+
+
+    <div
+      class="garden-field"
+    >
+
+      <div
+        class="garden-field-title"
+      >
+        🪴 나의 텃밭
+      </div>
+
+      <div
+        class="garden-plots"
+      >
+        ${plots}
+      </div>
+
+    </div>
+
+
+    <div
+      class="garden-tip"
+    >
+      💡 <b>정원 가꾸기 팁</b><br>
+      씨앗을 산 뒤 빈 밭을 눌러 심을 수 있어요.
+      물을 주면 성장 속도가 빨라지고,
+      비료를 사용하면 더 빠르게 자라요.
+      다 자란 식물은 수확해서 코인과 경험치를 얻을 수 있어요.
+    </div>
+
+  `;
+
+  bindGardenEvents();
+}
+
+
+/* =========================================================
+   씨앗 심기
+========================================================= */
+
+function plantGardenSeed(
+  plotIndex
+) {
+
+  normalizeGarden();
+
+  const plot =
+    state.gardenPlots[
+      plotIndex
+    ];
+
+  if (!plot) {
+    return;
+  }
+
+  if (plot.plant) {
+    toast(
+      "이미 식물이 자라고 있어요. 🌱"
+    );
+
+    return;
+  }
+
+  const available =
+    Object.keys(
+      GARDEN_PLANTS
+    ).filter(
+      id =>
+        (
+          Number(
+            state.gardenSeeds[id]
+          ) || 0
+        ) > 0
+    );
+
+  if (
+    available.length === 0
+  ) {
+
+    toast(
+      "먼저 씨앗 상점에서 씨앗을 구매해 주세요. 🌱"
+    );
+
+    return;
+  }
+
+  let selected =
+    state.selectedGardenSeed;
+
+  if (
+    !selected ||
+    !GARDEN_PLANTS[selected] ||
+    !available.includes(selected)
+  ) {
+    selected =
+      available[0];
+  }
+
+  state.gardenSeeds[selected]--;
+
+  plot.plant =
+    selected;
+
+  plot.plantedAt =
+    Date.now();
+
+  plot.watered =
+    0;
+
+  plot.fertilized =
+    false;
+
+  state.stats.seedsPlanted++;
+
+  save();
+
+  renderGardenUI();
+
+  toast(
+    `${GARDEN_PLANTS[selected].name} 씨앗을 심었어요! 🌱`
+  );
+}
+
+
+/* =========================================================
+   씨앗 구매
+========================================================= */
+
+function buyGardenSeed(
+  id
+) {
+
+  const plant =
+    GARDEN_PLANTS[id];
+
+  if (!plant) {
+    return;
+  }
+
+  if (
+    state.coins <
+    plant.price
+  ) {
+
+    toast(
+      "코인이 부족해요. 🪙"
+    );
+
+    return;
+  }
+
+  state.coins -=
+    plant.price;
+
+  state.gardenSeeds[id] =
+    (
+      Number(
+        state.gardenSeeds[id]
+      ) || 0
+    ) + 1;
+
+  state.selectedGardenSeed =
+    id;
+
+  state.stats.seedsBought++;
+
+  save();
+
+  renderGardenUI();
+
+  toast(
+    `${plant.name} 씨앗을 구매했어요! 🌱`
+  );
+}
+
+
+/* =========================================================
+   물주기
+========================================================= */
+
+function waterGarden(
+  index
+) {
+
+  const plot =
+    state.gardenPlots[
+      index
+    ];
+
+  if (
+    !plot ||
+    !plot.plant
+  ) {
+    return;
+  }
+
+  const progress =
+    gardenProgress(
+      plot
+    );
+
+  if (progress.ready) {
+    toast(
+      "이 식물은 이제 수확할 수 있어요! 🌸"
+    );
+
+    return;
+  }
+
+  if (
+    plot.watered >= 3
+  ) {
+
+    toast(
+      "이 식물은 오늘 충분히 물을 마셨어요. 💧"
+    );
+
+    return;
+  }
+
+  plot.watered++;
+
+  state.stats.waters++;
+
+  save();
+
+  const fx =
+    document.getElementById(
+      `gardenWaterFx${index}`
+    );
+
+  if (fx) {
+
+    fx.classList.remove(
+      "play"
+    );
+
+    void fx.offsetWidth;
+
+    fx.classList.add(
+      "play"
+    );
+
+  }
+
+  setTimeout(
+    () => {
+      renderGardenUI();
+    },
+    650
+  );
+
+  toast(
+    "물을 촉촉하게 줬어요. 💧"
+  );
+}
+
+
+/* =========================================================
+   비료
+========================================================= */
+
+function fertilizeGarden(
+  index
+) {
+
+  const plot =
+    state.gardenPlots[
+      index
+    ];
+
+  if (
+    !plot ||
+    !plot.plant
+  ) {
+    return;
+  }
+
+  if (
+    plot.fertilized
+  ) {
+
+    toast(
+      "이미 비료를 준 식물이에요. ✨"
+    );
+
+    return;
+  }
+
+  if (
+    state.fertilizer <= 0
+  ) {
+
+    toast(
+      "비료가 없어요. ✨"
+    );
+
+    return;
+  }
+
+  plot.fertilized =
+    true;
+
+  state.fertilizer--;
+
+  state.stats.fertilizers++;
+
+  save();
+
+  const fx =
+    document.getElementById(
+      `gardenFertilizerFx${index}`
+    );
+
+  if (fx) {
+
+    fx.classList.remove(
+      "play"
+    );
+
+    void fx.offsetWidth;
+
+    fx.classList.add(
+      "play"
+    );
+
+  }
+
+  setTimeout(
+    () => {
+      renderGardenUI();
+    },
+    750
+  );
+
+  toast(
+    "비료를 줬어요! 식물이 더 빠르게 자라요. ✨"
+  );
+}
+
+
+/* =========================================================
+   수확
+========================================================= */
+
+function harvestGarden(
+  index
+) {
+
+  const plot =
+    state.gardenPlots[
+      index
+    ];
+
+  if (
+    !plot ||
+    !plot.plant
+  ) {
+    return;
+  }
+
+  const progress =
+    gardenProgress(
+      plot
+    );
+
+  if (
+    !progress.ready
+  ) {
+
+    toast(
+      "아직 자라고 있어요. 조금만 더 기다려 주세요. 🌱"
+    );
+
+    return;
+  }
+
+  const plant =
+    GARDEN_PLANTS[
+      plot.plant
+    ];
+
+  state.coins +=
+    plant.reward;
+
+  state.flowers++;
+
+  state.stats.harvests++;
+
+  xp(
+    plant.xp
+  );
+
+  plot.plant =
+    null;
+
+  plot.plantedAt =
+    0;
+
+  plot.watered =
+    0;
+
+  plot.fertilized =
+    false;
+
+  save();
+
+  renderGardenUI();
+
+  toast(
+    `${plant.icon} ${plant.name} 수확 완료! 🪙 +${plant.reward}`
+  );
+}
+
+
+/* =========================================================
+   정원 클릭 이벤트
+========================================================= */
+
+function bindGardenEvents() {
+
+  document
+    .querySelectorAll(
+      "[data-garden-buy]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          event => {
+
+            event.stopPropagation();
+
+            const id =
+              button.dataset
+                .gardenBuy;
+
+            buyGardenSeed(
+              id
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-garden-water]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          event => {
+
+            event.stopPropagation();
+
+            waterGarden(
+              Number(
+                button.dataset
+                  .gardenWater
+              )
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-garden-fertilize]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          event => {
+
+            event.stopPropagation();
+
+            fertilizeGarden(
+              Number(
+                button.dataset
+                  .gardenFertilize
+              )
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-garden-harvest]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          event => {
+
+            event.stopPropagation();
+
+            harvestGarden(
+              Number(
+                button.dataset
+                  .gardenHarvest
+              )
+            );
+
+          }
+        );
+
+      }
+    );
+
+
+  document
+    .querySelectorAll(
+      ".garden-plot.empty"
+    )
+    .forEach(
+      plot => {
+
+        plot.addEventListener(
+          "click",
+          () => {
+
+            plantGardenSeed(
+              Number(
+                plot.dataset
+                  .gardenPlot
+              ) || 0
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   정원 성장 자동 업데이트
+========================================================= */
+
+let gardenTicker =
+  null;
+
+function startGardenTicker() {
+
+  if (gardenTicker) {
+    return;
+  }
+
+  gardenTicker =
+    setInterval(
+      () => {
+
+        if (
+          state.nav !==
+          "garden"
+        ) {
+          return;
+        }
+
+        renderGardenUI();
+
+      },
+      1000
+    );
+
+}
+
+
+/* =========================================================
+   정원 입장
+========================================================= */
+
+const originalShowPage =
+  showPage;
+
+showPage =
+  function(page) {
+
+    originalShowPage(
+      page
+    );
+
+    if (
+      page === "garden"
+    ) {
+
+      normalizeGarden();
+
+      setTimeout(
+        () => {
+          renderGardenUI();
+        },
+        0
+      );
+
+      startGardenTicker();
+
+    }
+
+  };
+
+
+/* =========================================================
+   기존 정원 버튼
+========================================================= */
+
 const gardenWater =
   $("gardenWater");
 
 if (gardenWater) {
+
   gardenWater.addEventListener(
     "click",
     () => {
+
       showPage(
         "garden"
       );
+
     }
   );
-}
 
+}
+   
 /* =========================================================
    방
 ========================================================= */
