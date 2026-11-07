@@ -5406,15 +5406,18 @@ function buyGardenSeed(
   state.coins -=
     plant.price;
 
+  /*
+    씨앗을 인벤토리에 저장
+    같은 씨앗을 여러 개 사면
+    수량이 누적됨
+  */
+
   state.gardenSeeds[id] =
     (
       Number(
         state.gardenSeeds[id]
       ) || 0
     ) + 1;
-
-  state.selectedGardenSeed =
-    id;
 
   state.stats.seedsBought++;
 
@@ -5423,7 +5426,7 @@ function buyGardenSeed(
   renderGardenUI();
 
   toast(
-    `${plant.name} 씨앗을 구매했어요! 🌱`
+    `${plant.icon} ${plant.name} 씨앗이 인벤토리에 들어왔어요! 🌱`
   );
 }
 
