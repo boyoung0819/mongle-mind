@@ -3032,21 +3032,147 @@ function craftPet(petId) {
 }
 
 /* =========================================================
+   반복 퀘스트 시스템
+========================================================= */
+
+/*
+  퀘스트마다
+  "마지막으로 보상을 받은 시점의 진행도"를 저장합니다.
+
+  예:
+  물주기 현재 통계 = 7
+  목표 = 3
+  마지막 기준 = 4
+
+  → 현재 퀘스트 진행도 = 7 - 4 = 3
+
+  보상을 받으면 기준을 7로 변경
+
+  → 현재 진행도 = 7 - 7 = 0
+*/
+
+
+function ensureQuestProgressBase() {
+
+  if (
+    !state.questProgressBase ||
+    typeof state.questProgressBase !== "object"
+  ) {
+
+    state.questProgressBase = {};
+
+  }
+
+
+  QUESTS.forEach(q => {
+
+    /*
+      이미 기준값이 있으면 그대로 사용
+    */
+
+    if (
+      typeof state.questProgressBase[q.id]
+      === "number"
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+      예전에 이미 보상을 받은 퀘스트라면
+      현재 진행도를 새로운 시작점으로 설정합니다.
+
+      이렇게 해야 기존 저장 데이터에서
+      이미 받은 보상을 다시 받는 문제가 없습니다.
+    */
+
+    if (
+      Array.isArray(state.questClaims) &&
+      state.questClaims.includes(q.id)
+    ) {
+
+      state.questProgressBase[q.id] =
+        Number(
+          q.getProgress()
+        ) || 0;
+
+      return;
+
+    }
+
+
+    /*
+      아직 보상을 받지 않은 퀘스트는
+      기존 진행도를 그대로 사용할 수 있도록
+      시작점을 0으로 설정합니다.
+    */
+
+    state.questProgressBase[q.id] = 0;
+
+  });
+
+}
+
+
+/* =========================================================
+   반복 퀘스트 진행도
+========================================================= */
+
+function getRepeatableQuestProgress(q) {
+
+  ensureQuestProgressBase();
+
+
+  const current =
+    Number(
+      q.getProgress()
+    ) || 0;
+
+
+  const base =
+    Number(
+      state.questProgressBase[q.id]
+    ) || 0;
+
+
+  return Math.max(
+    0,
+    current - base
+  );
+
+}
+
+
+/* =========================================================
    퀘스트 UI
 ========================================================= */
 
 function renderQuestUI() {
+
   ensureQuestUI();
 
-  if (!questUI) return;
+  if (!questUI) {
+    return;
+  }
+
+
+  ensureQuestProgressBase();
+
 
   questUI.innerHTML = `
+
     <div class="mm-pet-section">
 
       <div class="mm-pet-title">
-        <h3>✨ 별빛 퀘스트</h3>
+
+        <h3>
+          ✨ 별빛 퀘스트
+        </h3>
 
         <div class="mm-pet-currency">
+
           <span class="mm-currency">
             ✨ 별빛 ${state.petCurrency}
           </span>
@@ -3054,37 +3180,48 @@ function renderQuestUI() {
           <span class="mm-currency">
             🪙 펫 코인 ${state.petCoins}
           </span>
+
         </div>
+
       </div>
+
 
       <div style="
         font-size:13px;
         line-height:1.6;
         opacity:.7;
       ">
+
         별빛은 펫 뽑기에 사용하는 새로운 재화예요.
         마을에서 다양한 활동을 하면 별빛 퀘스트를
         완료할 수 있어요.
+        <br>
+        퀘스트를 완료하면 다시 새로운 목표에 도전할 수 있어요. 🌱
+
       </div>
 
     </div>
 
+
     ${QUESTS.map(q => {
+
+      /*
+        마지막 보상 이후의 활동만 계산
+      */
+
       const progress =
         Math.min(
           q.goal,
           Math.max(
             0,
-            Number(
-              q.getProgress()
-            )
+            getRepeatableQuestProgress(q)
           )
         );
 
-     const claimed = false;
 
       const completed =
         progress >= q.goal;
+
 
       const percent =
         Math.min(
@@ -3094,12 +3231,24 @@ function renderQuestUI() {
             100
         );
 
+
+      const completionCount =
+        state.questCompletions &&
+        Number(
+          state.questCompletions[q.id]
+        ) || 0;
+
+
       return `
-        <div class="mm-quest ${
-          completed
-            ? "completed"
-            : ""
-        }">
+
+        <div class="
+          mm-quest
+          ${
+            completed
+              ? "completed"
+              : ""
+          }
+        ">
 
           <div class="mm-quest-top">
 
@@ -3107,23 +3256,29 @@ function renderQuestUI() {
               ${q.icon}
             </div>
 
+
             <div class="mm-quest-body">
 
               <div class="mm-quest-name">
                 ${q.title}
               </div>
 
+
               <div class="mm-quest-desc">
                 ${q.description}
               </div>
 
+
               <div class="mm-quest-progress">
+
                 <div
                   style="
                     width:${percent}%;
                   "
                 ></div>
+
               </div>
+
 
               <div class="mm-quest-bottom">
 
@@ -3131,14 +3286,19 @@ function renderQuestUI() {
                   ${progress} / ${q.goal}
                 </span>
 
+
                 <span>
+
                   ✨ +${q.rewardPetCurrency}
+
                   ${
                     q.rewardCoins > 0
                       ? ` · 🪙 +${q.rewardCoins}`
                       : ""
                   }
+
                 </span>
+
 
                 <button
                   class="mm-pet-button"
@@ -3149,76 +3309,120 @@ function renderQuestUI() {
                   data-quest-action="claim"
                   data-quest-id="${q.id}"
                   ${
-                    !completed ||
-                    claimed
+                    !completed
                       ? "disabled"
                       : ""
                   }
                 >
+
                   ${
-                    claimed
-                      ? "보상 받음 ✓"
-                      : completed
-                        ? "보상 받기"
-                        : "진행 중"
+                    completed
+                      ? "보상 받기"
+                      : "진행 중"
                   }
+
                 </button>
 
               </div>
+
+
+              ${
+                completionCount > 0
+                  ? `
+                    <div style="
+                      margin-top:6px;
+                      font-size:11px;
+                      opacity:.55;
+                    ">
+                      ✨ ${completionCount}회 완료
+                    </div>
+                  `
+                  : ""
+              }
 
             </div>
 
           </div>
 
         </div>
+
       `;
+
     }).join("")}
+
   `;
+
 }
 
+
+/* =========================================================
+   퀘스트 클릭
+========================================================= */
+
 function handleQuestClick(e) {
+
   const button =
     e.target.closest(
       "[data-quest-action]"
     );
 
-  if (!button) return;
+
+  if (!button) {
+    return;
+  }
+
 
   if (
     button.dataset.questAction !==
     "claim"
   ) {
+
     return;
+
   }
+
 
   claimQuest(
     button.dataset.questId
   );
+
 }
 
+
+/* =========================================================
+   퀘스트 보상 받기
+========================================================= */
+
 function claimQuest(id) {
+
+  ensureQuestProgressBase();
+
 
   const quest =
     QUESTS.find(
       q => q.id === id
     );
 
+
   if (!quest) {
     return;
   }
 
+
   /*
-    현재 퀘스트 진행도 확인
+    마지막 보상 이후의
+    실제 퀘스트 진행도
   */
 
   const progress =
-    Number(
-      quest.getProgress()
+    getRepeatableQuestProgress(
+      quest
     );
 
+
   /*
-    아직 완료하지 않았으면
-    보상을 지급하지 않음
+    목표를 달성하지 않았다면
+    보상을 지급하지 않습니다.
   */
 
   if (
@@ -3227,14 +3431,16 @@ function claimQuest(id) {
   ) {
 
     toast(
-      "아직 퀘스트를 완료하지 않았어요."
+      "아직 퀘스트를 완료하지 않았어요. 🌱"
     );
 
     return;
+
   }
 
+
   /*
-    보상 지급
+    별빛 지급
   */
 
   state.petCurrency +=
@@ -3242,30 +3448,37 @@ function claimQuest(id) {
       quest.rewardPetCurrency
     ) || 0;
 
+
+  /*
+    코인 지급
+  */
+
   state.coins +=
     Number(
       quest.rewardCoins
     ) || 0;
 
+
   /*
-    경험치
+    경험치 지급
   */
 
   xp(10);
 
+
   /*
-    중요:
-    questClaims에 영구 저장하지 않는다.
-    
-    대신 현재 퀘스트의 진행 기준을
-    초기화하기 위해 완료 횟수를 기록한다.
+    완료 횟수 기록
   */
 
   if (
-    !state.questCompletions
+    !state.questCompletions ||
+    typeof state.questCompletions !== "object"
   ) {
+
     state.questCompletions = {};
+
   }
+
 
   state.questCompletions[id] =
     (
@@ -3274,25 +3487,63 @@ function claimQuest(id) {
       ) || 0
     ) + 1;
 
+
   /*
-    퀘스트 진행 기준 초기화
+    ⭐ 핵심
+
+    현재 진행도를
+    새로운 시작점으로 저장합니다.
+
+    예:
+
+    물주기 3회 달성
+    현재 통계 = 8
+
+    보상 받기
+
+    기준값 = 8
+
+    화면:
+
+    0 / 3
+
+    이후 물주기:
+
+    9 → 1 / 3
+    10 → 2 / 3
+    11 → 3 / 3
+
+    다시 보상 가능
   */
 
-  if (
-    quest.resetProgress
-  ) {
+  state.questProgressBase[id] =
+    Number(
+      quest.getProgress()
+    ) || 0;
 
-    quest.resetProgress();
 
-  }
+  /*
+    예전 일회성 questClaims는
+    반복 퀘스트에서는 더 이상 사용하지 않습니다.
+
+    다만 기존 저장 데이터와의 호환을 위해
+    배열 자체는 그대로 둡니다.
+  */
+
 
   save();
+
 
   /*
     화면 갱신
   */
 
   renderQuestUI();
+
+
+  /*
+    완료 알림
+  */
 
   toast(
     `퀘스트 완료! ✨ 별빛 +${
@@ -3303,8 +3554,9 @@ function claimQuest(id) {
         : ""
     }`
   );
-}
 
+}
+   
 /* =========================================================
    UI
 ========================================================= */
