@@ -3847,6 +3847,54 @@ if (journalInput) {
     "";
 }
 
+/* 상태 버튼 클릭 */
+
+document
+  .querySelectorAll(".mood")
+  .forEach(button => {
+    button.addEventListener(
+      "click",
+      () => {
+        const mood =
+          button.dataset.mood;
+
+        if (!mood) {
+          return;
+        }
+
+        state.mood =
+          mood;
+
+        save();
+
+        document
+          .querySelectorAll(".mood")
+          .forEach(b => {
+            b.classList.toggle(
+              "selected",
+              b.dataset.mood ===
+                state.mood
+            );
+          });
+
+        const moodSaved =
+          $("moodSaved");
+
+        if (moodSaved) {
+          moodSaved.textContent =
+            moodNames[mood] ||
+            "오늘의 마음을 기록했어요.";
+        }
+
+        toast(
+          "오늘의 마음을 선택했어요. 💜"
+        );
+      }
+    );
+  });
+
+/* 글 기록 저장 */
+
 if (journalSave) {
   journalSave.addEventListener(
     "click",
@@ -3874,7 +3922,7 @@ if (journalSave) {
     }
   );
 }
-
+   
 /* =========================================================
    호흡
 ========================================================= */
