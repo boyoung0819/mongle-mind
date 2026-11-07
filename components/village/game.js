@@ -2395,7 +2395,7 @@ function renderPetUI() {
       <div class="mm-pet-title">
         <h3>📖 펫 도감</h3>
         <span style="font-size:12px;opacity:.6;">
-          state.ownedPets.length/{PET_LIST.length}
+          ${state.ownedPets.length}/${PET_LIST.length}
         </span>
       </div>
 
@@ -2592,7 +2592,7 @@ function renderPetUI() {
                   opacity:.6;
                   margin-top:3px;
                 ">
-                  🧩 fragments/{p.fragmentNeed}
+                  🧩 ${fragments}/${p.fragmentNeed}
                 </div>
               </div>
 
@@ -3244,7 +3244,7 @@ function claimQuest(id) {
   save();
 
   toast(
-    `퀘스트 완료! ✨ 별빛 +quest.rewardPetCurrency{
+    `퀘스트 완료! ✨ 별빛 +${quest.rewardPetCurrency}${
       quest.rewardCoins
         ? ` · 🪙 코인 +${quest.rewardCoins}`
         : ""
