@@ -1,5074 +1,4534 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
+import * as THREE from "three";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/loaders/GLTFLoader.js";
 
+(() => {
+const root = document.getElementById("world");
+if (!root || root.dataset.ready === "1") return;
+root.dataset.ready = "1";
+
+const $ = id => document.getElementById(id);
+
 /* =========================================================
-   몽글마음
-   game.js 전체 교체본
+   기본 저장 데이터
 ========================================================= */
 
-(() => {
-  "use strict";
+const defaults = {
+  x: 0,
+  z: 4,
+  coins: 30,
+  xp: 0,
+  level: 1,
 
-  /* =========================================================
-     기본
-  ========================================================= */
+  flowers: 0,
+  mood: null,
 
-  const $ = id => document.getElementById(id);
+  watered: false,
+  foundShell: false,
 
-  const STORAGE_KEY = "mongleMindSave";
+  nav: "home",
+  roomDecor: "lavender",
+  journalText: "",
+  journalDate: "",
 
-  const PAGE_TITLES = {
-    home: "나만의 작은 쉼",
-    village: "몽글마을 산책",
-    dress: "나의 펫 꾸미기",
-    garden: "나만의 정원",
-    room: "나만의 방",
-    journal: "마음 돌보기",
-    quests: "오늘의 작은 퀘스트"
-  };
+  /* 퀘스트 */
+  questClaims: [],
 
-  const DEFAULT_STATE = {
-    nav: "home",
+  /* 정원 */
+  gardenPlots: [],
+  gardenSeeds: {},
+  selectedGardenSeed: null,
+  fertilizer: 3,
 
-    coins: 30,
-    xp: 0,
-    level: 1,
-    flowers: 0,
+  /* 활동 통계 */
+  stats: {
+    seedsPlanted: 0,
+    seedsBought: 0,
+    waters: 0,
+    fertilizers: 0,
+    harvests: 0,
+    petGreetings: 0,
+    breaths: 0,
+    journals: 0,
+    shellFinds: 0
+  },
 
-    mood: null,
-    journalText: "",
-    journalDate: "",
+  /* 펫 */
+  petCurrency: 0,
+  petCoins: 0,
 
-    roomDecor: "lavender",
+  ownedPets: ["bunny"],
+  selectedPet: "bunny",
 
-    x: 0,
-    z: 4,
+  petFragments: {},
 
-    petCurrency: 0,
-    petCoins: 0,
-
-    firstPetTutorialDone: false,
-
-    ownedPets: [],
-    selectedPet: null,
-
-    petFragments: {},
-
-    petAccessories: {},
-
-    stats: {
-      petGreetings: 0,
-      petDraws: 0,
-      breaths: 0,
-      journals: 0,
-      waters: 0,
-      harvests: 0,
-      shellFinds: 0,
-      gardenPlants: 0
-    },
-
-    questStages: {},
-    questClaims: [],
-
-    foundShell: false
-  };
-
-
-  /* =========================================================
-     상태 불러오기
-  ========================================================= */
-
-  let state = loadState();
-
-  function loadState() {
-    let saved = {};
-
-    try {
-      saved = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "{}"
-      ) || {};
-    } catch (error) {
-      console.warn("저장 데이터를 읽지 못했습니다.", error);
+  petAccessories: {
+    bunny: {
+      hat: "none",
+      outfit: "none"
     }
+  },
 
-    const result = {
-      ...DEFAULT_STATE,
+  selectedPetAccessory: {
+    hat: "none",
+    outfit: "none"
+  }
+};
+
+let state = { ...defaults };
+
+try {
+  const saved = JSON.parse(
+    localStorage.getItem("mongleMindSave") || "null"
+  );
+
+  if (saved) {
+    state = {
+      ...defaults,
       ...saved,
-
       stats: {
-        ...DEFAULT_STATE.stats,
+        ...defaults.stats,
         ...(saved.stats || {})
       },
-
-      petFragments: {
-        ...(saved.petFragments || {})
-      },
-
       petAccessories: {
+        ...defaults.petAccessories,
         ...(saved.petAccessories || {})
       },
-
-      questStages: {
-        ...(saved.questStages || {})
-      },
-
-      questClaims: Array.isArray(saved.questClaims)
-        ? saved.questClaims
-        : []
+      selectedPetAccessory: {
+        ...defaults.selectedPetAccessory,
+        ...(saved.selectedPetAccessory || {})
+      }
     };
+  }
+} catch (e) {}
 
+/* =========================================================
+   오래된 저장 데이터 보정
+========================================================= */
 
-    /* -------------------------------------------------------
-       기존 버전 데이터 호환
-    ------------------------------------------------------- */
+if (!Array.isArray(state.questClaims)) state.questClaims = [];
 
-    if (
-      Array.isArray(saved.ownedPets) &&
-      saved.ownedPets.length > 0
-    ) {
-      result.ownedPets = [...saved.ownedPets];
+if (!Array.isArray(state.ownedPets)) {
+  state.ownedPets = ["bunny"];
+}
+
+if (!state.ownedPets.includes("bunny")) {
+  state.ownedPets.unshift("bunny");
+}
+
+if (!state.petAccessories || typeof state.petAccessories !== "object") {
+  state.petAccessories = {};
+}
+
+if (!state.petAccessories.bunny) {
+  state.petAccessories.bunny = {
+    hat: "none",
+    outfit: "none"
+  };
+}
+
+if (!state.petFragments || typeof state.petFragments !== "object") {
+  state.petFragments = {};
+}
+
+if (!state.stats || typeof state.stats !== "object") {
+  state.stats = { ...defaults.stats };
+}
+
+state.stats = {
+  ...defaults.stats,
+  ...state.stats
+};
+
+if (typeof state.petCurrency !== "number") {
+  state.petCurrency = 0;
+}
+
+if (typeof state.petCoins !== "number") {
+  state.petCoins = 0;
+}
+
+if (!state.selectedPet || !state.ownedPets.includes(state.selectedPet)) {
+  state.selectedPet = "bunny";
+}
+
+if (!state.selectedPetAccessory) {
+  state.selectedPetAccessory = {
+    hat: "none",
+    outfit: "none"
+  };
+}
+
+if (!Array.isArray(state.gardenPlots) || state.gardenPlots.length !== 6) {
+  state.gardenPlots = Array.from({ length: 6 }, (_, i) => ({
+    id: i,
+    seedId: null,
+    plantedAt: 0,
+    growthBonus: 0,
+    waterCount: 0,
+    fertilizerCount: 0,
+    lastWateredAt: 0
+  }));
+}
+
+if (!state.gardenSeeds || typeof state.gardenSeeds !== "object") {
+  state.gardenSeeds = {};
+}
+
+if (typeof state.fertilizer !== "number") {
+  state.fertilizer = 3;
+}
+
+if (typeof state.x !== "number" || Math.abs(state.x) > 20) {
+  state.x = 0;
+}
+
+if (typeof state.z !== "number" || Math.abs(state.z) > 20) {
+  state.z = 4;
+}
+
+if (typeof state.journalText !== "string") {
+  state.journalText = "";
+}
+
+if (!state.roomDecor) {
+  state.roomDecor = "lavender";
+}
+
+/* =========================================================
+   펫 데이터
+========================================================= */
+
+const PETS = {
+  bunny: {
+    id: "bunny",
+    name: "몽글토끼",
+    icon: "🐰",
+    rarity: "기본",
+    color: 0xfff4ec,
+    earColor: 0xe8b9c2,
+    rate: 0,
+    duplicateCoins: 10,
+    fragmentNeed: 10
+  },
+
+  puppy: {
+    id: "puppy",
+    name: "구름강아지",
+    icon: "🐶",
+    rarity: "일반",
+    color: 0xe8c39b,
+    earColor: 0xc9956b,
+    rate: 38,
+    duplicateCoins: 15,
+    fragmentNeed: 10
+  },
+
+  cat: {
+    id: "cat",
+    name: "달빛고양이",
+    icon: "🐱",
+    rarity: "일반",
+    color: 0xcfc7df,
+    earColor: 0xa99dbc,
+    rate: 30,
+    duplicateCoins: 18,
+    fragmentNeed: 10
+  },
+
+  fox: {
+    id: "fox",
+    name: "살구여우",
+    icon: "🦊",
+    rarity: "희귀",
+    color: 0xf0a66c,
+    earColor: 0xd77a4f,
+    rate: 18,
+    duplicateCoins: 25,
+    fragmentNeed: 15
+  },
+
+  bear: {
+    id: "bear",
+    name: "솜사탕곰",
+    icon: "🐻",
+    rarity: "희귀",
+    color: 0xc9a78d,
+    earColor: 0xa98268,
+    rate: 10,
+    duplicateCoins: 30,
+    fragmentNeed: 15
+  },
+
+  star: {
+    id: "star",
+    name: "별빛친구",
+    icon: "⭐",
+    rarity: "특별",
+    color: 0xf3d47b,
+    earColor: 0xf1bd62,
+    rate: 4,
+    duplicateCoins: 50,
+    fragmentNeed: 20
+  }
+};
+
+const PET_LIST = Object.values(PETS);
+
+/* =========================================================
+   펫 액세서리
+========================================================= */
+
+const PET_HATS = {
+  none: {
+    id: "none",
+    name: "없음",
+    icon: "—",
+    price: 0
+  },
+
+  flower: {
+    id: "flower",
+    name: "꽃 머리핀",
+    icon: "🌸",
+    price: 15
+  },
+
+  beret: {
+    id: "beret",
+    name: "포근 베레모",
+    icon: "🧢",
+    price: 25
+  },
+
+  crown: {
+    id: "crown",
+    name: "별 왕관",
+    icon: "👑",
+    price: 40
+  },
+
+  leaf: {
+    id: "leaf",
+    name: "숲의 잎모자",
+    icon: "🍃",
+    price: 30
+  }
+};
+
+const PET_OUTFITS = {
+  none: {
+    id: "none",
+    name: "없음",
+    icon: "—",
+    price: 0
+  },
+
+  scarf: {
+    id: "scarf",
+    name: "포근 목도리",
+    icon: "🧣",
+    price: 20
+  },
+
+  cape: {
+    id: "cape",
+    name: "작은 망토",
+    icon: "🪽",
+    price: 35
+  },
+
+  ribbon: {
+    id: "ribbon",
+    name: "리본 장식",
+    icon: "🎀",
+    price: 25
+  }
+};
+
+/* =========================================================
+   펫 뽑기 퀘스트
+========================================================= */
+
+const QUESTS = [
+  {
+    id: "pet_draw_1",
+    icon: "✨",
+    title: "새로운 친구 만나기",
+    description: "펫 뽑기를 1회 진행해 보세요.",
+    goal: 1,
+    rewardPetCurrency: 3,
+    rewardCoins: 0,
+    getProgress: () => state.stats.petDraws || 0
+  },
+
+  {
+    id: "pet_draw_3",
+    icon: "🎁",
+    title: "친구를 찾아서",
+    description: "펫 뽑기를 3회 진행해 보세요.",
+    goal: 3,
+    rewardPetCurrency: 5,
+    rewardCoins: 5,
+    getProgress: () => state.stats.petDraws || 0
+  },
+
+  {
+    id: "pet_collect_2",
+    icon: "🐾",
+    title: "친구 둘",
+    description: "서로 다른 펫 2종을 모아 보세요.",
+    goal: 2,
+    rewardPetCurrency: 8,
+    rewardCoins: 10,
+    getProgress: () => state.ownedPets.length
+  },
+
+  {
+    id: "pet_collect_4",
+    icon: "📖",
+    title: "작은 펫 도감",
+    description: "서로 다른 펫 4종을 모아 보세요.",
+    goal: 4,
+    rewardPetCurrency: 12,
+    rewardCoins: 15,
+    getProgress: () => state.ownedPets.length
+  },
+
+  {
+    id: "pet_fragment_5",
+    icon: "🧩",
+    title: "조각 모으기",
+    description: "펫 조각을 5개 모아 보세요.",
+    goal: 5,
+    rewardPetCurrency: 4,
+    rewardCoins: 0,
+    getProgress: () =>
+      Object.values(state.petFragments || {}).reduce(
+        (sum, n) => sum + Number(n || 0),
+        0
+      )
+  },
+
+  {
+    id: "garden_harvest_2",
+    icon: "🌷",
+    title: "정원에서 수확하기",
+    description: "정원에서 식물을 2번 수확해 보세요.",
+    goal: 2,
+    rewardPetCurrency: 3,
+    rewardCoins: 10,
+    getProgress: () => state.stats.harvests
+  },
+
+  {
+    id: "water_3",
+    icon: "💧",
+    title: "정원 돌보기",
+    description: "식물에게 물을 3번 주세요.",
+    goal: 3,
+    rewardPetCurrency: 3,
+    rewardCoins: 5,
+    getProgress: () => state.stats.waters
+  },
+
+  {
+    id: "breath_1",
+    icon: "🌿",
+    title: "잠깐의 쉼",
+    description: "호흡 활동을 끝까지 완료해 보세요.",
+    goal: 1,
+    rewardPetCurrency: 3,
+    rewardCoins: 5,
+    getProgress: () => state.stats.breaths
+  },
+
+  {
+    id: "journal_1",
+    icon: "💭",
+    title: "마음 남기기",
+    description: "오늘의 마음을 기록해 보세요.",
+    goal: 1,
+    rewardPetCurrency: 3,
+    rewardCoins: 5,
+    getProgress: () => state.stats.journals
+  },
+
+  {
+    id: "shell_1",
+    icon: "🐚",
+    title: "숨겨진 반짝임",
+    description: "마을에 숨겨진 조개를 찾아 보세요.",
+    goal: 1,
+    rewardPetCurrency: 5,
+    rewardCoins: 8,
+    getProgress: () => state.stats.shellFinds
+  }
+];
+
+if (typeof state.stats.petDraws !== "number") {
+  state.stats.petDraws = 0;
+}
+
+/* =========================================================
+   정원 데이터
+========================================================= */
+
+const PLANTS = {
+  tulip: {
+    id: "tulip",
+    name: "튤립",
+    icon: "🌷",
+    price: 10,
+    growth: 30,
+    reward: 20,
+    xp: 10
+  },
+
+  sunflower: {
+    id: "sunflower",
+    name: "해바라기",
+    icon: "🌻",
+    price: 15,
+    growth: 45,
+    reward: 28,
+    xp: 13
+  },
+
+  lavender: {
+    id: "lavender",
+    name: "라벤더",
+    icon: "💜",
+    price: 20,
+    growth: 55,
+    reward: 35,
+    xp: 16
+  },
+
+  strawberry: {
+    id: "strawberry",
+    name: "딸기",
+    icon: "🍓",
+    price: 25,
+    growth: 65,
+    reward: 45,
+    xp: 20
+  },
+
+  mint: {
+    id: "mint",
+    name: "민트",
+    icon: "🌿",
+    price: 18,
+    growth: 50,
+    reward: 32,
+    xp: 15
+  },
+
+  moonflower: {
+    id: "moonflower",
+    name: "달빛꽃",
+    icon: "🌙",
+    price: 40,
+    growth: 80,
+    reward: 75,
+    xp: 30
+  }
+};
+
+/* =========================================================
+   변수
+========================================================= */
+
+let keys = {};
+let toastTimer;
+let breathTimer;
+let breathStep = 0;
+let breathing = false;
+let last = 0;
+
+let walkBlend = 0;
+let walkPhase = 0;
+
+const colors = {
+  lavender: 0xb7a5e5,
+  peach: 0xefb39e,
+  mint: 0x9acdb5
+};
+
+const moodNames = {
+  calm: "차분한 마음을 기록했어요.",
+  happy: "기쁜 마음을 기록했어요.",
+  tired: "지친 마음을 기록했어요.",
+  worried: "걱정되는 마음을 기록했어요."
+};
+
+/* =========================================================
+   Three.js 마을
+========================================================= */
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0xbadcf3);
+scene.fog = new THREE.Fog(0xd5e7ce, 28, 60);
+
+const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 120);
+camera.position.set(0, 6.5, 27);
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: true
+});
+
+renderer.setPixelRatio(
+  Math.min(devicePixelRatio || 1, 2)
+);
+
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+root.replaceChildren(renderer.domElement);
+
+scene.add(
+  new THREE.HemisphereLight(
+    0xfff7ed,
+    0x78936c,
+    2
+  )
+);
+
+const sun = new THREE.DirectionalLight(
+  0xffefd7,
+  3
+);
+
+sun.position.set(-8, 17, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+scene.add(sun);
+
+const M = c =>
+  new THREE.MeshStandardMaterial({
+    color: c,
+    roughness: 0.86
+  });
+
+const m = {
+  grass: M(0x9fc88d),
+  path: M(0xe9d8bb),
+  path2: M(0xf6e9d2),
+  wood: M(0x986b54),
+  cream: M(0xffead7),
+  roof: M(0xc78391),
+  roof2: M(0xe4a5a6),
+  leaf: M(0x6f9d72),
+  leaf2: M(0x9bc58c),
+  leaf3: M(0xb8d59d),
+  water: M(0x7fc4d1),
+  white: M(0xfff9ef),
+  dark: M(0x43343b),
+  pink: M(0xf1b5c5),
+  gold: M(0xf1c76f),
+  pinks: M(0xf3a4c4),
+  lilac: M(0xc8a9ec),
+  yellow: M(0xffdc85)
+};
+
+function add(
+  g,
+  mat,
+  parent,
+  x,
+  y,
+  z,
+  sx = 1,
+  sy = 1,
+  sz = 1
+) {
+  const o = new THREE.Mesh(g, mat);
+
+  o.position.set(x, y, z);
+  o.scale.set(sx, sy, sz);
+
+  o.castShadow = true;
+  o.receiveShadow = true;
+
+  parent.add(o);
+
+  return o;
+}
+
+function box(
+  parent,
+  x,
+  y,
+  z,
+  w,
+  h,
+  d,
+  mat
+) {
+  return add(
+    new THREE.BoxGeometry(w, h, d),
+    mat,
+    parent,
+    x,
+    y,
+    z
+  );
+}
+
+function ball(
+  parent,
+  x,
+  y,
+  z,
+  sx,
+  sy,
+  sz,
+  mat
+) {
+  return add(
+    new THREE.SphereGeometry(1, 18, 12),
+    mat,
+    parent,
+    x,
+    y,
+    z,
+    sx,
+    sy,
+    sz
+  );
+}
+
+/* 바닥 */
+
+const ground = add(
+  new THREE.PlaneGeometry(90, 90),
+  m.grass,
+  scene,
+  0,
+  -0.12,
+  0
+);
+
+ground.rotation.x = -Math.PI / 2;
+
+/* 길 */
+
+for (let i = 0; i < 15; i++) {
+  const p = box(
+    scene,
+    Math.sin(i * 0.28) * 1.6,
+    0.01,
+    11 - i * 1.55,
+    4.2,
+    0.07,
+    1.65,
+    i % 3 ? m.path : m.path2
+  );
+
+  p.rotation.y =
+    Math.sin(i * 0.28) * -0.1;
+}
+
+/* 연못 */
+
+const pond = add(
+  new THREE.CylinderGeometry(3, 3, 0.15, 40),
+  m.water,
+  scene,
+  7,
+  0.03,
+  1,
+  1,
+  1,
+  0.72
+);
+
+const rim = add(
+  new THREE.TorusGeometry(3, 0.16, 8, 40),
+  m.white,
+  scene,
+  7,
+  0.12,
+  1,
+  1,
+  1,
+  0.72
+);
+
+rim.rotation.x = Math.PI / 2;
+
+/* 집 */
+
+const house = new THREE.Group();
+scene.add(house);
+
+house.position.set(-5, 0, -5);
+
+box(
+  house,
+  0,
+  1.1,
+  0,
+  5.3,
+  2.2,
+  4,
+  m.cream
+);
+
+const r1 = box(
+  house,
+  -1.3,
+  2.45,
+  0,
+  3.2,
+  0.2,
+  4.8,
+  m.roof
+);
+
+r1.rotation.z = 0.52;
+
+const r2 = box(
+  house,
+  1.3,
+  2.45,
+  0,
+  3.2,
+  0.2,
+  4.8,
+  m.roof2
+);
+
+r2.rotation.z = -0.52;
+
+box(
+  house,
+  0,
+  0.85,
+  2.04,
+  1,
+  1.65,
+  0.15,
+  m.wood
+);
+
+ball(
+  house,
+  0.3,
+  0.85,
+  2.15,
+  0.06,
+  0.06,
+  0.04,
+  m.gold
+);
+
+for (const x of [-1.6, 1.6]) {
+  box(
+    house,
+    x,
+    1.35,
+    2.05,
+    0.8,
+    0.7,
+    0.12,
+    M(0x9cced8)
+  );
+
+  box(
+    house,
+    x,
+    1.35,
+    2.12,
+    0.07,
+    0.7,
+    0.04,
+    m.white
+  );
+
+  box(
+    house,
+    x,
+    1.35,
+    2.12,
+    0.8,
+    0.07,
+    0.04,
+    m.white
+  );
+}
+
+/* 나무 */
+
+function tree(x, z, s = 1) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+  g.scale.setScalar(s);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.2,
+      0.28,
+      1.5,
+      10
+    ),
+    m.wood,
+    g,
+    0,
+    0.75,
+    0
+  );
+
+  ball(
+    g,
+    0,
+    1.95,
+    0,
+    0.95,
+    1.05,
+    0.9,
+    m.leaf
+  );
+
+  ball(
+    g,
+    -0.52,
+    1.75,
+    0.02,
+    0.7,
+    0.75,
+    0.7,
+    m.leaf2
+  );
+
+  ball(
+    g,
+    0.55,
+    1.8,
+    -0.03,
+    0.7,
+    0.8,
+    0.7,
+    m.leaf3
+  );
+
+  ball(
+    g,
+    -0.15,
+    2.48,
+    0.1,
+    0.62,
+    0.68,
+    0.6,
+    m.leaf2
+  );
+}
+
+[
+  [-10, -8, 1.2],
+  [-9, 1, 0.9],
+  [-10, 7, 1.1],
+  [10, -8, 1.2],
+  [11, -2, 0.95],
+  [10, 8, 1.1],
+  [4, -10, 0.8],
+  [-2, -12, 0.8]
+].forEach(a => tree(...a));
+
+/* 꽃 */
+
+const flowerGroups = [];
+
+function flower(
+  x,
+  z,
+  color,
+  scale = 1
+) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+  g.scale.setScalar(scale);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.025,
+      0.04,
+      0.42,
+      7
+    ),
+    M(0x6f9d68),
+    g,
+    0,
+    0.22,
+    0
+  );
+
+  for (let i = 0; i < 5; i++) {
+    const a =
+      i * Math.PI * 2 / 5;
+
+    ball(
+      g,
+      Math.cos(a) * 0.14,
+      0.46,
+      Math.sin(a) * 0.14,
+      0.12,
+      0.08,
+      0.12,
+      color
+    );
+  }
+
+  ball(
+    g,
+    0,
+    0.48,
+    0,
+    0.075,
+    0.07,
+    0.075,
+    m.gold
+  );
+
+  flowerGroups.push(g);
+}
+
+function bed(x, z) {
+  box(
+    scene,
+    x,
+    0.08,
+    z,
+    4.1,
+    0.17,
+    2.1,
+    M(0x7c9d68)
+  );
+
+  box(
+    scene,
+    x,
+    0.17,
+    z,
+    3.8,
+    0.1,
+    1.8,
+    M(0x80624c)
+  );
+
+  const cs = [
+    m.pinks,
+    m.yellow,
+    m.white,
+    m.lilac
+  ];
+
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 2; j++) {
+      flower(
+        x - 1.5 + i * 0.75,
+        z - 0.45 + j * 0.85,
+        cs[(i + j) % 4],
+        0.72
+      );
     }
+  }
+}
 
-    /*
-      예전 버전에서 bunny를 기본 보유하도록 되어 있었다면
-      기존 사용자의 토끼를 없애지 않는다.
-    */
-    if (
-      saved.ownedPets &&
-      Array.isArray(saved.ownedPets) &&
-      saved.ownedPets.includes("bunny")
-    ) {
-      result.ownedPets = [...new Set([
-        ...saved.ownedPets
-      ])];
+bed(-7, 2.8);
+bed(1, -1.2);
+bed(7, 7);
+
+for (let i = 0; i < 42; i++) {
+  const x =
+    Math.sin(i * 12.3) * 12;
+
+  const z =
+    Math.cos(i * 7.1) * 11;
+
+  if (
+    Math.abs(x) < 3 &&
+    z > 0 &&
+    z < 10
+  ) continue;
+
+  flower(
+    x,
+    z,
+    [
+      m.pinks,
+      m.yellow,
+      m.white,
+      m.lilac
+    ][i % 4],
+    0.45 + (i % 3) * 0.1
+  );
+}
+
+/* 울타리 */
+
+for (let i = 0; i < 7; i++) {
+  box(
+    scene,
+    -10 + i * 0.62,
+    0.43,
+    4.8,
+    0.12,
+    0.86,
+    0.12,
+    m.white
+  );
+
+  if (i < 6) {
+    box(
+      scene,
+      -9.7 + i * 0.62,
+      0.52,
+      4.8,
+      0.58,
+      0.12,
+      0.12,
+      M(0xb98767)
+    );
+  }
+}
+
+/* 가로등 */
+
+function lamp(x, z) {
+  add(
+    new THREE.CylinderGeometry(
+      0.07,
+      0.1,
+      1.3,
+      10
+    ),
+    m.wood,
+    scene,
+    x,
+    0.65,
+    z
+  );
+
+  box(
+    scene,
+    x,
+    1.36,
+    z,
+    0.48,
+    0.4,
+    0.48,
+    m.cream
+  );
+
+  ball(
+    scene,
+    x,
+    1.36,
+    z,
+    0.12,
+    0.13,
+    0.12,
+    m.gold
+  );
+}
+
+lamp(-2, -1);
+lamp(3, 4);
+lamp(-8, 6);
+
+/* 관목 */
+
+const shrubMat = M(0x7fae79);
+const shrubLight = M(0xa9cd91);
+const stoneMat = M(0xd7c9b5);
+const pinkMat = M(0xf3bfd0);
+
+function shrub(x, z, s = 1) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+  g.scale.setScalar(s);
+
+  ball(
+    g,
+    0,
+    0.35,
+    0,
+    0.52,
+    0.38,
+    0.45,
+    shrubMat
+  );
+
+  ball(
+    g,
+    -0.32,
+    0.43,
+    0.02,
+    0.34,
+    0.31,
+    0.34,
+    shrubLight
+  );
+
+  ball(
+    g,
+    0.3,
+    0.4,
+    -0.06,
+    0.34,
+    0.3,
+    0.34,
+    shrubLight
+  );
+
+  flower(
+    x - 0.1,
+    z - 0.05,
+    pinkMat,
+    0.42
+  );
+}
+
+[
+  [-4, 4],
+  [-3, 4.3],
+  [-2, 4.4],
+  [4, 2],
+  [4.6, 2.2],
+  [5.2, 2.1],
+  [-8, -2],
+  [-7.2, -2.1],
+  [8, 4.5],
+  [8.8, 4.6],
+  [-6, -8],
+  [-4, -8],
+  [6, -6],
+  [8, -6]
+].forEach((p, i) =>
+  shrub(
+    p[0],
+    p[1],
+    i % 3 === 0 ? 0.9 : 0.7
+  )
+);
+
+/* 돌 */
+
+function steppingStone(x, z, rot = 0) {
+  const o = add(
+    new THREE.CylinderGeometry(
+      0.32,
+      0.36,
+      0.09,
+      7
+    ),
+    stoneMat,
+    scene,
+    x,
+    0.02,
+    z
+  );
+
+  o.rotation.y = rot;
+}
+
+for (let i = 0; i < 7; i++) {
+  steppingStone(
+    -2.6 + i * 0.78,
+    7.2 + Math.sin(i * 0.55) * 0.18,
+    i * 0.2
+  );
+
+  steppingStone(
+    3.1 + i * 0.65,
+    -4.2 + Math.sin(i * 0.7) * 0.22,
+    i * 0.17
+  );
+}
+
+/* 버섯 */
+
+function mushroom(x, z, s = 1) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+  g.scale.setScalar(s);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.12,
+      0.16,
+      0.42,
+      10
+    ),
+    M(0xffefdc),
+    g,
+    0,
+    0.21,
+    0
+  );
+
+  ball(
+    g,
+    0,
+    0.45,
+    0,
+    0.36,
+    0.19,
+    0.35,
+    M(0xe995a7)
+  );
+}
+
+mushroom(-8, 4, 0.8);
+mushroom(-4, -3, 0.7);
+mushroom(9, -3, 0.9);
+mushroom(5, 8, 0.65);
+
+/* 우편함 */
+
+function mailbox(x, z) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.055,
+      0.07,
+      1.1,
+      8
+    ),
+    m.wood,
+    g,
+    0,
+    0.55,
+    0
+  );
+
+  box(
+    g,
+    0,
+    1.15,
+    0,
+    0.65,
+    0.48,
+    0.42,
+    M(0xd58c9a)
+  );
+
+  box(
+    g,
+    0,
+    1.18,
+    0.22,
+    0.3,
+    0.08,
+    0.025,
+    m.cream
+  );
+}
+
+mailbox(-2.8, -4.2);
+
+/* 표지판 */
+
+function signpost(
+  x,
+  z,
+  labelColor = 0xe9b6c6
+) {
+  const g = new THREE.Group();
+
+  scene.add(g);
+
+  g.position.set(x, 0, z);
+
+  add(
+    new THREE.CylinderGeometry(
+      0.06,
+      0.08,
+      1.5,
+      8
+    ),
+    m.wood,
+    g,
+    0,
+    0.75,
+    0
+  );
+
+  box(
+    g,
+    0,
+    1.35,
+    0,
+    0.95,
+    0.48,
+    0.13,
+    M(labelColor)
+  );
+}
+
+signpost(3.6, -3.7);
+signpost(-8, 0, 0xb8c9e8);
+
+/* =========================================================
+   캐릭터
+========================================================= */
+
+const avatar = new THREE.Group();
+scene.add(avatar);
+
+const limbs = [];
+
+const avatarShadow = add(
+  new THREE.CircleGeometry(0.65, 24),
+  new THREE.MeshBasicMaterial({
+    color: 0x536d4b,
+    transparent: true,
+    opacity: 0.16
+  }),
+  avatar,
+  0,
+  0.025,
+  0
+);
+
+avatarShadow.rotation.x = -Math.PI / 2;
+
+const characterLoader = new GLTFLoader();
+
+const characterUrls = [
+  "https://cdn.jsdelivr.net/gh/boyoung0819/mongle-mind@main/components/village/character.glb",
+  "https://raw.githubusercontent.com/boyoung0819/mongle-mind/main/components/village/character.glb"
+];
+
+let loadedCharacter = null;
+
+function loadOriginalCharacter(urlIndex = 0) {
+  if (urlIndex >= characterUrls.length) {
+    console.error(
+      "모든 주소에서 character.glb를 불러오지 못했습니다."
+    );
+
+    toast(
+      "캐릭터 파일을 불러오지 못했어요."
+    );
+
+    return;
+  }
+
+  characterLoader.load(
+    characterUrls[urlIndex],
+    gltf => {
+      loadedCharacter = gltf.scene;
+
+      const bounds =
+        new THREE.Box3().setFromObject(
+          loadedCharacter
+        );
+
+      const size =
+        bounds.getSize(
+          new THREE.Vector3()
+        );
+
+      const center =
+        bounds.getCenter(
+          new THREE.Vector3()
+        );
+
+      const height =
+        Math.max(size.y, 0.001);
+
+      loadedCharacter.scale.setScalar(
+        3 / height
+      );
+
+      loadedCharacter.position.set(
+        -center.x *
+          loadedCharacter.scale.x,
+
+        -bounds.min.y *
+          loadedCharacter.scale.y,
+
+        -center.z *
+          loadedCharacter.scale.z
+      );
+
+      loadedCharacter.userData.walkBaseY =
+        loadedCharacter.position.y;
+
+      loadedCharacter.userData.walkBaseRotationX =
+        loadedCharacter.rotation.x;
+
+      loadedCharacter.userData.walkBaseRotationZ =
+        loadedCharacter.rotation.z;
+
+      loadedCharacter.traverse(obj => {
+        if (!obj.isMesh) return;
+
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      });
+
+      avatar.add(loadedCharacter);
+    },
+
+    undefined,
+
+    error => {
+      console.warn(
+        "캐릭터 로드 실패",
+        error
+      );
+
+      loadOriginalCharacter(
+        urlIndex + 1
+      );
     }
+  );
+}
 
-    if (
-      typeof saved.selectedPet === "string" &&
-      saved.selectedPet
-    ) {
-      result.selectedPet = saved.selectedPet;
-    }
+loadOriginalCharacter();
 
-    if (
-      typeof saved.petCurrency !== "number"
-    ) {
-      result.petCurrency = 0;
-    }
+/* =========================================================
+   펫 3D 모델
+========================================================= */
 
-    if (
-      typeof saved.petCoins !== "number"
-    ) {
-      result.petCoins = 0;
-    }
+const pet = new THREE.Group();
+scene.add(pet);
 
+let petBodyGroup = null;
 
-    /* -------------------------------------------------------
-       액세서리 기본 구조
-    ------------------------------------------------------- */
+function clearGroup(group) {
+  while (group.children.length) {
+    const child = group.children.pop();
 
-    Object.keys(PETS).forEach(id => {
-      if (!result.petAccessories[id]) {
-        result.petAccessories[id] = {
-          hat: "none",
-          outfit: "none"
-        };
+    child.traverse(obj => {
+      if (obj.geometry) {
+        obj.geometry.dispose();
+      }
+
+      if (obj.material) {
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach(m => m.dispose());
+        } else {
+          obj.material.dispose();
+        }
       }
     });
-
-
-    return result;
   }
+}
 
+function createPetModel(petId) {
+  clearGroup(pet);
 
-  function saveState() {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(state)
+  const data =
+    PETS[petId] || PETS.bunny;
+
+  petBodyGroup =
+    new THREE.Group();
+
+  pet.add(petBodyGroup);
+
+  const bodyMat =
+    M(data.color);
+
+  const earMat =
+    M(data.earColor);
+
+  /* 몸 */
+
+  ball(
+    petBodyGroup,
+    0,
+    0.42,
+    0,
+    0.45,
+    0.36,
+    0.4,
+    bodyMat
+  );
+
+  /* 머리 */
+
+  ball(
+    petBodyGroup,
+    0,
+    0.78,
+    -0.02,
+    0.34,
+    0.32,
+    0.32,
+    bodyMat
+  );
+
+  /* 귀 */
+
+  if (petId === "cat") {
+    for (const x of [-0.21, 0.21]) {
+      const ear = add(
+        new THREE.ConeGeometry(
+          0.14,
+          0.38,
+          4
+        ),
+        earMat,
+        petBodyGroup,
+        x,
+        1.05,
+        -0.02
       );
-    } catch (error) {
-      console.warn("저장하지 못했습니다.", error);
-    }
 
-    updateTopUI();
+      ear.rotation.z =
+        x < 0 ? -0.25 : 0.25;
+    }
+  } else if (petId === "fox") {
+    for (const x of [-0.22, 0.22]) {
+      const ear = add(
+        new THREE.ConeGeometry(
+          0.16,
+          0.45,
+          5
+        ),
+        earMat,
+        petBodyGroup,
+        x,
+        1.05,
+        -0.02
+      );
+
+      ear.rotation.z =
+        x < 0 ? -0.2 : 0.2;
+    }
+  } else if (petId === "star") {
+    for (let i = 0; i < 5; i++) {
+      const a =
+        i * Math.PI * 2 / 5;
+
+      ball(
+        petBodyGroup,
+        Math.cos(a) * 0.25,
+        0.82 +
+          Math.sin(a) * 0.25,
+        -0.03,
+        0.13,
+        0.13,
+        0.13,
+        bodyMat
+      );
+    }
+  } else {
+    for (const x of [-0.21, 0.21]) {
+      ball(
+        petBodyGroup,
+        x,
+        1.02,
+        -0.02,
+        0.12,
+        0.22,
+        0.12,
+        earMat
+      );
+    }
   }
 
+  /* 눈 */
 
-  /* =========================================================
-     펫 데이터
-  ========================================================= */
+  for (const x of [-0.12, 0.12]) {
+    ball(
+      petBodyGroup,
+      x,
+      0.8,
+      0.28,
+      0.035,
+      0.045,
+      0.025,
+      m.dark
+    );
+  }
 
-  const PETS = {
+  /* 볼 */
 
-    bunny: {
-      id: "bunny",
-      name: "몽글토끼",
-      icon: "🐰",
-      rarity: "기본",
-      rate: 0,
-      duplicateCoins: 10,
-      fragmentNeed: 10,
-      body: 0xf7e9df,
-      ear: 0xe9b9c4
-    },
+  ball(
+    petBodyGroup,
+    -0.18,
+    0.69,
+    0.27,
+    0.055,
+    0.035,
+    0.02,
+    m.pink
+  );
 
-    puppy: {
-      id: "puppy",
-      name: "구름강아지",
-      icon: "🐶",
-      rarity: "일반",
-      rate: 40,
-      duplicateCoins: 12,
-      fragmentNeed: 10,
-      body: 0xdab68e,
-      ear: 0xb8895e
-    },
+  ball(
+    petBodyGroup,
+    0.18,
+    0.69,
+    0.27,
+    0.055,
+    0.035,
+    0.02,
+    m.pink
+  );
 
-    cat: {
-      id: "cat",
-      name: "달빛고양이",
-      icon: "🐱",
-      rarity: "일반",
-      rate: 30,
-      duplicateCoins: 15,
-      fragmentNeed: 10,
-      body: 0xcfc9dd,
-      ear: 0xa9a1bf
-    },
+  /* 꼬리 */
 
-    fox: {
-      id: "fox",
-      name: "살구여우",
-      icon: "🦊",
-      rarity: "희귀",
-      rate: 16,
-      duplicateCoins: 22,
-      fragmentNeed: 15,
-      body: 0xef9f63,
-      ear: 0xd97845
-    },
+  if (petId !== "star") {
+    ball(
+      petBodyGroup,
+      0,
+      0.42,
+      -0.38,
+      0.18,
+      0.18,
+      0.18,
+      bodyMat
+    );
+  }
 
-    bear: {
-      id: "bear",
-      name: "솜사탕곰",
-      icon: "🐻",
-      rarity: "희귀",
-      rate: 9,
-      duplicateCoins: 28,
-      fragmentNeed: 15,
-      body: 0xc9aa93,
-      ear: 0xa77f69
-    },
+  /* 액세서리 */
 
-    star: {
-      id: "star",
-      name: "별빛친구",
-      icon: "⭐",
-      rarity: "특별",
-      rate: 5,
-      duplicateCoins: 45,
-      fragmentNeed: 20,
-      body: 0xf3d47c,
-      ear: 0xf0bd5b
+  applyPetAccessories();
+}
+
+function applyPetAccessories() {
+  if (!petBodyGroup) return;
+
+  const petId =
+    state.selectedPet;
+
+  const acc =
+    state.petAccessories[petId] || {
+      hat: "none",
+      outfit: "none"
+    };
+
+  /* 액세서리 그룹 제거 */
+
+  const old =
+    petBodyGroup.getObjectByName(
+      "petAccessories"
+    );
+
+  if (old) {
+    petBodyGroup.remove(old);
+  }
+
+  const group =
+    new THREE.Group();
+
+  group.name =
+    "petAccessories";
+
+  petBodyGroup.add(group);
+
+  /* 모자 */
+
+  if (acc.hat === "flower") {
+    ball(
+      group,
+      0,
+      1.08,
+      0,
+      0.13,
+      0.08,
+      0.13,
+      M(0xf19bb4)
+    );
+
+    for (let i = 0; i < 5; i++) {
+      const a =
+        i * Math.PI * 2 / 5;
+
+      ball(
+        group,
+        Math.cos(a) * 0.12,
+        1.08,
+        Math.sin(a) * 0.12,
+        0.07,
+        0.04,
+        0.07,
+        M(0xffd5e2)
+      );
     }
+  }
+
+  if (acc.hat === "beret") {
+    ball(
+      group,
+      0,
+      1.05,
+      0,
+      0.3,
+      0.09,
+      0.27,
+      M(0xb998d9)
+    );
+  }
+
+  if (acc.hat === "crown") {
+    for (let i = 0; i < 3; i++) {
+      const tooth = add(
+        new THREE.ConeGeometry(
+          0.06,
+          0.22,
+          5
+        ),
+        m.gold,
+        group,
+        -0.12 + i * 0.12,
+        1.1,
+        0
+      );
+
+      tooth.rotation.z =
+        i === 1 ? 0 : 0.12;
+    }
+  }
+
+  if (acc.hat === "leaf") {
+    const leaf = ball(
+      group,
+      0,
+      1.08,
+      0,
+      0.24,
+      0.06,
+      0.12,
+      m.leaf2
+    );
+
+    leaf.rotation.z =
+      -0.25;
+  }
+
+  /* 옷 */
+
+  if (acc.outfit === "scarf") {
+    const scarf = add(
+      new THREE.TorusGeometry(
+        0.29,
+        0.07,
+        8,
+        24
+      ),
+      M(0xef9da9),
+      group,
+      0,
+      0.68,
+      0
+    );
+
+    scarf.rotation.x =
+      Math.PI / 2;
+  }
+
+  if (acc.outfit === "cape") {
+    const cape = add(
+      new THREE.ConeGeometry(
+        0.48,
+        0.65,
+        4,
+        1,
+        true
+      ),
+      M(0x9f8fd2),
+      group,
+      0,
+      0.45,
+      -0.18
+    );
+
+    cape.rotation.x =
+      Math.PI;
+  }
+
+  if (acc.outfit === "ribbon") {
+    ball(
+      group,
+      -0.15,
+      0.6,
+      0.3,
+      0.12,
+      0.07,
+      0.04,
+      M(0xef86a6)
+    );
+
+    ball(
+      group,
+      0.15,
+      0.6,
+      0.3,
+      0.12,
+      0.07,
+      0.04,
+      M(0xef86a6)
+    );
+
+    ball(
+      group,
+      0,
+      0.6,
+      0.3,
+      0.06,
+      0.06,
+      0.04,
+      M(0xf1c76f)
+    );
+  }
+}
+
+createPetModel(
+  state.selectedPet
+);
+
+/* =========================================================
+   숨겨진 조개
+========================================================= */
+
+const shell = new THREE.Group();
+scene.add(shell);
+
+shell.position.set(
+  8,
+  0.15,
+  5
+);
+
+ball(
+  shell,
+  0,
+  0.1,
+  0,
+  0.22,
+  0.11,
+  0.17,
+  M(0xf4d6a2)
+);
+
+for (let i = -1; i <= 1; i++) {
+  const q = add(
+    new THREE.TorusGeometry(
+      0.09,
+      0.01,
+      5,
+      12,
+      Math.PI
+    ),
+    m.white,
+    shell,
+    i * 0.06,
+    0.14,
+    0
+  );
+
+  q.rotation.x =
+    Math.PI / 2;
+}
+
+const sceneStatus =
+  $("sceneStatus");
+
+/* =========================================================
+   저장
+========================================================= */
+
+function save() {
+  try {
+    localStorage.setItem(
+      "mongleMindSave",
+      JSON.stringify(state)
+    );
+  } catch (e) {}
+
+  updateUI();
+}
+
+/* =========================================================
+   스타일
+========================================================= */
+
+function injectPetStyles() {
+  if (document.getElementById("monglePetStyles")) {
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.id =
+    "monglePetStyles";
+
+  style.textContent = `
+    .mm-pet-ui {
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .mm-pet-card,
+    .mm-pet-section {
+      background:rgba(255,255,255,.84);
+      border:1px solid rgba(120,100,150,.12);
+      border-radius:24px;
+      padding:18px;
+      box-shadow:0 10px 30px rgba(80,60,100,.08);
+    }
+
+    .mm-pet-title {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .mm-pet-title h3 {
+      margin:0;
+      font-size:18px;
+    }
+
+    .mm-pet-currency {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .mm-currency {
+      padding:8px 12px;
+      border-radius:999px;
+      background:#faf5ff;
+      font-weight:700;
+      font-size:13px;
+    }
+
+    .mm-pet-grid {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .mm-pet-item {
+      border:1px solid #eee7f5;
+      background:#fff;
+      border-radius:18px;
+      padding:12px;
+      text-align:center;
+      cursor:pointer;
+      transition:.18s;
+    }
+
+    .mm-pet-item:hover {
+      transform:translateY(-2px);
+    }
+
+    .mm-pet-item.active {
+      border:2px solid #b998d9;
+      background:#faf5ff;
+    }
+
+    .mm-pet-icon {
+      font-size:38px;
+      margin-bottom:5px;
+    }
+
+    .mm-pet-name {
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .mm-pet-rarity {
+      font-size:11px;
+      opacity:.65;
+      margin-top:3px;
+    }
+
+    .mm-pet-button {
+      border:0;
+      border-radius:14px;
+      padding:10px 13px;
+      background:#9d82c4;
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+      margin-top:8px;
+      width:100%;
+    }
+
+    .mm-pet-button.secondary {
+      background:#f1eafa;
+      color:#6e5689;
+    }
+
+    .mm-pet-button:disabled {
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .mm-pet-accessory-grid {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:8px;
+    }
+
+    .mm-accessory {
+      border:1px solid #eee7f5;
+      background:#fff;
+      border-radius:16px;
+      padding:10px 5px;
+      text-align:center;
+      cursor:pointer;
+    }
+
+    .mm-accessory.active {
+      border:2px solid #b998d9;
+      background:#faf5ff;
+    }
+
+    .mm-accessory-icon {
+      font-size:25px;
+    }
+
+    .mm-accessory-name {
+      font-size:11px;
+      margin-top:4px;
+      font-weight:700;
+    }
+
+    .mm-fragment {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:10px 0;
+      border-bottom:1px solid #f0ebf4;
+    }
+
+    .mm-fragment:last-child {
+      border-bottom:0;
+    }
+
+    .mm-quest {
+      padding:15px;
+      border-radius:18px;
+      background:#fff;
+      border:1px solid #eee7f5;
+      margin-bottom:10px;
+    }
+
+    .mm-quest.completed {
+      background:#faf5ff;
+      border-color:#d8c7eb;
+    }
+
+    .mm-quest-top {
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .mm-quest-icon {
+      font-size:26px;
+    }
+
+    .mm-quest-body {
+      flex:1;
+    }
+
+    .mm-quest-name {
+      font-weight:800;
+    }
+
+    .mm-quest-desc {
+      font-size:12px;
+      opacity:.7;
+      margin-top:3px;
+    }
+
+    .mm-quest-progress {
+      margin-top:10px;
+      height:8px;
+      background:#eeeaf2;
+      border-radius:99px;
+      overflow:hidden;
+    }
+
+    .mm-quest-progress > div {
+      height:100%;
+      background:#b998d9;
+      border-radius:99px;
+      transition:.3s;
+    }
+
+    .mm-quest-bottom {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-top:10px;
+      font-size:12px;
+    }
+
+    .mm-gacha-result {
+      text-align:center;
+      padding:18px;
+      border-radius:20px;
+      background:linear-gradient(135deg,#fff8fd,#f6f1ff);
+      margin-top:12px;
+      display:none;
+    }
+
+    .mm-gacha-result.show {
+      display:block;
+      animation:mmPop .35s ease;
+    }
+
+    @keyframes mmPop {
+      from {
+        transform:scale(.9);
+        opacity:0;
+      }
+      to {
+        transform:scale(1);
+        opacity:1;
+      }
+    }
+
+    @media(max-width:700px) {
+      .mm-pet-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+
+      .mm-pet-accessory-grid {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+injectPetStyles();
+
+/* =========================================================
+   펫 화면 생성
+========================================================= */
+
+let petUI = null;
+let questUI = null;
+let petResultTimer = null;
+
+function ensurePetUI() {
+  const screen =
+    document.querySelector(
+      '[data-screen="dress"]'
+    );
+
+  if (!screen) return;
+
+  if (!petUI) {
+    petUI =
+      document.createElement("div");
+
+    petUI.className =
+      "mm-pet-ui";
+
+    screen.appendChild(petUI);
+
+    petUI.addEventListener(
+      "click",
+      handlePetClick
+    );
+  }
+}
+
+function ensureQuestUI() {
+  const screen =
+    document.querySelector(
+      '[data-screen="quests"]'
+    );
+
+  if (!screen) return;
+
+  if (!questUI) {
+    questUI =
+      document.createElement("div");
+
+    questUI.className =
+      "mm-pet-ui";
+
+    screen.appendChild(questUI);
+
+    questUI.addEventListener(
+      "click",
+      handleQuestClick
+    );
+  }
+}
+
+/* =========================================================
+   펫 화면 렌더링
+========================================================= */
+
+function renderPetUI() {
+  ensurePetUI();
+
+  if (!petUI) return;
+
+  const selected =
+    PETS[state.selectedPet] ||
+    PETS.bunny;
+
+  const acc =
+    state.petAccessories[state.selectedPet] ||
+    {
+      hat: "none",
+      outfit: "none"
+    };
+
+  const owned =
+    new Set(state.ownedPets);
+
+  petUI.innerHTML = `
+    <div class="mm-pet-card">
+
+      <div class="mm-pet-title">
+        <h3>🐾 나의 펫</h3>
+
+        <div class="mm-pet-currency">
+          <span class="mm-currency">
+            ✨ 별빛 ${state.petCurrency}
+          </span>
+
+          <span class="mm-currency">
+            🪙 펫 코인 ${state.petCoins}
+          </span>
+        </div>
+      </div>
+
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:16px;
+        padding:14px;
+        border-radius:20px;
+        background:#faf7fd;
+      ">
+        <div style="font-size:58px;">
+          ${selected.icon}
+        </div>
+
+        <div>
+          <div style="
+            font-size:18px;
+            font-weight:900;
+          ">
+            ${selected.name}
+          </div>
+
+          <div style="
+            font-size:12px;
+            opacity:.65;
+            margin-top:4px;
+          ">
+            ${selected.rarity} · 현재 데리고 다니는 펫
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mm-pet-section">
+
+      <div class="mm-pet-title">
+        <h3>🎁 펫 뽑기</h3>
+      </div>
+
+      <div style="
+        font-size:13px;
+        line-height:1.6;
+        opacity:.75;
+      ">
+        별빛을 사용해서 새로운 펫을 만나 보세요.
+        <br>
+        중복된 펫이 나오면 자동으로 펫 코인으로 바뀌어요.
+      </div>
+
+      <button
+        class="mm-pet-button"
+        data-pet-action="draw"
+        ${state.petCurrency < 1 ? "disabled" : ""}
+      >
+        ✨ 별빛 1개로 뽑기
+      </button>
+
+      <div
+        class="mm-gacha-result"
+        id="petGachaResult"
+      ></div>
+    </div>
+
+    <div class="mm-pet-section">
+
+      <div class="mm-pet-title">
+        <h3>📖 펫 도감</h3>
+        <span style="font-size:12px;opacity:.6;">
+          ${state.ownedPets.length}/${PET_LIST.length}
+        </span>
+      </div>
+
+      <div class="mm-pet-grid">
+        ${PET_LIST.map(p => {
+          const has =
+            owned.has(p.id);
+
+          return `
+            <div
+              class="mm-pet-item ${
+                state.selectedPet === p.id
+                  ? "active"
+                  : ""
+              }"
+              data-pet-action="select"
+              data-pet-id="${p.id}"
+            >
+
+              <div class="mm-pet-icon">
+                ${has ? p.icon : "❔"}
+              </div>
+
+              <div class="mm-pet-name">
+                ${has ? p.name : "???"
+                }
+              </div>
+
+              <div class="mm-pet-rarity">
+                ${p.rarity}
+              </div>
+
+              ${
+                has
+                  ? `<button
+                      class="mm-pet-button secondary"
+                      data-pet-action="select"
+                      data-pet-id="${p.id}"
+                    >
+                      ${
+                        state.selectedPet === p.id
+                          ? "현재 펫"
+                          : "선택하기"
+                      }
+                    </button>`
+                  : ""
+              }
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="mm-pet-section">
+
+      <div class="mm-pet-title">
+        <h3>🎀 펫 꾸미기</h3>
+      </div>
+
+      <div style="
+        font-size:13px;
+        opacity:.7;
+        margin-bottom:10px;
+      ">
+        ${selected.name}에게 원하는 장식을 골라 주세요.
+      </div>
+
+      <div style="
+        font-weight:800;
+        font-size:13px;
+        margin-bottom:7px;
+      ">
+        🎩 모자
+      </div>
+
+      <div class="mm-pet-accessory-grid">
+        ${Object.values(PET_HATS).map(h => `
+          <div
+            class="mm-accessory ${
+              acc.hat === h.id
+                ? "active"
+                : ""
+            }"
+            data-pet-action="hat"
+            data-accessory="${h.id}"
+          >
+            <div class="mm-accessory-icon">
+              ${h.icon}
+            </div>
+
+            <div class="mm-accessory-name">
+              ${h.name}
+            </div>
+
+            ${
+              h.price > 0
+                ? `<div style="
+                    font-size:10px;
+                    opacity:.55;
+                    margin-top:3px;
+                  ">
+                    🪙 ${h.price}
+                  </div>`
+                : ""
+            }
+          </div>
+        `).join("")}
+      </div>
+
+      <div style="
+        font-weight:800;
+        font-size:13px;
+        margin:
+          16px 0 7px;
+      ">
+        🧣 옷
+      </div>
+
+      <div class="mm-pet-accessory-grid">
+        ${Object.values(PET_OUTFITS).map(o => `
+          <div
+            class="mm-accessory ${
+              acc.outfit === o.id
+                ? "active"
+                : ""
+            }"
+            data-pet-action="outfit"
+            data-accessory="${o.id}"
+          >
+            <div class="mm-accessory-icon">
+              ${o.icon}
+            </div>
+
+            <div class="mm-accessory-name">
+              ${o.name}
+            </div>
+
+            ${
+              o.price > 0
+                ? `<div style="
+                    font-size:10px;
+                    opacity:.55;
+                    margin-top:3px;
+                  ">
+                    🪙 ${o.price}
+                  </div>`
+                : ""
+            }
+          </div>
+        `).join("")}
+      </div>
+
+    </div>
+
+    <div class="mm-pet-section">
+
+      <div class="mm-pet-title">
+        <h3>🧩 펫 조각 상점</h3>
+      </div>
+
+      <div style="
+        font-size:13px;
+        line-height:1.6;
+        opacity:.7;
+        margin-bottom:10px;
+      ">
+        펫 코인으로 원하는 펫의 조각을 구매할 수 있어요.
+        조각이 충분히 모이면 펫을 직접 합성할 수 있어요.
+      </div>
+
+      ${PET_LIST
+        .filter(p => p.id !== "bunny")
+        .map(p => {
+          const fragments =
+            Number(
+              state.petFragments[p.id] || 0
+            );
+
+          const canCraft =
+            fragments >= p.fragmentNeed;
+
+          return `
+            <div class="mm-fragment">
+
+              <div>
+                <div style="
+                  font-weight:800;
+                ">
+                  ${p.icon} ${p.name}
+                </div>
+
+                <div style="
+                  font-size:11px;
+                  opacity:.6;
+                  margin-top:3px;
+                ">
+                  🧩 ${fragments}/${p.fragmentNeed}
+                </div>
+              </div>
+
+              <div style="
+                display:flex;
+                gap:6px;
+              ">
+
+                <button
+                  class="mm-pet-button secondary"
+                  style="
+                    width:auto;
+                    margin:0;
+                  "
+                  data-pet-action="fragment"
+                  data-pet-id="${p.id}"
+                  ${state.petCoins < 5 ? "disabled" : ""}
+                >
+                  🪙 5
+                </button>
+
+                <button
+                  class="mm-pet-button"
+                  style="
+                    width:auto;
+                    margin:0;
+                  "
+                  data-pet-action="craft"
+                  data-pet-id="${p.id}"
+                  ${!canCraft || owned.has(p.id)
+                    ? "disabled"
+                    : ""}
+                >
+                  ${
+                    owned.has(p.id)
+                      ? "보유 중"
+                      : "합성"
+                  }
+                </button>
+
+              </div>
+
+            </div>
+          `;
+        }).join("")}
+
+    </div>
+  `;
+}
+
+/* =========================================================
+   펫 클릭 처리
+========================================================= */
+
+function handlePetClick(e) {
+  const target =
+    e.target.closest(
+      "[data-pet-action]"
+    );
+
+  if (!target) return;
+
+  const action =
+    target.dataset.petAction;
+
+  if (action === "draw") {
+    drawPet();
+    return;
+  }
+
+  if (action === "select") {
+    const id =
+      target.dataset.petId;
+
+    if (!id) return;
+
+    if (!state.ownedPets.includes(id)) {
+      return;
+    }
+
+    state.selectedPet = id;
+
+    if (!state.petAccessories[id]) {
+      state.petAccessories[id] = {
+        hat: "none",
+        outfit: "none"
+      };
+    }
+
+    createPetModel(id);
+    save();
+
+    toast(
+      `${PETS[id].name}을 선택했어요!`
+    );
+
+    return;
+  }
+
+  if (action === "hat") {
+    const id =
+      target.dataset.accessory;
+
+    equipPetHat(id);
+    return;
+  }
+
+  if (action === "outfit") {
+    const id =
+      target.dataset.accessory;
+
+    equipPetOutfit(id);
+    return;
+  }
+
+  if (action === "fragment") {
+    const id =
+      target.dataset.petId;
+
+    buyFragment(id);
+    return;
+  }
+
+  if (action === "craft") {
+    const id =
+      target.dataset.petId;
+
+    craftPet(id);
+  }
+}
+
+/* =========================================================
+   펫 뽑기
+========================================================= */
+
+function drawPet() {
+  if (state.petCurrency < 1) {
+    toast(
+      "별빛이 부족해요. 퀘스트를 완료해 보세요!"
+    );
+
+    return;
+  }
+
+  state.petCurrency -= 1;
+
+  state.stats.petDraws =
+    (state.stats.petDraws || 0) + 1;
+
+  const roll =
+    Math.random() * 100;
+
+  let sum = 0;
+  let result = PETS.puppy;
+
+  for (const petData of PET_LIST) {
+    if (petData.id === "bunny") {
+      continue;
+    }
+
+    sum += petData.rate;
+
+    if (roll <= sum) {
+      result = petData;
+      break;
+    }
+  }
+
+  if (state.ownedPets.includes(result.id)) {
+    state.petCoins +=
+      result.duplicateCoins;
+
+    save();
+
+    showGachaResult(
+      `중복 펫!`,
+      `${result.icon} ${result.name}`,
+      `이미 가지고 있는 펫이라 🪙 펫 코인 ${result.duplicateCoins}개로 바뀌었어요.`
+    );
+
+    return;
+  }
+
+  state.ownedPets.push(
+    result.id
+  );
+
+  if (!state.petAccessories[result.id]) {
+    state.petAccessories[result.id] = {
+      hat: "none",
+      outfit: "none"
+    };
+  }
+
+  save();
+
+  showGachaResult(
+    `새로운 친구 등장!`,
+    `${result.icon} ${result.name}`,
+    `${result.rarity} 펫을 새롭게 만났어요!`
+  );
+}
+
+function showGachaResult(
+  title,
+  name,
+  description
+) {
+  const result =
+    document.getElementById(
+      "petGachaResult"
+    );
+
+  if (!result) return;
+
+  result.innerHTML = `
+    <div style="
+      font-size:13px;
+      font-weight:800;
+      opacity:.65;
+    ">
+      ${title}
+    </div>
+
+    <div style="
+      font-size:42px;
+      margin:8px 0;
+    ">
+      ${name}
+    </div>
+
+    <div style="
+      font-size:13px;
+    ">
+      ${description}
+    </div>
+  `;
+
+  result.classList.add("show");
+
+  clearTimeout(
+    petResultTimer
+  );
+
+  petResultTimer =
+    setTimeout(() => {
+      result.classList.remove(
+        "show"
+      );
+    }, 5000);
+}
+
+/* =========================================================
+   펫 꾸미기
+========================================================= */
+
+function equipPetHat(id) {
+  const item =
+    PET_HATS[id];
+
+  if (!item) return;
+
+  const petId =
+    state.selectedPet;
+
+  if (!state.petAccessories[petId]) {
+    state.petAccessories[petId] = {
+      hat: "none",
+      outfit: "none"
+    };
+  }
+
+  if (
+    id !== "none" &&
+    item.price > 0 &&
+    state.petCoins < item.price
+  ) {
+    toast(
+      "펫 코인이 부족해요."
+    );
+
+    return;
+  }
+
+  if (
+    id !== "none" &&
+    state.petAccessories[petId].hat !== id
+  ) {
+    state.petCoins -=
+      item.price;
+  }
+
+  state.petAccessories[petId].hat =
+    id;
+
+  createPetModel(
+    state.selectedPet
+  );
+
+  save();
+
+  toast(
+    `${item.name}을 적용했어요.`
+  );
+}
+
+function equipPetOutfit(id) {
+  const item =
+    PET_OUTFITS[id];
+
+  if (!item) return;
+
+  const petId =
+    state.selectedPet;
+
+  if (!state.petAccessories[petId]) {
+    state.petAccessories[petId] = {
+      hat: "none",
+      outfit: "none"
+    };
+  }
+
+  if (
+    id !== "none" &&
+    item.price > 0 &&
+    state.petCoins < item.price
+  ) {
+    toast(
+      "펫 코인이 부족해요."
+    );
+
+    return;
+  }
+
+  if (
+    id !== "none" &&
+    state.petAccessories[petId].outfit !== id
+  ) {
+    state.petCoins -=
+      item.price;
+  }
+
+  state.petAccessories[petId].outfit =
+    id;
+
+  createPetModel(
+    state.selectedPet
+  );
+
+  save();
+
+  toast(
+    `${item.name}을 적용했어요.`
+  );
+}
+
+/* =========================================================
+   펫 조각 상점
+========================================================= */
+
+function buyFragment(petId) {
+  const data =
+    PETS[petId];
+
+  if (!data) return;
+
+  if (state.petCoins < 5) {
+    toast(
+      "펫 코인이 부족해요."
+    );
+
+    return;
+  }
+
+  state.petCoins -= 5;
+
+  state.petFragments[petId] =
+    Number(
+      state.petFragments[petId] || 0
+    ) + 1;
+
+  save();
+
+  toast(
+    `${data.icon} ${data.name} 조각을 얻었어요!`
+  );
+}
+
+function craftPet(petId) {
+  const data =
+    PETS[petId];
+
+  if (!data) return;
+
+  const current =
+    Number(
+      state.petFragments[petId] || 0
+    );
+
+  if (
+    current < data.fragmentNeed
+  ) {
+    toast(
+      `조각이 ${data.fragmentNeed - current}개 더 필요해요.`
+    );
+
+    return;
+  }
+
+  if (
+    state.ownedPets.includes(petId)
+  ) {
+    toast(
+      "이미 가지고 있는 펫이에요."
+    );
+
+    return;
+  }
+
+  state.petFragments[petId] =
+    current - data.fragmentNeed;
+
+  state.ownedPets.push(
+    petId
+  );
+
+  state.petAccessories[petId] = {
+    hat: "none",
+    outfit: "none"
   };
 
-  const PET_LIST = Object.values(PETS);
+  save();
 
+  toast(
+    `${data.icon} ${data.name}을 합성했어요!`
+  );
+}
 
-  /* =========================================================
-     펫 액세서리
-  ========================================================= */
+/* =========================================================
+   퀘스트 UI
+========================================================= */
 
-  const PET_HATS = {
+function renderQuestUI() {
+  ensureQuestUI();
 
-    none: {
-      id: "none",
-      name: "없음",
-      icon: "—",
-      price: 0
+  if (!questUI) return;
+
+  questUI.innerHTML = `
+    <div class="mm-pet-section">
+
+      <div class="mm-pet-title">
+        <h3>✨ 별빛 퀘스트</h3>
+
+        <div class="mm-pet-currency">
+          <span class="mm-currency">
+            ✨ 별빛 ${state.petCurrency}
+          </span>
+
+          <span class="mm-currency">
+            🪙 펫 코인 ${state.petCoins}
+          </span>
+        </div>
+      </div>
+
+      <div style="
+        font-size:13px;
+        line-height:1.6;
+        opacity:.7;
+      ">
+        별빛은 펫 뽑기에 사용하는 새로운 재화예요.
+        마을에서 다양한 활동을 하면 별빛 퀘스트를
+        완료할 수 있어요.
+      </div>
+
+    </div>
+
+    ${QUESTS.map(q => {
+      const progress =
+        Math.min(
+          q.goal,
+          Math.max(
+            0,
+            Number(
+              q.getProgress()
+            )
+          )
+        );
+
+      const claimed =
+        state.questClaims.includes(
+          q.id
+        );
+
+      const completed =
+        progress >= q.goal;
+
+      const percent =
+        Math.min(
+          100,
+          progress /
+            q.goal *
+            100
+        );
+
+      return `
+        <div class="mm-quest ${
+          completed
+            ? "completed"
+            : ""
+        }">
+
+          <div class="mm-quest-top">
+
+            <div class="mm-quest-icon">
+              ${q.icon}
+            </div>
+
+            <div class="mm-quest-body">
+
+              <div class="mm-quest-name">
+                ${q.title}
+              </div>
+
+              <div class="mm-quest-desc">
+                ${q.description}
+              </div>
+
+              <div class="mm-quest-progress">
+                <div
+                  style="
+                    width:${percent}%;
+                  "
+                ></div>
+              </div>
+
+              <div class="mm-quest-bottom">
+
+                <span>
+                  ${progress} / ${q.goal}
+                </span>
+
+                <span>
+                  ✨ +${q.rewardPetCurrency}
+                  ${
+                    q.rewardCoins > 0
+                      ? ` · 🪙 +${q.rewardCoins}`
+                      : ""
+                  }
+                </span>
+
+                <button
+                  class="mm-pet-button"
+                  style="
+                    width:auto;
+                    margin:0;
+                  "
+                  data-quest-action="claim"
+                  data-quest-id="${q.id}"
+                  ${
+                    !completed ||
+                    claimed
+                      ? "disabled"
+                      : ""
+                  }
+                >
+                  ${
+                    claimed
+                      ? "보상 받음 ✓"
+                      : completed
+                        ? "보상 받기"
+                        : "진행 중"
+                  }
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+function handleQuestClick(e) {
+  const button =
+    e.target.closest(
+      "[data-quest-action]"
+    );
+
+  if (!button) return;
+
+  if (
+    button.dataset.questAction !==
+    "claim"
+  ) {
+    return;
+  }
+
+  claimQuest(
+    button.dataset.questId
+  );
+}
+
+function claimQuest(id) {
+  const quest =
+    QUESTS.find(
+      q => q.id === id
+    );
+
+  if (!quest) return;
+
+  if (
+    state.questClaims.includes(id)
+  ) {
+    return;
+  }
+
+  const progress =
+    Number(
+      quest.getProgress()
+    );
+
+  /* 중요:
+     조건을 만족하지 않았으면
+     절대로 보상을 지급하지 않는다.
+  */
+
+  if (progress < quest.goal) {
+    toast(
+      "아직 퀘스트를 완료하지 않았어요."
+    );
+
+    return;
+  }
+
+  state.questClaims.push(id);
+
+  state.petCurrency +=
+    quest.rewardPetCurrency;
+
+  state.coins +=
+    quest.rewardCoins;
+
+  xp(10);
+
+  save();
+
+  toast(
+    `퀘스트 완료! ✨ 별빛 +${quest.rewardPetCurrency}${
+      quest.rewardCoins
+        ? ` · 🪙 코인 +${quest.rewardCoins}`
+        : ""
+    }`
+  );
+}
+
+/* =========================================================
+   UI
+========================================================= */
+
+function updateUI() {
+  const coins =
+    $("coins");
+
+  const level =
+    $("level");
+
+  const xpEl =
+    $("xp");
+
+  const flowers =
+    $("flowers");
+
+  if (coins) {
+    coins.textContent =
+      state.coins;
+  }
+
+  if (level) {
+    level.textContent =
+      state.level;
+  }
+
+  if (xpEl) {
+    xpEl.textContent =
+      state.xp;
+  }
+
+  if (flowers) {
+    flowers.textContent =
+      state.flowers;
+  }
+
+  const gardenCoins =
+    $("gardenCoins");
+
+  if (gardenCoins) {
+    gardenCoins.textContent =
+      state.coins;
+  }
+
+  const waterStatus =
+    $("waterStatus");
+
+  if (waterStatus) {
+    waterStatus.textContent =
+      state.watered
+        ? "돌봄 완료"
+        : "아직 안 했어요";
+  }
+
+  const roomPreview =
+    $("roomPreview");
+
+  if (roomPreview) {
+    roomPreview.dataset.theme =
+      state.roomDecor ||
+      "lavender";
+  }
+
+  const moodSaved =
+    $("moodSaved");
+
+  if (moodSaved) {
+    moodSaved.textContent =
+      state.mood
+        ? moodNames[state.mood]
+        : "기분을 기록하지 않아도 괜찮아요.";
+  }
+
+  document
+    .querySelectorAll(".mood")
+    .forEach(b => {
+      b.classList.toggle(
+        "selected",
+        b.dataset.mood ===
+          state.mood
+      );
+    });
+
+  document
+    .querySelectorAll(".nav-item")
+    .forEach(b => {
+      b.classList.toggle(
+        "active",
+        b.dataset.nav ===
+          state.nav
+      );
+    });
+
+  document
+    .querySelectorAll("[data-room-decor]")
+    .forEach(b => {
+      b.classList.toggle(
+        "active",
+        b.dataset.roomDecor ===
+          state.roomDecor
+      );
+    });
+
+  const journal =
+    $("journalText");
+
+  if (
+    journal &&
+    journal.value !==
+      state.journalText
+  ) {
+    journal.value =
+      state.journalText;
+  }
+
+  const roomLabel =
+    $("roomDecorLabel");
+
+  if (roomLabel) {
+    roomLabel.textContent =
+      ({
+        lavender:
+          "라벤더 포근방",
+        peach:
+          "피치 햇살방",
+        mint:
+          "민트 숲속방"
+      })[
+        state.roomDecor
+      ] || "나만의 방";
+  }
+
+  renderPetUI();
+  renderQuestUI();
+}
+
+/* =========================================================
+   토스트
+========================================================= */
+
+function toast(s) {
+  const e =
+    $("toast");
+
+  if (!e) return;
+
+  e.textContent = s;
+
+  e.classList.add(
+    "show"
+  );
+
+  clearTimeout(
+    toastTimer
+  );
+
+  toastTimer =
+    setTimeout(() => {
+      e.classList.remove(
+        "show"
+      );
+    }, 2400);
+}
+
+/* =========================================================
+   경험치
+========================================================= */
+
+function levelUp() {
+  while (state.xp >= 100) {
+    state.xp -= 100;
+    state.level++;
+    state.coins += 15;
+
+    toast(
+      "레벨 업! 코인 +15"
+    );
+  }
+}
+
+function xp(n) {
+  state.xp += n;
+  levelUp();
+}
+
+/* =========================================================
+   대화창
+========================================================= */
+
+function closeDialog() {
+  const dialog =
+    $("dialog");
+
+  if (dialog) {
+    dialog.hidden = true;
+  }
+}
+
+const closeDialogButton =
+  $("closeDialog");
+
+if (closeDialogButton) {
+  closeDialogButton.addEventListener(
+    "click",
+    closeDialog
+  );
+}
+
+function dialog(
+  name,
+  text,
+  actions = []
+) {
+  $("dialogName").textContent =
+    name;
+
+  $("dialogText").textContent =
+    text;
+
+  const h =
+    $("dialogActions");
+
+  h.replaceChildren();
+
+  actions.forEach(a => {
+    const b =
+      document.createElement(
+        "button"
+      );
+
+    b.textContent =
+      a.label;
+
+    b.onclick =
+      a.action;
+
+    h.appendChild(b);
+  });
+
+  $("dialog").hidden =
+    false;
+}
+
+/* =========================================================
+   마을 상호작용
+========================================================= */
+
+function target() {
+  const a = [
+    {
+      id: "garden",
+      x: -7,
+      z: 2.8,
+      r: 2.7,
+      label: "정원 관리"
     },
-
-    flower: {
-      id: "flower",
-      name: "꽃 머리핀",
-      icon: "🌸",
-      price: 15
-    },
-
-    beret: {
-      id: "beret",
-      name: "포근 베레모",
-      icon: "🧢",
-      price: 25
-    },
-
-    crown: {
-      id: "crown",
-      name: "별 왕관",
-      icon: "👑",
-      price: 40
-    },
-
-    leaf: {
-      id: "leaf",
-      name: "숲의 잎모자",
-      icon: "🍃",
-      price: 30
-    }
-  };
-
-
-  const PET_OUTFITS = {
-
-    none: {
-      id: "none",
-      name: "없음",
-      icon: "—",
-      price: 0
-    },
-
-    scarf: {
-      id: "scarf",
-      name: "포근 목도리",
-      icon: "🧣",
-      price: 20
-    },
-
-    cape: {
-      id: "cape",
-      name: "작은 망토",
-      icon: "🪽",
-      price: 35
-    },
-
-    ribbon: {
-      id: "ribbon",
-      name: "리본 장식",
-      icon: "🎀",
-      price: 25
-    }
-  };
-
-
-  /* =========================================================
-     퀘스트
-  ========================================================= */
-
-  const QUESTS = [
 
     {
-      id: "pet_interact",
-      icon: "🐾",
-      title: "작은 친구와 인사하기",
-      description: "마을의 동물 친구에게 인사해 보세요.",
-      stages: [1, 3, 5, 10],
-      reward: 2,
-      type: "petGreetings"
+      id: "animal",
+      x: 2.5,
+      z: 5.7,
+      r: 2.5,
+      label: "펫 만나기"
     },
 
     {
-      id: "pet_draw",
-      icon: "✨",
-      title: "새로운 친구 만나기",
-      description: "펫 뽑기를 진행해 보세요.",
-      stages: [1, 3, 5, 10],
-      reward: 3,
-      type: "petDraws"
-    },
-
-    {
-      id: "pet_collect",
-      icon: "📖",
-      title: "펫 도감 채우기",
-      description: "서로 다른 펫을 모아 보세요.",
-      stages: [1, 2, 4, 6],
-      reward: 5,
-      type: "petCollection"
-    },
-
-    {
-      id: "garden_water",
-      icon: "💧",
-      title: "정원 돌보기",
-      description: "식물에게 물을 주세요.",
-      stages: [3, 6, 10, 15],
-      reward: 2,
-      type: "waters"
-    },
-
-    {
-      id: "garden_harvest",
-      icon: "🌷",
-      title: "꽃 수확하기",
-      description: "정원에서 꽃을 수확해 보세요.",
-      stages: [2, 5, 10, 20],
-      reward: 3,
-      type: "harvests"
-    },
-
-    {
-      id: "breathing",
-      icon: "🌿",
-      title: "잠깐의 쉼",
-      description: "호흡 활동을 완료해 보세요.",
-      stages: [1, 3, 5, 10],
-      reward: 3,
-      type: "breaths"
-    },
-
-    {
-      id: "journal",
-      icon: "💭",
-      title: "마음 남기기",
-      description: "오늘의 마음을 기록해 보세요.",
-      stages: [1, 3, 5, 10],
-      reward: 3,
-      type: "journals"
+      id: "house",
+      x: -5,
+      z: -1.5,
+      r: 3,
+      label: "집 앞에서 쉬기"
     },
 
     {
       id: "shell",
-      icon: "🐚",
-      title: "숨겨진 반짝임",
-      description: "마을의 숨겨진 조개를 찾아 보세요.",
-      stages: [1, 2, 3, 5],
-      reward: 4,
-      type: "shellFinds"
+      x: 8,
+      z: 5,
+      r: 1.8,
+      label: "숨겨진 조개"
     }
   ];
 
-
-  /* =========================================================
-     UI 업데이트
-  ========================================================= */
-
-  function updateTopUI() {
-
-    const coins = $("coins");
-    const level = $("level");
-    const xp = $("xp");
-    const flowers = $("flowers");
-    const gardenCoins = $("gardenCoins");
-
-    if (coins) {
-      coins.textContent = state.coins;
-    }
-
-    if (level) {
-      level.textContent = state.level;
-    }
-
-    if (xp) {
-      xp.textContent = state.xp;
-    }
-
-    if (flowers) {
-      flowers.textContent = state.flowers;
-    }
-
-    if (gardenCoins) {
-      gardenCoins.textContent = state.coins;
-    }
-
-    const roomLabel = $("roomDecorLabel");
-
-    if (roomLabel) {
-      const labels = {
-        lavender: "라벤더 포근방",
-        peach: "피치 포근방",
-        mint: "민트 포근방"
-      };
-
-      roomLabel.textContent =
-        labels[state.roomDecor] ||
-        labels.lavender;
-    }
-  }
-
-
-  /* =========================================================
-     페이지 이동
-     
-     가장 먼저 등록한다.
-     3D 코드와 완전히 분리한다.
-  ========================================================= */
-
-  let currentPage = "home";
-
-  function showPage(page) {
-
-    if (!PAGE_TITLES[page]) {
-      page = "home";
-    }
-
-    currentPage = page;
-    state.nav = page;
-
-    document
-      .querySelectorAll("[data-screen]")
-      .forEach(screen => {
-
-        screen.hidden =
-          screen.dataset.screen !== page;
-      });
-
-
-    const title = $("pageTitle");
-
-    if (title) {
-      title.textContent =
-        PAGE_TITLES[page];
-    }
-
-
-    document
-      .querySelectorAll(".nav-item")
-      .forEach(button => {
-
-        button.classList.toggle(
-          "active",
-          button.dataset.nav === page
-        );
-      });
-
-
-    updateTopUI();
-
-
-    if (page === "dress") {
-      renderPetPage();
-    }
-
-    if (page === "quests") {
-      renderQuestPage();
-    }
-
-    if (page === "room") {
-      updateRoomPreview();
-    }
-
-    if (page === "journal") {
-      updateJournalUI();
-    }
-
-    if (page === "garden") {
-      updateGardenUI();
-    }
-
-
-    /*
-      마을에 처음 들어왔을 때만
-      Three.js를 시작한다.
-    */
-    if (page === "village") {
-      initVillage();
-    }
-
-
-    saveState();
-  }
-
-
-  /* =========================================================
-     클릭 이벤트
-     
-     이것을 game.js 초반에 바로 연결한다.
-  ========================================================= */
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      const pageButton =
-        event.target.closest("[data-page]");
-
-      const navButton =
-        event.target.closest("[data-nav]");
-
-      const homeButton =
-        event.target.closest("[data-home]");
-
-
-      if (pageButton) {
-
-        event.preventDefault();
-
-        showPage(
-          pageButton.dataset.page
-        );
-
-        return;
-      }
-
-
-      if (navButton) {
-
-        event.preventDefault();
-
-        showPage(
-          navButton.dataset.nav
-        );
-
-        return;
-      }
-
-
-      if (homeButton) {
-
-        event.preventDefault();
-
-        showPage("home");
-
-        return;
-      }
-
-    },
-    false
+  return a.find(t =>
+    Math.hypot(
+      avatar.position.x - t.x,
+      avatar.position.z - t.z
+    ) < t.r &&
+    !(
+      t.id === "shell" &&
+      state.foundShell
+    )
   );
-
-
-  /* =========================================================
-     토스트
-  ========================================================= */
-
-  let toastTimer = null;
-
-  function toast(message) {
-
-    const el = $("toast");
-
-    if (!el) {
-      return;
-    }
-
-    el.textContent = message;
-
-    el.classList.add("show");
-
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-      el.classList.remove("show");
-    }, 2600);
-  }
-
-
-  /* =========================================================
-     XP
-  ========================================================= */
-
-  function addXP(amount) {
-
-    state.xp += amount;
-
-    while (state.xp >= 100) {
-
-      state.xp -= 100;
-      state.level += 1;
-
-      toast(
-        `레벨 업! 🌱 Lv.${state.level}`
-      );
-    }
-  }
-
-
-  /* =========================================================
-     펫 UI
-  ========================================================= */
-
-  function renderPetPage() {
-
-    const root = $("petRoomRoot");
-
-    if (!root) {
-      return;
-    }
-
-
-    const selected =
-      state.selectedPet &&
-      PETS[state.selectedPet]
-        ? PETS[state.selectedPet]
-        : null;
-
-
-    root.innerHTML = `
-      <div class="mm-pet-ui">
-
-        ${
-          !selected
-            ? renderNoPetState()
-            : renderPetRoom(selected)
-        }
-
-        ${renderPetDraw()}
-
-        ${renderPetBook()}
-
-        ${
-          selected
-            ? renderPetAccessories(selected)
-            : ""
-        }
-
-        ${renderFragmentShop()}
-
-      </div>
-    `;
-
-    applyPetUIStyles();
-  }
-
-
-  function renderNoPetState() {
-
-    return `
-      <section class="mm-pet-section mm-empty-pet">
-
-        <div class="mm-empty-icon">
-          🐾
-        </div>
-
-        <h2>
-          아직 함께할 펫이 없어요.
-        </h2>
-
-        <p>
-          첫 번째 펫은 무료로 만날 수 있어요.
-        </p>
-
-        <button
-          class="mm-pet-button"
-          data-pet-action="first-draw"
-          type="button"
-        >
-          ✨ 첫 펫 만나기
-        </button>
-
-      </section>
-    `;
-  }
-
-
-  function renderPetRoom(pet) {
-
-    const acc =
-      state.petAccessories[pet.id] || {
-        hat: "none",
-        outfit: "none"
-      };
-
-
-    return `
-      <section class="mm-pet-section">
-
-        <div class="mm-pet-title">
-
-          <div>
-            <h2>🐾 ${pet.name}</h2>
-
-            <div style="
-              font-size:12px;
-              opacity:.65;
-              margin-top:4px;
-            ">
-              ${pet.rarity} · 나의 작은 친구
-            </div>
-          </div>
-
-          <div class="mm-pet-currency">
-
-            <span class="mm-currency">
-              ✨ ${state.petCurrency}
-            </span>
-
-            <span class="mm-currency">
-              🪙 ${state.petCoins}
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="mm-pet-room">
-
-          <div class="mm-pet-room-emoji">
-            ${pet.icon}
-          </div>
-
-          <div>
-
-            <strong>
-              ${pet.name}의 작은 방
-            </strong>
-
-            <p>
-              ${acc.hat !== "none"
-                ? PET_HATS[acc.hat]?.icon || ""
-                : ""}
-              ${acc.outfit !== "none"
-                ? PET_OUTFITS[acc.outfit]?.icon || ""
-                : ""}
-              오늘도 함께 쉬어요.
-            </p>
-
-          </div>
-
-        </div>
-
-      </section>
-    `;
-  }
-
-
-  function renderPetDraw() {
-
-    const canDraw =
-      state.petCurrency >= 20;
-
-
-    return `
-      <section class="mm-pet-section">
-
-        <div class="mm-pet-title">
-
-          <h2>
-            🎁 펫 뽑기
-          </h2>
-
-          <span class="mm-currency">
-            ✨ ${state.petCurrency}
-          </span>
-
-        </div>
-
-
-        <p>
-          별빛 20개로 새로운 친구를 만날 수 있어요.
-          중복 펫은 펫 코인으로 바뀌어요.
-        </p>
-
-
-        <button
-          class="mm-pet-button"
-          data-pet-action="draw"
-          type="button"
-          ${canDraw ? "" : "disabled"}
-        >
-          ✨ 별빛 20개로 뽑기
-        </button>
-
-
-        <div class="mm-gacha-rates">
-
-          <strong>
-            뽑기 확률
-          </strong>
-
-          <div>
-            일반 70%
-            · 희귀 25%
-            · 특별 5%
-          </div>
-
-        </div>
-
-
-        <div
-          id="petGachaResult"
-          class="mm-gacha-result"
-        ></div>
-
-      </section>
-    `;
-  }
-
-
-  function renderPetBook() {
-
-    return `
-      <section class="mm-pet-section">
-
-        <div class="mm-pet-title">
-
-          <h2>
-            📖 펫 도감
-          </h2>
-
-          <span>
-            ${state.ownedPets.length}/${PET_LIST.length}
-          </span>
-
-        </div>
-
-
-        <div class="mm-pet-grid">
-
-          ${PET_LIST.map(pet => {
-
-            const owned =
-              state.ownedPets.includes(
-                pet.id
-              );
-
-            const active =
-              state.selectedPet === pet.id;
-
-
-            return `
-              <div
-                class="mm-pet-item ${active ? "active" : ""}"
-              >
-
-                <div class="mm-pet-icon">
-                  ${owned ? pet.icon : "❔"}
-                </div>
-
-                <div class="mm-pet-name">
-                  ${owned ? pet.name : "???"}
-                </div>
-
-                <div class="mm-pet-rarity">
-                  ${pet.rarity}
-                </div>
-
-
-                ${
-                  owned
-                    ? `
-                      <button
-                        class="mm-pet-button secondary"
-                        data-pet-action="select"
-                        data-pet-id="${pet.id}"
-                        type="button"
-                      >
-                        ${
-                          active
-                            ? "현재 펫"
-                            : "선택하기"
-                        }
-                      </button>
-                    `
-                    : ""
-                }
-
-              </div>
-            `;
-          }).join("")}
-
-        </div>
-
-      </section>
-    `;
-  }
-
-
-  function renderPetAccessories(pet) {
-
-    const acc =
-      state.petAccessories[pet.id] || {
-        hat: "none",
-        outfit: "none"
-      };
-
-
-    return `
-      <section class="mm-pet-section">
-
-        <div class="mm-pet-title">
-
-          <h2>
-            🎀 ${pet.name} 꾸미기
-          </h2>
-
-          <span>
-            🪙 ${state.petCoins}
-          </span>
-
-        </div>
-
-
-        <p>
-          한 번 구매한 장식은 계속 가지고 있을 수 있어요.
-        </p>
-
-
-        <h3>
-          🎩 모자
-        </h3>
-
-        <div class="mm-pet-accessory-grid">
-
-          ${Object.values(PET_HATS)
-            .map(item => {
-
-              const owned =
-                isAccessoryOwned(
-                  pet.id,
-                  "hat",
-                  item.id
-                );
-
-              const equipped =
-                acc.hat === item.id;
-
-
-              return `
-                <button
-                  class="
-                    mm-accessory
-                    ${equipped ? "active" : ""}
-                  "
-                  data-pet-action="accessory-hat"
-                  data-accessory="${item.id}"
-                  type="button"
-                >
-
-                  <span>
-                    ${item.icon}
-                  </span>
-
-                  <strong>
-                    ${item.name}
-                  </strong>
-
-                  ${
-                    item.price === 0
-                      ? `<small>기본</small>`
-                      : owned
-                        ? `<small>보유 · ${equipped ? "장착 중" : "장착"}</small>`
-                        : `<small>🪙 ${item.price}</small>`
-                  }
-
-                </button>
-              `;
-            })
-            .join("")}
-
-        </div>
-
-
-        <h3 style="margin-top:20px;">
-          🧣 장식
-        </h3>
-
-        <div class="mm-pet-accessory-grid">
-
-          ${Object.values(PET_OUTFITS)
-            .map(item => {
-
-              const owned =
-                isAccessoryOwned(
-                  pet.id,
-                  "outfit",
-                  item.id
-                );
-
-              const equipped =
-                acc.outfit === item.id;
-
-
-              return `
-                <button
-                  class="
-                    mm-accessory
-                    ${equipped ? "active" : ""}
-                  "
-                  data-pet-action="accessory-outfit"
-                  data-accessory="${item.id}"
-                  type="button"
-                >
-
-                  <span>
-                    ${item.icon}
-                  </span>
-
-                  <strong>
-                    ${item.name}
-                  </strong>
-
-                  ${
-                    item.price === 0
-                      ? `<small>기본</small>`
-                      : owned
-                        ? `<small>보유 · ${equipped ? "장착 중" : "장착"}</small>`
-                        : `<small>🪙 ${item.price}</small>`
-                  }
-
-                </button>
-              `;
-            })
-            .join("")}
-
-        </div>
-
-      </section>
-    `;
-  }
-
-
-  function isAccessoryOwned(
-    petId,
-    type,
-    itemId
-  ) {
-
-    if (itemId === "none") {
-      return true;
-    }
-
-
-    const owned =
-      state.petAccessories[petId]?.owned;
-
-
-    if (
-      owned &&
-      Array.isArray(owned[type])
-    ) {
-      return owned[type].includes(
-        itemId
-      );
-    }
-
-
-    return false;
-  }
-
-
-  function ensureAccessoryInventory(petId) {
-
-    if (!state.petAccessories[petId]) {
-
-      state.petAccessories[petId] = {
-        hat: "none",
-        outfit: "none",
-        owned: {
-          hat: [],
-          outfit: []
-        }
-      };
-
-      return;
-    }
-
-
-    if (
-      !state.petAccessories[petId].owned
-    ) {
-
-      state.petAccessories[petId].owned = {
-        hat: [],
-        outfit: []
-      };
-    }
-
-
-    if (
-      !Array.isArray(
-        state.petAccessories[petId].owned.hat
-      )
-    ) {
-
-      state.petAccessories[petId].owned.hat = [];
-    }
-
-
-    if (
-      !Array.isArray(
-        state.petAccessories[petId].owned.outfit
-      )
-    ) {
-
-      state.petAccessories[petId].owned.outfit = [];
-    }
-  }
-
-
-  function useAccessory(
-    type,
-    id
-  ) {
-
-    if (!state.selectedPet) {
-      return;
-    }
-
-
-    const data =
-      type === "hat"
-        ? PET_HATS[id]
-        : PET_OUTFITS[id];
-
-
-    if (!data) {
-      return;
-    }
-
-
-    ensureAccessoryInventory(
-      state.selectedPet
+}
+
+function interact() {
+  const t =
+    target();
+
+  if (!t) {
+    toast(
+      "마을의 장소나 펫 가까이 다가가 E를 눌러 보세요."
     );
 
-
-    const inventory =
-      state.petAccessories[
-        state.selectedPet
-      ];
-
-
-    if (id === "none") {
-
-      inventory[type] = "none";
-
-      saveState();
-
-      renderPetPage();
-
-      toast("장식을 벗겼어요.");
-
-      return;
-    }
-
-
-    const owned =
-      inventory.owned[type].includes(
-        id
-      );
-
-
-    if (!owned) {
-
-      if (
-        state.petCoins <
-        data.price
-      ) {
-
-        toast(
-          "펫 코인이 부족해요."
-        );
-
-        return;
-      }
-
-
-      state.petCoins -=
-        data.price;
-
-      inventory.owned[type].push(
-        id
-      );
-
-      toast(
-        `${data.name}을 구매했어요!`
-      );
-    }
-
-
-    inventory[type] = id;
-
-    saveState();
-
-    renderPetPage();
+    return;
   }
 
+  if (t.id === "garden") {
+    showPage("garden");
+    return;
+  }
 
-  /* =========================================================
-     첫 펫
-  ========================================================= */
+  if (t.id === "animal") {
+    dialog(
+      "포근한 친구",
+      "오늘도 잘 지냈어? 함께 천천히 놀아 보자.",
+      [
+        {
+          label: "인사하기",
+          action: () => {
+            state.stats.petGreetings++;
+            xp(5);
+            save();
+            closeDialog();
 
-  function firstPetDraw() {
+            toast(
+              "펫과 인사했어요. 경험치 +5"
+            );
+          }
+        },
 
-    if (
-      state.firstPetTutorialDone
-    ) {
+        {
+          label: "펫 꾸미러 가기",
+          action: () => {
+            closeDialog();
+            showPage("dress");
+          }
+        },
 
-      if (
-        state.selectedPet
-      ) {
-
-        renderPetPage();
-
-        return;
-      }
-    }
-
-
-    state.firstPetTutorialDone =
-      true;
-
-
-    if (
-      !state.ownedPets.includes(
-        "bunny"
-      )
-    ) {
-
-      state.ownedPets.push(
-        "bunny"
-      );
-    }
-
-
-    state.selectedPet =
-      "bunny";
-
-
-    ensureAccessoryInventory(
-      "bunny"
+        {
+          label: "닫기",
+          action: closeDialog
+        }
+      ]
     );
 
+    return;
+  }
 
-    addXP(10);
+  if (t.id === "shell") {
+    state.foundShell = true;
 
-    saveState();
+    state.stats.shellFinds++;
 
-    renderPetPage();
+    state.coins += 8;
 
-    showPetResult(
-      "첫 번째 친구가 도착했어요!",
-      "🐰 몽글토끼",
-      "첫 펫은 특별히 무료로 만났어요."
-    );
+    xp(8);
+
+    shell.visible =
+      false;
+
+    closeDialog();
+
+    save();
 
     toast(
-      "몽글토끼가 친구가 되었어요! 🐰"
+      "반짝이는 조개 발견! 코인 +8"
     );
+
+    return;
   }
 
-
-  /* =========================================================
-     일반 펫 뽑기
-  ========================================================= */
-
-  function drawPet() {
-
-    if (
-      state.petCurrency < 20
-    ) {
-
-      toast(
-        "별빛이 부족해요. 퀘스트를 완료해 보세요!"
-      );
-
-      return;
-    }
-
-
-    state.petCurrency -= 20;
-
-    state.stats.petDraws += 1;
-
-
-    const result =
-      rollPet();
-
-
-    if (
-      state.ownedPets.includes(
-        result.id
-      )
-    ) {
-
-      state.petCoins +=
-        result.duplicateCoins;
-
-      saveState();
-
-      renderPetPage();
-
-      showPetResult(
-        "중복 펫!",
-        `${result.icon} ${result.name}`,
-        `펫 코인 ${result.duplicateCoins}개로 바뀌었어요.`
-      );
-
-      return;
-    }
-
-
-    state.ownedPets.push(
-      result.id
-    );
-
-    state.selectedPet =
-      result.id;
-
-
-    ensureAccessoryInventory(
-      result.id
-    );
-
-
-    addXP(15);
-
-    saveState();
-
-    renderPetPage();
-
-    showPetResult(
-      "새로운 친구 등장!",
-      `${result.icon} ${result.name}`,
-      `${result.rarity} 펫을 만났어요!`
-    );
-  }
-
-
-  function rollPet() {
-
-    const roll =
-      Math.random() * 100;
-
-    let total = 0;
-
-
-    for (
-      const pet of PET_LIST
-    ) {
-
-      if (
-        pet.id === "bunny"
-      ) {
-        continue;
-      }
-
-
-      total += pet.rate;
-
-
-      if (
-        roll <= total
-      ) {
-
-        return pet;
-      }
-    }
-
-
-    return PETS.puppy;
-  }
-
-
-  function showPetResult(
-    title,
-    name,
-    description
-  ) {
-
-    const result =
-      $("petGachaResult");
-
-
-    if (!result) {
-      return;
-    }
-
-
-    result.innerHTML = `
-      <strong>
-        ${title}
-      </strong>
-
-      <div style="
-        font-size:42px;
-        margin:10px 0;
-      ">
-        ${name}
-      </div>
-
-      <p>
-        ${description}
-      </p>
-    `;
-
-
-    result.classList.add(
-      "show"
-    );
-  }
-
-
-  /* =========================================================
-     펫 조각 상점
-  ========================================================= */
-
-  function renderFragmentShop() {
-
-    return `
-      <section class="mm-pet-section">
-
-        <div class="mm-pet-title">
-
-          <h2>
-            🧩 펫 조각 상점
-          </h2>
-
-          <span>
-            🪙 ${state.petCoins}
-          </span>
-
-        </div>
-
-        <p>
-          펫 코인 5개로 원하는 펫 조각을 살 수 있어요.
-        </p>
-
-
-        ${PET_LIST
-          .filter(
-            pet =>
-              pet.id !== "bunny"
-          )
-          .map(pet => {
-
-            const count =
-              Number(
-                state.petFragments[
-                  pet.id
-                ] || 0
-              );
-
-
-            const need =
-              pet.fragmentNeed;
-
-
-            return `
-              <div class="mm-fragment">
-
-                <div>
-
-                  <strong>
-                    ${pet.icon}
-                    ${pet.name}
-                  </strong>
-
-                  <div>
-                    🧩 ${count}/${need}
-                  </div>
-
-                </div>
-
-
-                <div>
-
-                  <button
-                    class="mm-pet-button secondary"
-                    data-pet-action="fragment"
-                    data-pet-id="${pet.id}"
-                    type="button"
-                    ${state.petCoins < 5 ? "disabled" : ""}
-                  >
-                    🪙 5
-                  </button>
-
-
-                  <button
-                    class="mm-pet-button"
-                    data-pet-action="craft"
-                    data-pet-id="${pet.id}"
-                    type="button"
-                    ${
-                      count < need ||
-                      state.ownedPets.includes(
-                        pet.id
-                      )
-                        ? "disabled"
-                        : ""
-                    }
-                  >
-                    ${
-                      state.ownedPets.includes(
-                        pet.id
-                      )
-                        ? "보유 중"
-                        : "합성"
-                    }
-                  </button>
-
-                </div>
-
-              </div>
-            `;
-          })
-          .join("")}
-
-      </section>
-    `;
-  }
-
-
-  function buyFragment(
-    petId
-  ) {
-
-    const pet =
-      PETS[petId];
-
-
-    if (!pet) {
-      return;
-    }
-
-
-    if (
-      state.petCoins < 5
-    ) {
-
-      toast(
-        "펫 코인이 부족해요."
-      );
-
-      return;
-    }
-
-
-    state.petCoins -= 5;
-
-
-    state.petFragments[
-      petId
-    ] =
-      Number(
-        state.petFragments[
-          petId
-        ] || 0
-      ) + 1;
-
-
-    saveState();
-
-    renderPetPage();
-
-    toast(
-      `${pet.icon} ${pet.name} 조각 +1`
-    );
-  }
-
-
-  function craftPet(
-    petId
-  ) {
-
-    const pet =
-      PETS[petId];
-
-
-    if (!pet) {
-      return;
-    }
-
-
-    const count =
-      Number(
-        state.petFragments[
-          petId
-        ] || 0
-      );
-
-
-    if (
-      count <
-      pet.fragmentNeed
-    ) {
-
-      toast(
-        `조각이 ${pet.fragmentNeed - count}개 더 필요해요.`
-      );
-
-      return;
-    }
-
-
-    if (
-      state.ownedPets.includes(
-        petId
-      )
-    ) {
-
-      toast(
-        "이미 가지고 있는 펫이에요."
-      );
-
-      return;
-    }
-
-
-    state.petFragments[
-      petId
-    ] -= pet.fragmentNeed;
-
-
-    state.ownedPets.push(
-      petId
-    );
-
-    state.selectedPet =
-      petId;
-
-
-    ensureAccessoryInventory(
-      petId
-    );
-
-
-    saveState();
-
-    renderPetPage();
-
-    toast(
-      `${pet.icon} ${pet.name}을 합성했어요!`
-    );
-  }
-
-
-  /* =========================================================
-     펫 UI 클릭
-  ========================================================= */
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      const action =
-        event.target.closest(
-          "[data-pet-action]"
-        );
-
-
-      if (!action) {
-        return;
-      }
-
-
-      const type =
-        action.dataset.petAction;
-
-
-      if (
-        type === "first-draw"
-      ) {
-
-        firstPetDraw();
-
-        return;
-      }
-
-
-      if (
-        type === "draw"
-      ) {
-
-        drawPet();
-
-        return;
-      }
-
-
-      if (
-        type === "select"
-      ) {
-
-        const id =
-          action.dataset.petId;
-
-
-        if (
-          !state.ownedPets.includes(
-            id
-          )
-        ) {
-          return;
+  dialog(
+    "작은 집",
+    "오늘 하루도 여기까지 온 것만으로 충분해요. 잠시 쉬어 가요.",
+    [
+      {
+        label: "정원 둘러보기",
+        action: () => {
+          avatar.position.set(
+            -7,
+            0,
+            2.8
+          );
+
+          closeDialog();
+
+          showPage(
+            "garden"
+          );
         }
+      },
 
+      {
+        label: "펫 꾸미기",
+        action: () => {
+          closeDialog();
+          showPage(
+            "dress"
+          );
+        }
+      },
 
-        state.selectedPet =
-          id;
-
-
-        ensureAccessoryInventory(
-          id
-        );
-
-
-        saveState();
-
-        renderPetPage();
-
-        toast(
-          `${PETS[id].name}을 선택했어요.`
-        );
-
-        return;
+      {
+        label: "산책 계속하기",
+        action: closeDialog
       }
-
-
-      if (
-        type === "accessory-hat"
-      ) {
-
-        useAccessory(
-          "hat",
-          action.dataset.accessory
-        );
-
-        return;
-      }
-
-
-      if (
-        type === "accessory-outfit"
-      ) {
-
-        useAccessory(
-          "outfit",
-          action.dataset.accessory
-        );
-
-        return;
-      }
-
-
-      if (
-        type === "fragment"
-      ) {
-
-        buyFragment(
-          action.dataset.petId
-        );
-
-        return;
-      }
-
-
-      if (
-        type === "craft"
-      ) {
-
-        craftPet(
-          action.dataset.petId
-        );
-      }
-
-    }
+    ]
   );
+}
 
+/* =========================================================
+   페이지 이동
+========================================================= */
 
-  /* =========================================================
-     퀘스트
-  ========================================================= */
+function showPage(page) {
+  const allowed = [
+    "home",
+    "village",
+    "dress",
+    "garden",
+    "room",
+    "journal",
+    "quests"
+  ];
 
-  function getQuestProgress(
-    quest
+  if (
+    !allowed.includes(page)
   ) {
-
-    switch (quest.type) {
-
-      case "petGreetings":
-        return state.stats.petGreetings;
-
-      case "petDraws":
-        return state.stats.petDraws;
-
-      case "petCollection":
-        return state.ownedPets.length;
-
-      case "waters":
-        return state.stats.waters;
-
-      case "harvests":
-        return state.stats.harvests;
-
-      case "breaths":
-        return state.stats.breaths;
-
-      case "journals":
-        return state.stats.journals;
-
-      case "shellFinds":
-        return state.stats.shellFinds;
-
-      default:
-        return 0;
-    }
+    page = "home";
   }
 
+  state.nav = page;
 
-  function getQuestStage(
-    quest
-  ) {
+  document
+    .querySelectorAll("[data-screen]")
+    .forEach(el => {
+      el.hidden =
+        el.dataset.screen !==
+        page;
+    });
 
-    const value =
-      Number(
-        state.questStages[
-          quest.id
-        ] || 0
+  const titles = {
+    home:
+      "나만의 작은 쉼",
+
+    village:
+      "몽글마을 산책",
+
+    dress:
+      "나의 펫 꾸미기",
+
+    garden:
+      "나만의 정원",
+
+    room:
+      "나만의 방",
+
+    journal:
+      "마음 돌보기",
+
+    quests:
+      "오늘의 작은 퀘스트"
+  };
+
+  const title =
+    $("pageTitle");
+
+  if (title) {
+    title.textContent =
+      titles[page];
+  }
+
+  document
+    .querySelectorAll(".nav-item")
+    .forEach(b => {
+      b.classList.toggle(
+        "active",
+        b.dataset.nav ===
+          page
       );
+    });
 
+  save();
 
-    return Math.min(
-      value,
-      quest.stages.length - 1
+  if (
+    page === "village"
+  ) {
+    requestAnimationFrame(
+      () => resize()
     );
   }
 
-
-  function renderQuestPage() {
-
-    const root =
-      $("questRoomRoot");
-
-
-    if (!root) {
-      return;
-    }
-
-
-    root.innerHTML = `
-
-      <div class="mm-pet-ui">
-
-        <section class="mm-pet-section">
-
-          <div class="mm-pet-title">
-
-            <h2>
-              ✨ 별빛 퀘스트
-            </h2>
-
-            <span class="mm-currency">
-              ✨ ${state.petCurrency}
-            </span>
-
-          </div>
-
-          <p>
-            활동을 하면서 별빛을 조금씩 모아
-            새로운 펫을 만나 보세요.
-          </p>
-
-        </section>
-
-
-        ${QUESTS.map(
-          quest =>
-            renderQuest(
-              quest
-            )
-        ).join("")}
-
-      </div>
-    `;
-
-    applyPetUIStyles();
-  }
-
-
-  function renderQuest(
-    quest
+  if (
+    page === "home"
   ) {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+}
 
-    const stage =
-      getQuestStage(
-        quest
-      );
-
-
-    const goal =
-      quest.stages[
-        stage
-      ];
-
-
-    const progress =
-      Math.min(
-        goal,
-        getQuestProgress(
-          quest
+document
+  .querySelectorAll("[data-page]")
+  .forEach(b => {
+    b.addEventListener(
+      "click",
+      () =>
+        showPage(
+          b.dataset.page
         )
-      );
-
-
-    const completed =
-      progress >= goal;
-
-
-    const percent =
-      Math.round(
-        progress /
-        goal *
-        100
-      );
-
-
-    return `
-      <section class="
-        mm-quest
-        ${completed ? "completed" : ""}
-      ">
-
-        <div class="mm-quest-top">
-
-          <div class="mm-quest-icon">
-            ${quest.icon}
-          </div>
-
-
-          <div class="mm-quest-body">
-
-            <div class="mm-quest-name">
-              ${quest.title}
-            </div>
-
-            <div class="mm-quest-desc">
-              ${quest.description}
-            </div>
-
-
-            <div class="mm-quest-progress">
-
-              <div
-                style="width:${percent}%"
-              ></div>
-
-            </div>
-
-
-            <div class="mm-quest-bottom">
-
-              <span>
-                ${progress} / ${goal}
-              </span>
-
-              <span>
-                ✨ +${quest.reward}
-              </span>
-
-
-              <button
-                class="mm-pet-button"
-                data-quest-action="claim"
-                data-quest-id="${quest.id}"
-                type="button"
-                ${completed ? "" : "disabled"}
-              >
-                ${
-                  completed
-                    ? "보상 받기"
-                    : "진행 중"
-                }
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-    `;
-  }
-
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      const button =
-        event.target.closest(
-          "[data-quest-action]"
-        );
-
-
-      if (!button) {
-        return;
-      }
-
-
-      if (
-        button.dataset.questAction !==
-        "claim"
-      ) {
-        return;
-      }
-
-
-      claimQuest(
-        button.dataset.questId
-      );
-    }
-  );
-
-
-  function claimQuest(
-    id
-  ) {
-
-    const quest =
-      QUESTS.find(
-        q => q.id === id
-      );
-
-
-    if (!quest) {
-      return;
-    }
-
-
-    const stage =
-      getQuestStage(
-        quest
-      );
-
-
-    const goal =
-      quest.stages[
-        stage
-      ];
-
-
-    const progress =
-      getQuestProgress(
-        quest
-      );
-
-
-    if (
-      progress <
-      goal
-    ) {
-
-      toast(
-        "아직 완료하지 않았어요."
-      );
-
-      return;
-    }
-
-
-    state.petCurrency +=
-      quest.reward;
-
-
-    state.questStages[
-      quest.id
-    ] =
-      Math.min(
-        stage + 1,
-        quest.stages.length - 1
-      );
-
-
-    addXP(10);
-
-
-    saveState();
-
-    renderQuestPage();
-
-    toast(
-      `퀘스트 완료! ✨ 별빛 +${quest.reward}`
     );
-  }
+  });
 
+document
+  .querySelectorAll(".nav-item")
+  .forEach(b => {
+    b.addEventListener(
+      "click",
+      () =>
+        showPage(
+          b.dataset.nav
+        )
+    );
+  });
 
-  /* =========================================================
-     정원
-  ========================================================= */
+document
+  .querySelectorAll("[data-home]")
+  .forEach(b => {
+    b.addEventListener(
+      "click",
+      () =>
+        showPage("home")
+    );
+  });
 
-  function updateGardenUI() {
+/* =========================================================
+   정원
+========================================================= */
 
-    const water =
-      $("waterStatus");
+const gardenWater =
+  $("gardenWater");
 
-
-    if (water) {
-
-      water.textContent =
-        state.stats.waters > 0
-          ? `물 주기 ${state.stats.waters}회`
-          : "아직 안 했어요";
-    }
-  }
-
-
-  document.addEventListener(
+if (gardenWater) {
+  gardenWater.addEventListener(
     "click",
-    event => {
-
-      const water =
-        event.target.closest(
-          "#gardenWater"
-        );
-
-
-      if (!water) {
-        return;
-      }
-
-
-      state.stats.waters += 1;
-
-      state.flowers += 1;
-
-      state.coins += 5;
-
-      state.petCurrency += 1;
-
-      addXP(5);
-
-      saveState();
-
-      updateGardenUI();
-
-      toast(
-        "꽃을 돌봤어요! 🌷"
+    () => {
+      showPage(
+        "garden"
       );
     }
   );
+}
 
+/* =========================================================
+   방
+========================================================= */
 
-  /* =========================================================
-     방
-  ========================================================= */
+document
+  .querySelectorAll(
+    "[data-room-decor]"
+  )
+  .forEach(b => {
+    b.addEventListener(
+      "click",
+      () => {
+        state.roomDecor =
+          b.dataset.roomDecor;
 
-  function updateRoomPreview() {
+        save();
 
-    const preview =
-      $("roomPreview");
-
-
-    if (!preview) {
-      return;
-    }
-
-
-    preview.dataset.theme =
-      state.roomDecor;
-
-
-    document
-      .querySelectorAll(
-        "[data-room-decor]"
-      )
-      .forEach(button => {
-
-        button.classList.toggle(
-          "active",
-          button.dataset.roomDecor ===
-            state.roomDecor
+        toast(
+          "방 분위기를 바꿨어요."
         );
-      });
-  }
-
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      const button =
-        event.target.closest(
-          "[data-room-decor]"
-        );
-
-
-      if (!button) {
-        return;
       }
+    );
+  });
 
+/* =========================================================
+   마음 기록
+========================================================= */
 
-      state.roomDecor =
-        button.dataset.roomDecor;
+const journalInput =
+  $("journalText");
 
+const journalSave =
+  $("journalSave");
 
-      saveState();
+if (journalInput) {
+  journalInput.value =
+    state.journalText ||
+    "";
+}
 
-      updateRoomPreview();
-
-      toast(
-        "방 분위기를 바꿨어요. 🪴"
-      );
-    }
-  );
-
-
-  /* =========================================================
-     마음 기록
-  ========================================================= */
-
-  function updateJournalUI() {
-
-    const input =
-      $("journalText");
-
-
-    if (input) {
-      input.value =
-        state.journalText || "";
-    }
-
-
-    document
-      .querySelectorAll(
-        "[data-mood]"
-      )
-      .forEach(button => {
-
-        button.classList.toggle(
-          "active",
-          button.dataset.mood ===
-            state.mood
-        );
-      });
-
-
-    const saved =
-      $("moodSaved");
-
-
-    if (saved) {
-
-      saved.textContent =
-        state.mood
-          ? `오늘의 마음: ${moodName(state.mood)}`
-          : "기분을 기록하지 않아도 괜찮아요.";
-    }
-  }
-
-
-  function moodName(
-    mood
-  ) {
-
-    return {
-      calm: "차분해요 🌿",
-      happy: "기분이 좋아요 ☀️",
-      tired: "조금 지쳤어요 🌙",
-      worried: "조금 걱정돼요 ☁️"
-    }[mood] || mood;
-  }
-
-
-  document.addEventListener(
+if (journalSave) {
+  journalSave.addEventListener(
     "click",
-    event => {
+    () => {
+      state.journalText =
+        journalInput
+          ? journalInput.value.slice(
+              0,
+              1200
+            )
+          : "";
 
-      const mood =
-        event.target.closest(
-          "[data-mood]"
+      state.journalDate =
+        new Date().toLocaleDateString(
+          "ko-KR"
         );
 
+      state.stats.journals++;
 
-      if (!mood) {
-        return;
-      }
-
-
-      state.mood =
-        mood.dataset.mood;
-
-
-      saveState();
-
-      updateJournalUI();
+      save();
 
       toast(
         "오늘의 마음을 기록했어요."
       );
     }
   );
+}
 
+/* =========================================================
+   호흡
+========================================================= */
 
-  document.addEventListener(
-    "click",
-    event => {
+showPage(
+  state.nav || "home"
+);
 
-      const saveButton =
-        event.target.closest(
-          "#journalSave"
-        );
+function stopBreath() {
+  breathing =
+    false;
 
-
-      if (!saveButton) {
-        return;
-      }
-
-
-      const input =
-        $("journalText");
-
-
-      if (!input) {
-        return;
-      }
-
-
-      state.journalText =
-        input.value.trim();
-
-
-      state.journalDate =
-        new Date()
-          .toISOString()
-          .slice(0, 10);
-
-
-      state.stats.journals += 1;
-
-      state.petCurrency += 2;
-
-      addXP(8);
-
-      saveState();
-
-      toast(
-        "마음 기록을 저장했어요. 💭"
-      );
-    }
+  clearTimeout(
+    breathTimer
   );
 
+  const box =
+    $("breathBox");
 
-  /* =========================================================
-     호흡
-  ========================================================= */
+  if (box) {
+    box.hidden = true;
+  }
 
-  let breathing = false;
-  let breathingTimer = null;
-  let breathingSeconds = 0;
+  const label =
+    $("breathLabel");
 
+  if (label) {
+    label.textContent =
+      "함께 천천히 호흡하기";
+  }
 
-  document.addEventListener(
-    "click",
-    event => {
+  const circle =
+    $("breathCircle");
 
-      const button =
-        event.target.closest(
-          "#breathBtn"
-        );
+  if (circle) {
+    circle.classList.remove(
+      "expand"
+    );
+  }
+}
 
+const breathBtn =
+  $("breathBtn");
 
-      if (!button) {
-        return;
-      }
-
-
+if (breathBtn) {
+  breathBtn.onclick =
+    () => {
       if (breathing) {
+        stopBreath();
         return;
       }
 
-
-      startBreathing();
-    }
-  );
-
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      const stop =
-        event.target.closest(
-          "#stopBreath"
-        );
-
-
-      if (!stop) {
-        return;
-      }
-
-
-      stopBreathing();
-
-      toast(
-        "호흡 활동을 멈췄어요."
-      );
-    }
-  );
-
-
-  function startBreathing() {
-
-    const box =
-      $("breathBox");
-
-    const text =
-      $("breathText");
-
-    const instruction =
-      $("breathInstruction");
-
-
-    if (!box) {
-      return;
-    }
-
-
-    breathing = true;
-
-    breathingSeconds = 30;
-
-
-    box.hidden = false;
-
-
-    if (text) {
-      text.textContent =
-        "천천히 숨 쉬어요";
-    }
-
-
-    if (instruction) {
-      instruction.textContent =
-        "편안한 속도로 호흡해요.";
-    }
-
-
-    clearInterval(
-      breathingTimer
-    );
-
-
-    breathingTimer =
-      setInterval(() => {
-
-        breathingSeconds -= 1;
-
-
-        if (instruction) {
-
-          instruction.textContent =
-            `${breathingSeconds}초 남았어요.`;
-        }
-
-
-        if (
-          breathingSeconds <= 0
-        ) {
-
-          finishBreathing();
-        }
-
-      }, 1000);
-  }
-
-
-  function finishBreathing() {
-
-    clearInterval(
-      breathingTimer
-    );
-
-
-    breathing = false;
-
-
-    state.stats.breaths += 1;
-
-    state.petCurrency += 2;
-
-    addXP(10);
-
-
-    saveState();
-
-
-    const box =
-      $("breathBox");
-
-
-    if (box) {
-      box.hidden = true;
-    }
-
-
-    toast(
-      "잘 쉬었어요. 🌿 별빛 +2"
-    );
-  }
-
-
-  function stopBreathing() {
-
-    clearInterval(
-      breathingTimer
-    );
-
-
-    breathing = false;
-
-
-    const box =
-      $("breathBox");
-
-
-    if (box) {
-      box.hidden = true;
-    }
-  }
-
-
-  /* =========================================================
-     마을 3D
-     
-     이 부분은 페이지 이동과 완전히 분리되어 있음.
-  ========================================================= */
-
-  let villageInitialized = false;
-
-  let scene = null;
-  let camera = null;
-  let renderer = null;
-
-  let avatar = null;
-  let avatarModel = null;
-
-  let villagePet = null;
-
-  let villageShell = null;
-
-  let sceneStatus = null;
-
-  let keys = {};
-
-  let animationFrame = null;
-
-  let targetPosition = null;
-
-  let mouseX = 0;
-  let mouseY = 0;
-
-  let cameraYaw = 0;
-  let cameraPitch = 0.32;
-
-
-  function initVillage() {
-
-    if (villageInitialized) {
-
-      if (
-        renderer &&
-        renderer.domElement
-      ) {
-
-        setTimeout(
-          resizeVillage,
-          50
-        );
-      }
-
-      return;
-    }
-
-
-    const root =
-      $("world");
-
-
-    if (!root) {
-      return;
-    }
-
-
-    villageInitialized = true;
-
-
-    try {
-
-      createVillageScene();
-
-      loadCharacter();
-
-      createVillagePet();
-
-      createShell();
-
-      setupVillageControls();
-
-      resizeVillage();
-
-      animateVillage();
-
-    } catch (error) {
-
-      console.error(
-        "3D 마을 초기화 오류:",
-        error
-      );
-
-
-      /*
-        3D가 실패해도 페이지 자체는
-        계속 사용할 수 있도록 한다.
-      */
-
-      if (sceneStatus) {
-
-        sceneStatus.textContent =
-          "마을을 불러오는 중이에요.";
-      }
-    }
-  }
-
-
-  function createVillageScene() {
-
-    const root =
-      $("world");
-
-
-    if (!root) {
-      return;
-    }
-
-
-    scene =
-      new THREE.Scene();
-
-
-    scene.background =
-      new THREE.Color(
-        0xbadcf3
-      );
-
-
-    scene.fog =
-      new THREE.Fog(
-        0xbadcf3,
-        20,
-        55
-      );
-
-
-    camera =
-      new THREE.PerspectiveCamera(
-        43,
-        1,
-        0.1,
-        100
-      );
-
-
-    camera.position.set(
-      0,
-      6.5,
-      24
-    );
-
-
-    renderer =
-      new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: false
-      });
-
-
-    renderer.setPixelRatio(
-      Math.min(
-        window.devicePixelRatio || 1,
-        2
-      )
-    );
-
-
-    renderer.shadowMap.enabled =
-      true;
-
-
-    renderer.shadowMap.type =
-      THREE.PCFSoftShadowMap;
-
-
-    renderer.outputColorSpace =
-      THREE.SRGBColorSpace;
-
-
-    renderer.toneMapping =
-      THREE.ACESFilmicToneMapping;
-
-
-    renderer.toneMappingExposure =
-      1.05;
-
-
-    renderer.domElement.style.width =
-      "100%";
-
-
-    renderer.domElement.style.height =
-      "100%";
-
-
-    renderer.domElement.style.display =
-      "block";
-
-
-    root.innerHTML = "";
-
-    root.appendChild(
-      renderer.domElement
-    );
-
-
-    const ambient =
-      new THREE.HemisphereLight(
-        0xdff5ff,
-        0x8a745f,
-        2.1
-      );
-
-
-    scene.add(
-      ambient
-    );
-
-
-    const sun =
-      new THREE.DirectionalLight(
-        0xfff4df,
-        3.0
-      );
-
-
-    sun.position.set(
-      8,
-      16,
-      10
-    );
-
-
-    sun.castShadow =
-      true;
-
-
-    sun.shadow.mapSize.width =
-      2048;
-
-
-    sun.shadow.mapSize.height =
-      2048;
-
-
-    scene.add(
-      sun
-    );
-
-
-    createGround();
-
-    createPaths();
-
-    createPond();
-
-    createHouse();
-
-    createTrees();
-
-    createFlowers();
-
-    createLamps();
-
-
-    avatar =
-      new THREE.Group();
-
-
-    avatar.position.set(
-      Number(state.x) || 0,
-      0,
-      Number(state.z) || 4
-    );
-
-
-    scene.add(
-      avatar
-    );
-
-
-    sceneStatus =
-      $("sceneStatus");
-  }
-
-
-  function createGround() {
-
-    const ground =
-      new THREE.Mesh(
-        new THREE.PlaneGeometry(
-          42,
-          42
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0x91bd7b,
-          roughness: 1
-        })
-      );
-
-
-    ground.rotation.x =
-      -Math.PI / 2;
-
-
-    ground.receiveShadow =
-      true;
-
-
-    scene.add(
-      ground
-    );
-  }
-
-
-  function createPaths() {
-
-    const material =
-      new THREE.MeshStandardMaterial({
-        color: 0xe7d4ae,
-        roughness: 1
-      });
-
-
-    const path1 =
-      new THREE.Mesh(
-        new THREE.BoxGeometry(
-          3,
-          0.08,
-          42
-        ),
-        material
-      );
-
-
-    path1.position.y =
-      0.04;
-
-
-    scene.add(
-      path1
-    );
-
-
-    const path2 =
-      new THREE.Mesh(
-        new THREE.BoxGeometry(
-          42,
-          0.08,
-          3
-        ),
-        material
-      );
-
-
-    path2.position.y =
-      0.05;
-
-
-    scene.add(
-      path2
-    );
-  }
-
-
-  function createPond() {
-
-    const pond =
-      new THREE.Mesh(
-        new THREE.CircleGeometry(
-          5,
-          48
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0x78c7dc,
-          roughness: 0.25,
-          metalness: 0.05
-        })
-      );
-
-
-    pond.rotation.x =
-      -Math.PI / 2;
-
-
-    pond.position.set(
-      -9,
-      0.08,
-      -7
-    );
-
-
-    scene.add(
-      pond
-    );
-
-
-    for (
-      let i = 0;
-      i < 10;
-      i++
-    ) {
-
-      const angle =
-        i / 10 *
-        Math.PI *
-        2;
-
-
-      const rock =
-        new THREE.Mesh(
-          new THREE.SphereGeometry(
-            0.35,
-            12,
-            8
-          ),
-          new THREE.MeshStandardMaterial({
-            color: 0x8d9a8c
-          })
-        );
-
-
-      rock.scale.y =
-        0.55;
-
-
-      rock.position.set(
-        -9 +
-          Math.cos(angle) *
-          5.1,
-        0.22,
-        -7 +
-          Math.sin(angle) *
-          5.1
-      );
-
-
-      rock.castShadow =
+      breathing =
         true;
 
+      breathStep =
+        0;
 
-      scene.add(
-        rock
-      );
-    }
-  }
-
-
-  function createHouse() {
-
-    const group =
-      new THREE.Group();
-
-
-    group.position.set(
-      8,
-      0,
-      -6
-    );
-
-
-    const wall =
-      new THREE.Mesh(
-        new THREE.BoxGeometry(
-          7,
-          4.3,
-          6
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0xf8d9c9
-        })
-      );
-
-
-    wall.position.y =
-      2.15;
-
-
-    wall.castShadow =
-      true;
-
-
-    wall.receiveShadow =
-      true;
-
-
-    group.add(
-      wall
-    );
-
-
-    /*
-      지붕을 두 박스가 아니라
-      하나의 정상적인 지붕 형태로 만들어
-      거꾸로 보이는 문제를 피한다.
-    */
-
-    const roof =
-      new THREE.Mesh(
-        new THREE.ConeGeometry(
-          4.9,
-          2.5,
-          4
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0xb96f77
-        })
-      );
-
-
-    roof.rotation.y =
-      Math.PI / 4;
-
-
-    roof.position.y =
-      5.5;
-
-
-    roof.castShadow =
-      true;
-
-
-    group.add(
-      roof
-    );
-
-
-    const door =
-      new THREE.Mesh(
-        new THREE.BoxGeometry(
-          1.25,
-          2.1,
-          0.18
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0x805c50
-        })
-      );
-
-
-    door.position.set(
-      0,
-      1.05,
-      3.08
-    );
-
-
-    group.add(
-      door
-    );
-
-
-    for (
-      const x of [-2, 2]
-    ) {
-
-      const window =
-        new THREE.Mesh(
-          new THREE.BoxGeometry(
-            1.4,
-            1.25,
-            0.15
-          ),
-          new THREE.MeshStandardMaterial({
-            color: 0x9ed7e7,
-            roughness: 0.15
-          })
-        );
-
-
-      window.position.set(
-        x,
-        2.5,
-        3.08
-      );
-
-
-      group.add(
-        window
-      );
-    }
-
-
-    scene.add(
-      group
-    );
-  }
-
-
-  function createTrees() {
-
-    const positions = [
-      [-15, -12],
-      [-14, 8],
-      [15, 10],
-      [14, -12],
-      [-7, 13],
-      [7, 13]
-    ];
-
-
-    positions.forEach(
-      ([x, z], index) => {
-
-        const group =
-          new THREE.Group();
-
-
-        const trunk =
-          new THREE.Mesh(
-            new THREE.CylinderGeometry(
-              0.35,
-              0.48,
-              2.5,
-              8
-            ),
-            new THREE.MeshStandardMaterial({
-              color: 0x8b654e
-            })
-          );
-
-
-        trunk.position.y =
-          1.25;
-
-
-        trunk.castShadow =
-          true;
-
-
-        group.add(
-          trunk
-        );
-
-
-        const crown =
-          new THREE.Mesh(
-            new THREE.SphereGeometry(
-              1.7 +
-                (index % 2) *
-                0.25,
-              16,
-              12
-            ),
-            new THREE.MeshStandardMaterial({
-              color:
-                index % 2
-                  ? 0x76a96b
-                  : 0x8fbc76
-            })
-          );
-
-
-        crown.position.y =
-          3.0;
-
-
-        crown.castShadow =
-          true;
-
-
-        group.add(
-          crown
-        );
-
-
-        group.position.set(
-          x,
-          0,
-          z
-        );
-
-
-        scene.add(
-          group
-        );
-      }
-    );
-  }
-
-
-  function createFlowers() {
-
-    const colors = [
-      0xffd3df,
-      0xffe4a9,
-      0xcbb9ef,
-      0xffffff
-    ];
-
-
-    for (
-      let i = 0;
-      i < 35;
-      i++
-    ) {
-
-      const group =
-        new THREE.Group();
-
-
-      const stem =
-        new THREE.Mesh(
-          new THREE.CylinderGeometry(
-            0.035,
-            0.05,
-            0.45,
-            6
-          ),
-          new THREE.MeshStandardMaterial({
-            color: 0x5f914e
-          })
-        );
-
-
-      stem.position.y =
-        0.22;
-
-
-      group.add(
-        stem
-      );
-
-
-      const flower =
-        new THREE.Mesh(
-          new THREE.SphereGeometry(
-            0.17,
-            8,
-            8
-          ),
-          new THREE.MeshStandardMaterial({
-            color:
-              colors[
-                i % colors.length
-              ]
-          })
-        );
-
-
-      flower.position.y =
-        0.5;
-
-
-      group.add(
-        flower
-      );
-
-
-      const x =
-        ((i * 7) % 34) - 17;
-
-
-      const z =
-        ((i * 11) % 34) - 17;
-
-
-      if (
-        Math.abs(x) < 2.2 ||
-        Math.abs(z) < 2.2
-      ) {
-        continue;
-      }
-
-
-      group.position.set(
-        x,
-        0,
-        z
-      );
-
-
-      scene.add(
-        group
-      );
-    }
-  }
-
-
-  function createLamps() {
-
-    [-5, 5].forEach(
-      x => {
-
-        const group =
-          new THREE.Group();
-
-
-        const pole =
-          new THREE.Mesh(
-            new THREE.CylinderGeometry(
-              0.08,
-              0.1,
-              2.5,
-              8
-            ),
-            new THREE.MeshStandardMaterial({
-              color: 0x5e625d
-            })
-          );
-
-
-        pole.position.y =
-          1.25;
-
-
-        group.add(
-          pole
-        );
-
-
-        const light =
-          new THREE.Mesh(
-            new THREE.SphereGeometry(
-              0.3,
-              12,
-              12
-            ),
-            new THREE.MeshStandardMaterial({
-              color: 0xffedaa,
-              emissive: 0xffd76a,
-              emissiveIntensity: 0.8
-            })
-          );
-
-
-        light.position.y =
-          2.55;
-
-
-        group.add(
-          light
-        );
-
-
-        group.position.set(
-          x,
-          0,
-          1
-        );
-
-
-        scene.add(
-          group
-        );
-      }
-    );
-  }
-
-
-  /* =========================================================
-     캐릭터 GLB
-  ========================================================= */
-
-  function loadCharacter() {
-
-    if (!avatar) {
-      return;
-    }
-
-
-    const loader =
-      new GLTFLoader();
-
-
-    const urls = [
-      "https://cdn.jsdelivr.net/gh/boyoung0819/mongle-mind@main/components/village/character.glb",
-      "https://raw.githubusercontent.com/boyoung0819/mongle-mind/main/components/village/character.glb"
-    ];
-
-
-    let index = 0;
-
-
-    function tryLoad() {
-
-      if (
-        index >= urls.length
-      ) {
-
-        createSimpleAvatarFallback();
-
-        return;
-      }
-
-
-      const url =
-        urls[index++];
-
-
-      loader.load(
-        url,
-
-        gltf => {
-
-          avatarModel =
-            gltf.scene;
-
-
-          const box =
-            new THREE.Box3()
-              .setFromObject(
-                avatarModel
-              );
-
-
-          const size =
-            box.getSize(
-              new THREE.Vector3()
-            );
-
-
-          const height =
-            size.y || 1;
-
-
-          const scale =
-            3 / height;
-
-
-          avatarModel.scale.setScalar(
-            scale
-          );
-
-
-          const afterBox =
-            new THREE.Box3()
-              .setFromObject(
-                avatarModel
-              );
-
-
-          avatarModel.position.y =
-            -afterBox.min.y;
-
-
-          avatarModel.traverse(
-            object => {
-
-              if (
-                object.isMesh
-              ) {
-
-                object.castShadow =
-                  true;
-
-                object.receiveShadow =
-                  true;
-              }
-            }
-          );
-
-
-          avatar.add(
-            avatarModel
-          );
-
-        },
-
-        undefined,
-
-        () => {
-
-          tryLoad();
-        }
-      );
-    }
-
-
-    tryLoad();
-  }
-
-
-  function createSimpleAvatarFallback() {
-
-    if (!avatar) {
-      return;
-    }
-
-
-    const group =
-      new THREE.Group();
-
-
-    const body =
-      new THREE.Mesh(
-        new THREE.CapsuleGeometry(
-          0.65,
-          1.3,
-          8,
-          16
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0xf4c9b8
-        })
-      );
-
-
-    body.position.y =
-      1.1;
-
-
-    body.castShadow =
-      true;
-
-
-    group.add(
-      body
-    );
-
-
-    const head =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.75,
-          20,
-          20
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0xffeadf
-        })
-      );
-
-
-    head.position.y =
-      2.25;
-
-
-    head.castShadow =
-      true;
-
-
-    group.add(
-      head
-    );
-
-
-    avatar.add(
-      group
-    );
-
-
-    avatarModel =
-      group;
-  }
-
-
-  /* =========================================================
-     마을 펫
-  ========================================================= */
-
-  function createVillagePet() {
-
-    if (!scene) {
-      return;
-    }
-
-
-    if (
-      villagePet
-    ) {
-
-      scene.remove(
-        villagePet
-      );
-    }
-
-
-    villagePet =
-      new THREE.Group();
-
-
-    const petId =
-      state.selectedPet;
-
-
-    if (!petId) {
-      return;
-    }
-
-
-    const data =
-      PETS[petId];
-
-
-    if (!data) {
-      return;
-    }
-
-
-    const body =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.58,
-          16,
-          12
-        ),
-        new THREE.MeshStandardMaterial({
-          color: data.body
-        })
-      );
-
-
-    body.scale.y =
-      0.9;
-
-
-    body.position.y =
-      0.7;
-
-
-    body.castShadow =
-      true;
-
-
-    villagePet.add(
-      body
-    );
-
-
-    const head =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.48,
-          16,
-          12
-        ),
-        new THREE.MeshStandardMaterial({
-          color: data.body
-        })
-      );
-
-
-    head.position.y =
-      1.25;
-
-
-    head.castShadow =
-      true;
-
-
-    villagePet.add(
-      head
-    );
-
-
-    const eyeMaterial =
-      new THREE.MeshStandardMaterial({
-        color: 0x40353d
-      });
-
-
-    [-0.17, 0.17].forEach(
-      x => {
-
-        const eye =
-          new THREE.Mesh(
-            new THREE.SphereGeometry(
-              0.045,
-              8,
-              8
-            ),
-            eyeMaterial
-          );
-
-
-        eye.position.set(
-          x,
-          1.3,
-          0.42
-        );
-
-
-        villagePet.add(
-          eye
-        );
-      }
-    );
-
-
-    scene.add(
-      villagePet
-    );
-  }
-
-
-  /* =========================================================
-     조개
-  ========================================================= */
-
-  function createShell() {
-
-    if (!scene) {
-      return;
-    }
-
-
-    villageShell =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.3,
-          12,
-          8
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0xf6b5ca
-        })
-      );
-
-
-    villageShell.position.set(
-      8,
-      0.25,
-      5
-    );
-
-
-    villageShell.scale.set(
-      1,
-      0.5,
-      1
-    );
-
-
-    villageShell.castShadow =
-      true;
-
-
-    villageShell.visible =
-      !state.foundShell;
-
-
-    scene.add(
-      villageShell
-    );
-  }
-
-
-  /* =========================================================
-     마을 상호작용
-  ========================================================= */
-
-  function setupVillageControls() {
-
-    if (!renderer) {
-      return;
-    }
-
-
-    const canvas =
-      renderer.domElement;
-
-
-    window.addEventListener(
-      "keydown",
-      event => {
-
-        keys[
-          event.key.toLowerCase()
-        ] = true;
-
-
-        if (
-          event.key === "ArrowUp" ||
-          event.key === "ArrowDown" ||
-          event.key === "ArrowLeft" ||
-          event.key === "ArrowRight" ||
-          event.key === " "
-        ) {
-
-          event.preventDefault();
-        }
-
-
-        if (
-          event.key.toLowerCase() === "e"
-        ) {
-
-          interactVillage();
-        }
-      }
-    );
-
-
-    window.addEventListener(
-      "keyup",
-      event => {
-
-        keys[
-          event.key.toLowerCase()
-        ] = false;
-      }
-    );
-
-
-    window.addEventListener(
-      "blur",
-      () => {
-
-        keys = {};
-      }
-    );
-
-
-    /*
-      캔버스 클릭은
-      UI 버튼과 충돌하지 않는다.
-    */
-
-    canvas.addEventListener(
-      "pointerdown",
-      event => {
-
-        if (
-          currentPage !==
-          "village"
-        ) {
-          return;
-        }
-
-
-        const rect =
-          canvas.getBoundingClientRect();
-
-
-        const ndc =
-          new THREE.Vector2(
-            (
-              (event.clientX -
-                rect.left) /
-                rect.width
-            ) * 2 - 1,
-
-            -(
-              (
-                (event.clientY -
-                  rect.top) /
-                  rect.height
-              ) * 2 - 1
-            )
-          );
-
-
-        const raycaster =
-          new THREE.Raycaster();
-
-
-        raycaster.setFromCamera(
-          ndc,
-          camera
-        );
-
-
-        const plane =
-          new THREE.Plane(
-            new THREE.Vector3(
-              0,
-              1,
-              0
-            ),
-            0
-          );
-
-
-        const point =
-          new THREE.Vector3();
-
-
-        if (
-          raycaster.ray.intersectPlane(
-            plane,
-            point
-          )
-        ) {
-
-          targetPosition =
-            new THREE.Vector3(
-              THREE.MathUtils.clamp(
-                point.x,
-                -18,
-                18
-              ),
-              0,
-              THREE.MathUtils.clamp(
-                point.z,
-                -18,
-                18
-              )
-            );
-        }
-      }
-    );
-
-
-    let dragging =
-      false;
-
-
-    let lastX = 0;
-    let lastY = 0;
-
-
-    canvas.addEventListener(
-      "pointerdown",
-      event => {
-
-        if (
-          event.button === 2
-        ) {
-
-          dragging = true;
-
-          lastX =
-            event.clientX;
-
-          lastY =
-            event.clientY;
-        }
-      }
-    );
-
-
-    window.addEventListener(
-      "pointermove",
-      event => {
-
-        if (
-          !dragging ||
-          currentPage !==
-            "village"
-        ) {
-          return;
-        }
-
-
-        const dx =
-          event.clientX -
-          lastX;
-
-
-        const dy =
-          event.clientY -
-          lastY;
-
-
-        lastX =
-          event.clientX;
-
-        lastY =
-          event.clientY;
-
-
-        cameraYaw -=
-          dx * 0.008;
-
-
-        cameraPitch =
-          THREE.MathUtils.clamp(
-            cameraPitch -
-              dy * 0.005,
-            0.08,
-            0.75
-          );
-      }
-    );
-
-
-    window.addEventListener(
-      "pointerup",
-      () => {
-
-        dragging = false;
-      }
-    );
-
-
-    canvas.addEventListener(
-      "contextmenu",
-      event => {
-
-        event.preventDefault();
-      }
-    );
-
-
-    document
-      .querySelectorAll(
-        ".touch-pad button"
-      )
-      .forEach(button => {
-
-        const key =
-          button.dataset.k;
-
-
-        button.addEventListener(
-          "pointerdown",
-          event => {
-
-            event.preventDefault();
-
-            keys[key] = true;
-          }
-        );
-
-
-        button.addEventListener(
-          "pointerup",
-          () => {
-
-            keys[key] = false;
-          }
-        );
-
-
-        button.addEventListener(
-          "pointerleave",
-          () => {
-
-            keys[key] = false;
-          }
-        );
-      });
-  }
-
-
-  function interactVillage() {
-
-    if (
-      currentPage !==
-      "village"
-    ) {
-      return;
-    }
-
-
-    if (!avatar) {
-      return;
-    }
-
-
-    const x =
-      avatar.position.x;
-
-
-    const z =
-      avatar.position.z;
-
-
-    /*
-      조개
-    */
-
-    if (
-      villageShell &&
-      villageShell.visible &&
-      distance2D(
-        x,
-        z,
-        villageShell.position.x,
-        villageShell.position.z
-      ) < 2
-    ) {
-
-      villageShell.visible =
+      $("breathBox").hidden =
         false;
 
+      $("breathLabel").textContent =
+        "호흡 활동 진행 중";
 
-      state.foundShell =
-        true;
+      $("breathInstruction").textContent =
+        "편안한 만큼만 따라 해요. 언제든 그만할 수 있어요.";
 
+      const c =
+        $("breathCircle");
 
-      state.stats.shellFinds +=
-        1;
+      const t =
+        $("breathText");
 
+      const steps = [
+        [
+          "천천히 들이쉬어요",
+          true
+        ],
 
-      state.coins += 8;
+        [
+          "편안하게 내쉬어요",
+          false
+        ]
+      ];
 
-      state.petCurrency +=
-        2;
+      function tick() {
+        if (!breathing) return;
 
-      addXP(8);
+        const s =
+          steps[
+            breathStep++ %
+              2
+          ];
 
-      saveState();
+        t.textContent =
+          s[0];
 
-      toast(
-        "숨겨진 조개를 찾았어요! 🐚"
-      );
+        c.classList.toggle(
+          "expand",
+          s[1]
+        );
 
-      return;
-    }
-
-
-    /*
-      마을 동물 친구
-    */
-
-    if (
-      distance2D(
-        x,
-        z,
-        -5,
-        -1
-      ) < 3
-    ) {
-
-      state.stats.petGreetings +=
-        1;
-
-
-      state.petCurrency +=
-        1;
-
-
-      addXP(5);
-
-      saveState();
-
-      toast(
-        "동물 친구와 인사했어요! 🐾"
-      );
-
-      return;
-    }
-
-
-    toast(
-      "조금 더 가까이 가면 상호작용할 수 있어요."
-    );
-  }
-
-
-  function distance2D(
-    x1,
-    z1,
-    x2,
-    z2
-  ) {
-
-    return Math.sqrt(
-      (x1 - x2) ** 2 +
-      (z1 - z2) ** 2
-    );
-  }
-
-
-  /* =========================================================
-     마을 애니메이션
-  ========================================================= */
-
-  let lastTime =
-    performance.now();
-
-
-  function animateVillage(
-    now = performance.now()
-  ) {
-
-    animationFrame =
-      requestAnimationFrame(
-        animateVillage
-      );
-
-
-    if (
-      !renderer ||
-      !scene ||
-      !camera
-    ) {
-      return;
-    }
-
-
-    const dt =
-      Math.min(
-        0.05,
-        (now - lastTime) /
-          1000
-      );
-
-
-    lastTime =
-      now;
-
-
-    if (
-      currentPage ===
-      "village"
-    ) {
-
-      updateAvatarMovement(
-        dt
-      );
-
-
-      updateCamera(
-        dt
-      );
-
-
-      updateVillagePet(
-        now
-      );
-
-
-      if (
-        villageShell &&
-        villageShell.visible
-      ) {
-
-        villageShell.rotation.y +=
-          dt * 1.5;
+        breathTimer =
+          setTimeout(
+            tick,
+            4000
+          );
       }
+
+      tick();
+
+      breathTimer =
+        setTimeout(
+          () => {
+            if (!breathing) {
+              return;
+            }
+
+            state.stats.breaths++;
+
+            save();
+
+            stopBreath();
+
+            toast(
+              "호흡 활동을 끝까지 완료했어요. ✨ 별빛 퀘스트에 반영됐어요!"
+            );
+          },
+          30000
+        );
+    };
+}
+
+const stopBreathButton =
+  $("stopBreath");
+
+if (stopBreathButton) {
+  stopBreathButton.onclick =
+    stopBreath;
+}
+
+/* =========================================================
+   키보드 이동
+========================================================= */
+
+window.addEventListener(
+  "keydown",
+  e => {
+    keys[
+      e.key.toLowerCase()
+    ] = true;
+
+    if (
+      [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        " "
+      ].includes(e.key)
+    ) {
+      e.preventDefault();
     }
 
+    if (
+      e.key.toLowerCase() ===
+        "e" &&
+      $("dialog").hidden
+    ) {
+      interact();
+    }
 
-    renderer.render(
-      scene,
+    if (
+      e.key === "Escape"
+    ) {
+      closeDialog();
+    }
+  }
+);
+
+window.addEventListener(
+  "keyup",
+  e =>
+    keys[
+      e.key.toLowerCase()
+    ] = false
+);
+
+window.addEventListener(
+  "blur",
+  () =>
+    keys = {}
+);
+
+/* =========================================================
+   화면 이동 버튼
+========================================================= */
+
+document
+  .querySelectorAll(
+    ".touch-pad button"
+  )
+  .forEach(b => {
+    const k =
+      b.dataset.k.toLowerCase();
+
+    const start = e => {
+      e.preventDefault();
+      keys[k] = true;
+    };
+
+    const end = e => {
+      e.preventDefault();
+      keys[k] = false;
+    };
+
+    b.addEventListener(
+      "pointerdown",
+      start
+    );
+
+    b.addEventListener(
+      "pointerup",
+      end
+    );
+
+    b.addEventListener(
+      "pointerleave",
+      end
+    );
+
+    b.addEventListener(
+      "pointercancel",
+      end
+    );
+  });
+
+/* =========================================================
+   마우스 클릭 이동
+========================================================= */
+
+renderer.domElement.addEventListener(
+  "pointerdown",
+  e => {
+    const r =
+      renderer.domElement.getBoundingClientRect();
+
+    const ray =
+      new THREE.Raycaster();
+
+    ray.setFromCamera(
+      new THREE.Vector2(
+        (e.clientX - r.left) /
+            r.width *
+            2 -
+          1,
+
+        -(
+          (e.clientY - r.top) /
+            r.height *
+            2 -
+          1
+        )
+      ),
       camera
     );
-  }
 
+    const p =
+      new THREE.Vector3();
 
-  function updateAvatarMovement(
-    dt
-  ) {
-
-    if (!avatar) {
-      return;
+    if (
+      ray.ray.intersectPlane(
+        new THREE.Plane(
+          new THREE.Vector3(
+            0,
+            1,
+            0
+          ),
+          0
+        ),
+        p
+      )
+    ) {
+      avatar.userData.dest =
+        new THREE.Vector3(
+          THREE.MathUtils.clamp(
+            p.x,
+            -13,
+            13
+          ),
+          0,
+          THREE.MathUtils.clamp(
+            p.z,
+            -13,
+            13
+          )
+        );
     }
+  }
+);
 
+/* =========================================================
+   초기 위치
+========================================================= */
 
+avatar.position.set(
+  THREE.MathUtils.clamp(
+    state.x,
+    -13,
+    13
+  ),
+  0,
+  THREE.MathUtils.clamp(
+    state.z,
+    -13,
+    13
+  )
+);
+
+if (state.foundShell) {
+  shell.visible =
+    false;
+}
+
+updateUI();
+
+/* =========================================================
+   화면 크기
+========================================================= */
+
+function resize() {
+  const w =
+    Math.max(
+      root.clientWidth,
+      320
+    );
+
+  const h =
+    Math.max(
+      root.clientHeight,
+      320
+    );
+
+  renderer.setSize(
+    w,
+    h,
+    false
+  );
+
+  camera.aspect =
+    w / h;
+
+  camera.updateProjectionMatrix();
+}
+
+new ResizeObserver(
+  resize
+).observe(root);
+
+resize();
+
+/* =========================================================
+   자동 UI 갱신
+========================================================= */
+
+setInterval(() => {
+  if (
+    state.nav ===
+      "dress" ||
+    state.nav ===
+      "quests"
+  ) {
+    updateUI();
+  }
+}, 2000);
+
+/* =========================================================
+   게임 루프
+========================================================= */
+
+function animate(t) {
+  requestAnimationFrame(
+    animate
+  );
+
+  const dt =
+    Math.min(
+      (t - last) / 1000 || 0,
+      0.05
+    );
+
+  last = t;
+
+  let moving =
+    false;
+
+  if (
+    $("dialog").hidden
+  ) {
     let dx = 0;
     let dz = 0;
 
-
     if (
-      keys["w"] ||
-      keys["arrowup"]
+      keys.arrowleft ||
+      keys.a
     ) {
-      dz -= 1;
+      dx--;
     }
 
-
     if (
-      keys["s"] ||
-      keys["arrowdown"]
+      keys.arrowright ||
+      keys.d
     ) {
-      dz += 1;
+      dx++;
     }
 
-
     if (
-      keys["a"] ||
-      keys["arrowleft"]
+      keys.arrowup ||
+      keys.w
     ) {
-      dx -= 1;
+      dz--;
     }
 
-
     if (
-      keys["d"] ||
-      keys["arrowright"]
+      keys.arrowdown ||
+      keys.s
     ) {
-      dx += 1;
+      dz++;
     }
 
-
     if (
-      dx !== 0 ||
-      dz !== 0
+      avatar.userData.dest
     ) {
+      const v =
+        avatar.userData.dest
+          .clone()
+          .sub(
+            avatar.position
+          );
 
-      targetPosition =
-        null;
+      v.y = 0;
 
+      if (
+        v.length() < 0.2
+      ) {
+        avatar.userData.dest =
+          null;
+      } else {
+        v.normalize();
 
-      const length =
-        Math.sqrt(
-          dx * dx +
-          dz * dz
+        dx = v.x;
+        dz = v.z;
+      }
+    }
+
+    if (dx || dz) {
+      const len =
+        Math.hypot(
+          dx,
+          dz
         );
 
+      dx /= len;
+      dz /= len;
 
-      dx /= length;
-      dz /= length;
+      moving =
+        true;
 
+      avatar.position.x =
+        THREE.MathUtils.clamp(
+          avatar.position.x +
+            dx * dt * 4,
+          -13,
+          13
+        );
 
-      const speed =
-        4.2;
-
-
-      avatar.position.x +=
-        dx * speed * dt;
-
-
-      avatar.position.z +=
-        dz * speed * dt;
-
+      avatar.position.z =
+        THREE.MathUtils.clamp(
+          avatar.position.z +
+            dz * dt * 4,
+          -13,
+          13
+        );
 
       avatar.rotation.y =
         Math.atan2(
           dx,
           dz
         );
-    }
 
-
-    else if (
-      targetPosition
-    ) {
-
-      const vx =
-        targetPosition.x -
-        avatar.position.x;
-
-
-      const vz =
-        targetPosition.z -
-        avatar.position.z;
-
-
-      const distance =
-        Math.sqrt(
-          vx * vx +
-          vz * vz
-        );
-
-
-      if (
-        distance < 0.15
-      ) {
-
-        targetPosition =
-          null;
-
-      } else {
-
-        const speed =
-          4.0;
-
-
-        avatar.position.x +=
-          vx /
-            distance *
-            speed *
-            dt;
-
-
-        avatar.position.z +=
-          vz /
-            distance *
-            speed *
-            dt;
-
-
-        avatar.rotation.y =
-          Math.atan2(
-            vx,
-            vz
-          );
-      }
-    }
-
-
-    avatar.position.x =
-      THREE.MathUtils.clamp(
-        avatar.position.x,
-        -18,
-        18
+      limbs.forEach(
+        l => {
+          l.o.rotation.x =
+            Math.sin(
+              t * 0.012
+            ) *
+            (
+              l.kind ===
+              "leg"
+                ? 0.45
+                : 0.22
+            ) *
+            l.side;
+        }
       );
-
-
-    avatar.position.z =
-      THREE.MathUtils.clamp(
-        avatar.position.z,
-        -18,
-        18
+    } else {
+      limbs.forEach(
+        l =>
+          l.o.rotation.x =
+            0
       );
-
-
-    state.x =
-      avatar.position.x;
-
-
-    state.z =
-      avatar.position.z;
+    }
   }
 
+  /* 캐릭터 걷기 */
 
-  function updateCamera() {
+  walkBlend =
+    THREE.MathUtils.damp(
+      walkBlend,
+      moving ? 1 : 0,
+      8,
+      dt
+    );
 
-    if (
-      !avatar ||
-      !camera
-    ) {
-      return;
-    }
+  if (moving) {
+    walkPhase +=
+      dt * 8;
+  }
 
+  if (loadedCharacter) {
+    const baseY =
+      loadedCharacter
+        .userData
+        .walkBaseY ??
+      loadedCharacter.position.y;
 
-    const distance =
-      13;
+    const baseRotX =
+      loadedCharacter
+        .userData
+        .walkBaseRotationX ??
+      0;
 
+    const baseRotZ =
+      loadedCharacter
+        .userData
+        .walkBaseRotationZ ??
+      0;
 
-    const horizontal =
-      Math.cos(
-        cameraPitch
+    const bounce =
+      Math.abs(
+        Math.sin(
+          walkPhase * 2
+        )
       ) *
-      distance;
+      0.055 *
+      walkBlend;
 
-
-    const vertical =
+    const idle =
       Math.sin(
-        cameraPitch
+        t * 0.0018
       ) *
-      distance;
+      0.009 *
+      (1 - walkBlend);
 
+    loadedCharacter.position.y =
+      baseY +
+      bounce +
+      idle;
 
-    const desired =
-      new THREE.Vector3(
-        avatar.position.x +
-          Math.sin(
-            cameraYaw
-          ) *
-          horizontal,
+    loadedCharacter.rotation.x =
+      baseRotX -
+      0.018 *
+        walkBlend;
 
-        avatar.position.y +
-          3.0 +
-          vertical,
-
-        avatar.position.z +
-          Math.cos(
-            cameraYaw
-          ) *
-          horizontal
-      );
-
-
-    camera.position.lerp(
-      desired,
-      0.08
-    );
-
-
-    const lookAt =
-      new THREE.Vector3(
-        avatar.position.x,
-        1.45,
-        avatar.position.z
-      );
-
-
-    camera.lookAt(
-      lookAt
-    );
-  }
-
-
-  function updateVillagePet(
-    now
-  ) {
-
-    if (
-      !villagePet ||
-      !avatar
-    ) {
-      return;
-    }
-
-
-    const target =
-      new THREE.Vector3(
-        avatar.position.x +
-          1.0,
-        0,
-        avatar.position.z +
-          0.8
-      );
-
-
-    villagePet.position.lerp(
-      target,
-      0.08
-    );
-
-
-    villagePet.position.y =
+    loadedCharacter.rotation.z =
+      baseRotZ +
       Math.sin(
-        now * 0.004
+        walkPhase
       ) *
-      0.08;
-
-
-    villagePet.rotation.y =
-      avatar.rotation.y;
+      0.025 *
+      walkBlend;
   }
 
+  avatar.position.y =
+    0;
 
-  function resizeVillage() {
+  /* 펫 따라오기 */
 
-    if (
-      !renderer ||
-      !camera
-    ) {
-      return;
-    }
+  pet.position.set(
+    avatar.position.x +
+      0.9,
 
-
-    const root =
-      $("world");
-
-
-    if (!root) {
-      return;
-    }
-
-
-    const width =
-      Math.max(
-        1,
-        root.clientWidth
-      );
-
-
-    const height =
-      Math.max(
-        1,
-        root.clientHeight
-      );
-
-
-    camera.aspect =
-      width / height;
-
-
-    camera.updateProjectionMatrix();
-
-
-    renderer.setSize(
-      width,
-      height,
-      false
-    );
-  }
-
-
-  window.addEventListener(
-    "resize",
-    resizeVillage
-  );
-
-
-  /* =========================================================
-     펫 UI 스타일
-  ========================================================= */
-
-  function applyPetUIStyles() {
-
-    if (
-      document.getElementById(
-        "monglePetStyles"
+    Math.abs(
+      Math.sin(
+        t * 0.003
       )
-    ) {
-      return;
-    }
-
-
-    const style =
-      document.createElement(
-        "style"
-      );
-
-
-    style.id =
-      "monglePetStyles";
-
-
-    style.textContent = `
-
-      .mm-pet-ui {
-        display:grid;
-        gap:18px;
-        max-width:1100px;
-        margin:0 auto 100px;
-      }
-
-      .mm-pet-section {
-        background:rgba(255,255,255,.88);
-        border:1px solid rgba(120,90,130,.10);
-        border-radius:26px;
-        padding:24px;
-        box-shadow:0 12px 35px rgba(90,70,100,.07);
-      }
-
-      .mm-pet-title {
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-        margin-bottom:14px;
-      }
-
-      .mm-pet-title h2 {
-        margin:0;
-        font-size:21px;
-      }
-
-      .mm-pet-currency {
-        display:flex;
-        gap:7px;
-        flex-wrap:wrap;
-      }
-
-      .mm-currency {
-        display:inline-flex;
-        align-items:center;
-        gap:4px;
-        padding:8px 12px;
-        border-radius:999px;
-        background:#f7f1fb;
-        font-size:13px;
-        font-weight:800;
-      }
-
-      .mm-pet-section p {
-        color:#6f6875;
-        line-height:1.7;
-        font-size:14px;
-      }
-
-      .mm-pet-button {
-        border:0;
-        border-radius:14px;
-        padding:11px 16px;
-        background:#7f6a9e;
-        color:white;
-        font-weight:800;
-        cursor:pointer;
-        margin-top:10px;
-      }
-
-      .mm-pet-button:hover {
-        transform:translateY(-1px);
-      }
-
-      .mm-pet-button:disabled {
-        opacity:.4;
-        cursor:not-allowed;
-        transform:none;
-      }
-
-      .mm-pet-button.secondary {
-        background:#eee8f4;
-        color:#675a70;
-      }
-
-      .mm-pet-grid {
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(135px,1fr));
-        gap:12px;
-      }
-
-      .mm-pet-item {
-        border:1px solid #eee7f1;
-        border-radius:20px;
-        padding:15px;
-        text-align:center;
-        background:#fff;
-      }
-
-      .mm-pet-item.active {
-        border-color:#9b85b9;
-        box-shadow:0 0 0 2px rgba(155,133,185,.12);
-      }
-
-      .mm-pet-icon {
-        font-size:48px;
-        margin-bottom:8px;
-      }
-
-      .mm-pet-name {
-        font-weight:900;
-        font-size:14px;
-      }
-
-      .mm-pet-rarity {
-        font-size:11px;
-        color:#9a8fa0;
-        margin-top:4px;
-      }
-
-      .mm-pet-accessory-grid {
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
-        gap:10px;
-      }
-
-      .mm-accessory {
-        border:1px solid #eee7f1;
-        background:#fff;
-        border-radius:18px;
-        padding:14px;
-        cursor:pointer;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        gap:5px;
-      }
-
-      .mm-accessory.active {
-        border-color:#9b85b9;
-        background:#f8f3fb;
-      }
-
-      .mm-accessory span {
-        font-size:30px;
-      }
-
-      .mm-accessory strong {
-        font-size:12px;
-      }
-
-      .mm-accessory small {
-        color:#8d8391;
-        font-size:10px;
-      }
-
-      .mm-fragment {
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        padding:14px;
-        border-radius:18px;
-        background:#faf7fc;
-        margin-top:9px;
-      }
-
-      .mm-fragment > div:last-child {
-        display:flex;
-        gap:5px;
-      }
-
-      .mm-fragment .mm-pet-button {
-        margin-top:0;
-        padding:8px 10px;
-        font-size:11px;
-      }
-
-      .mm-pet-room {
-        display:flex;
-        align-items:center;
-        gap:18px;
-        padding:22px;
-        border-radius:22px;
-        background:linear-gradient(135deg,#f8f0fb,#fff8f1);
-      }
-
-      .mm-pet-room-emoji {
-        font-size:78px;
-        min-width:100px;
-        text-align:center;
-      }
-
-      .mm-pet-room strong {
-        font-size:18px;
-      }
-
-      .mm-empty-pet {
-        text-align:center;
-        padding:45px 24px;
-      }
-
-      .mm-empty-icon {
-        font-size:70px;
-        margin-bottom:10px;
-      }
-
-      .mm-gacha-rates {
-        margin-top:15px;
-        padding:13px;
-        border-radius:15px;
-        background:#faf7fc;
-        font-size:12px;
-        line-height:1.7;
-      }
-
-      .mm-gacha-result {
-        display:none;
-        margin-top:15px;
-        padding:20px;
-        text-align:center;
-        border-radius:20px;
-        background:#f7f0fb;
-      }
-
-      .mm-gacha-result.show {
-        display:block;
-      }
-
-      .mm-quest {
-        background:rgba(255,255,255,.9);
-        border:1px solid rgba(120,90,130,.1);
-        border-radius:22px;
-        padding:18px;
-      }
-
-      .mm-quest.completed {
-        border-color:#b6a2c9;
-      }
-
-      .mm-quest-top {
-        display:flex;
-        gap:15px;
-        align-items:flex-start;
-      }
-
-      .mm-quest-icon {
-        font-size:34px;
-      }
-
-      .mm-quest-body {
-        flex:1;
-      }
-
-      .mm-quest-name {
-        font-weight:900;
-        font-size:15px;
-      }
-
-      .mm-quest-desc {
-        font-size:12px;
-        color:#817784;
-        margin-top:4px;
-      }
-
-      .mm-quest-progress {
-        height:8px;
-        border-radius:999px;
-        background:#eee8f2;
-        overflow:hidden;
-        margin-top:12px;
-      }
-
-      .mm-quest-progress > div {
-        height:100%;
-        border-radius:999px;
-        background:#9b85b9;
-      }
-
-      .mm-quest-bottom {
-        display:flex;
-        align-items:center;
-        gap:12px;
-        flex-wrap:wrap;
-        margin-top:10px;
-        font-size:11px;
-        color:#766b7c;
-      }
-
-      .mm-quest-bottom .mm-pet-button {
-        margin-left:auto;
-      }
-
-      @media(max-width:700px) {
-
-        .mm-pet-section {
-          padding:18px;
-          border-radius:20px;
-        }
-
-        .mm-pet-title {
-          align-items:flex-start;
-          flex-direction:column;
-        }
-
-        .mm-fragment {
-          flex-direction:column;
-          align-items:flex-start;
-        }
-
-        .mm-fragment > div:last-child {
-          width:100%;
-        }
-
-        .mm-fragment .mm-pet-button {
-          flex:1;
-        }
-
-      }
-
-    `;
-
-
-    document.head.appendChild(
-      style
-    );
-  }
-
-
-  /* =========================================================
-     초기화
-     
-     여기서 페이지 이동부터 보여준다.
-  ========================================================= */
-
-  updateTopUI();
-
-  applyPetUIStyles();
-
-  showPage(
-    state.nav &&
-    PAGE_TITLES[state.nav]
-      ? state.nav
-      : "home"
+    ) *
+      0.05,
+
+    avatar.position.z +
+      1
   );
 
+  pet.rotation.y =
+    Math.sin(
+      t * 0.001
+    ) *
+    0.15;
 
-  /*
-    기존 저장 데이터에서 bunny가
-    선택되어 있는 경우에는 펫을 유지한다.
-    신규 사용자는 펫이 없는 상태로 시작한다.
-  */
+  /* 카메라 */
 
-  if (
-    state.selectedPet &&
-    state.ownedPets.includes(
-      state.selectedPet
-    )
-  ) {
+  camera.position.lerp(
+    new THREE.Vector3(
+      avatar.position.x,
+      6.5,
+      avatar.position.z +
+        27
+    ),
+    0.055
+  );
 
-    ensureAccessoryInventory(
-      state.selectedPet
-    );
+  camera.lookAt(
+    avatar.position.x,
+    1.45,
+    avatar.position.z -
+      1
+  );
+
+  const near =
+    target();
+
+  if (sceneStatus) {
+    sceneStatus.textContent =
+      near
+        ? `E · ${near.label}`
+        : "나만의 속도로 산책해요";
   }
 
+  /* 저장 */
 
-  /* =========================================================
-     주기적 저장
-  ========================================================= */
+  state.x =
+    avatar.position.x;
 
-  setInterval(
-    () => {
+  state.z =
+    avatar.position.z;
 
-      if (
-        currentPage ===
-        "village" &&
-        avatar
-      ) {
-
-        state.x =
-          avatar.position.x;
-
-        state.z =
-          avatar.position.z;
-      }
-
-
-      saveState();
-
-    },
-    5000
+  renderer.render(
+    scene,
+    camera
   );
+}
+
+requestAnimationFrame(
+  animate
+);
 
 })();
