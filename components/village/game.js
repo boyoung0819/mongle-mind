@@ -4990,7 +4990,6 @@ function plantGardenSeed(
     toast(
       "이미 식물이 자라고 있어요. 🌱"
     );
-
     return;
   }
 
@@ -5011,28 +5010,350 @@ function plantGardenSeed(
   ) {
 
     toast(
-      "먼저 씨앗 상점에서 씨앗을 구매해 주세요. 🌱"
+      "심을 씨앗이 없어요. 씨앗 상점에서 먼저 구매해 주세요. 🌱"
     );
 
     return;
   }
 
-  let selected =
-    state.selectedGardenSeed;
+  /*
+    씨앗이 하나뿐이면
+    바로 심기
+  */
 
   if (
-    !selected ||
-    !GARDEN_PLANTS[selected] ||
-    !available.includes(selected)
+    available.length === 1
   ) {
-    selected =
-      available[0];
+
+    plantSelectedGardenSeed(
+      plotIndex,
+      available[0]
+    );
+
+    return;
   }
 
-  state.gardenSeeds[selected]--;
+  /*
+    여러 종류의 씨앗이 있으면
+    선택창 표시
+  */
+
+  showGardenSeedPicker(
+    plotIndex,
+    available
+  );
+}
+
+
+/* =========================================================
+   씨앗 선택창
+========================================================= */
+
+function showGardenSeedPicker(
+  plotIndex,
+  available
+) {
+
+  const old =
+    document.getElementById(
+      "gardenSeedPicker"
+    );
+
+  if (old) {
+    old.remove();
+  }
+
+  const overlay =
+    document.createElement(
+      "div"
+    );
+
+  overlay.id =
+    "gardenSeedPicker";
+
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(39,48,35,.38);
+    backdrop-filter: blur(5px);
+  `;
+
+  const box =
+    document.createElement(
+      "div"
+    );
+
+  box.style.cssText = `
+    width: min(520px, 100%);
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 22px;
+    border-radius: 26px;
+    background: #fffdf8;
+    box-shadow:
+      0 24px 70px
+      rgba(0,0,0,.20);
+  `;
+
+  box.innerHTML = `
+
+    <div
+      style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        margin-bottom:6px;
+      "
+    >
+
+      <div
+        style="
+          font-size:21px;
+          font-weight:800;
+          color:#43523d;
+        "
+      >
+        🌱 어떤 씨앗을 심을까요?
+      </div>
+
+      <button
+        id="closeGardenSeedPicker"
+        style="
+          border:0;
+          width:34px;
+          height:34px;
+          border-radius:50%;
+          background:#f0f2ed;
+          cursor:pointer;
+          font-size:17px;
+        "
+      >
+        ✕
+      </button>
+
+    </div>
+
+    <div
+      style="
+        color:#899384;
+        font-size:13px;
+        margin-bottom:16px;
+      "
+    >
+      밭에 심을 씨앗을 골라주세요.
+    </div>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:
+          repeat(
+            auto-fit,
+            minmax(140px,1fr)
+          );
+        gap:10px;
+      "
+    >
+
+      ${available.map(id => {
+
+        const plant =
+          GARDEN_PLANTS[id];
+
+        const count =
+          Number(
+            state.gardenSeeds[id]
+          ) || 0;
+
+        return `
+
+          <button
+            data-pick-garden-seed="${id}"
+            style="
+              border:1px solid #e1e8dc;
+              border-radius:18px;
+              padding:16px 12px;
+              background:white;
+              cursor:pointer;
+              text-align:center;
+            "
+          >
+
+            <div
+              style="
+                font-size:40px;
+                margin-bottom:5px;
+              "
+            >
+              ${plant.icon}
+            </div>
+
+            <div
+              style="
+                font-weight:800;
+                color:#4b5945;
+              "
+            >
+              ${plant.name}
+            </div>
+
+            <div
+              style="
+                margin-top:4px;
+                color:#87917f;
+                font-size:12px;
+              "
+            >
+              보유 ${count}개
+            </div>
+
+          </button>
+
+        `;
+
+      }).join("")}
+
+    </div>
+
+  `;
+
+  overlay.appendChild(
+    box
+  );
+
+  document.body.appendChild(
+    overlay
+  );
+
+  const close =
+    () => {
+      overlay.remove();
+    };
+
+  const closeButton =
+    document.getElementById(
+      "closeGardenSeedPicker"
+    );
+
+  if (closeButton) {
+    closeButton.addEventListener(
+      "click",
+      close
+    );
+  }
+
+  overlay.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target ===
+        overlay
+      ) {
+        close();
+      }
+
+    }
+  );
+
+  overlay
+    .querySelectorAll(
+      "[data-pick-garden-seed]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const id =
+              button.dataset
+                .pickGardenSeed;
+
+            close();
+
+            plantSelectedGardenSeed(
+              plotIndex,
+              id
+            );
+
+          }
+        );
+
+      }
+    );
+}
+
+
+/* =========================================================
+   선택한 씨앗 심기
+========================================================= */
+
+function plantSelectedGardenSeed(
+  plotIndex,
+  seedId
+) {
+
+  normalizeGarden();
+
+  const plot =
+    state.gardenPlots[
+      plotIndex
+    ];
+
+  const plant =
+    GARDEN_PLANTS[
+      seedId
+    ];
+
+  if (
+    !plot ||
+    !plant
+  ) {
+    return;
+  }
+
+  if (plot.plant) {
+
+    toast(
+      "이미 식물이 자라고 있어요. 🌱"
+    );
+
+    return;
+  }
+
+  const count =
+    Number(
+      state.gardenSeeds[
+        seedId
+      ]
+    ) || 0;
+
+  if (
+    count <= 0
+  ) {
+
+    toast(
+      "이 씨앗은 인벤토리에 없어요."
+    );
+
+    return;
+  }
+
+  state.gardenSeeds[
+    seedId
+  ] =
+    count - 1;
 
   plot.plant =
-    selected;
+    seedId;
 
   plot.plantedAt =
     Date.now();
@@ -5050,11 +5371,11 @@ function plantGardenSeed(
   renderGardenUI();
 
   toast(
-    `${GARDEN_PLANTS[selected].name} 씨앗을 심었어요! 🌱`
+    `${plant.icon} ${plant.name}을(를) 심었어요! 🌱`
   );
 }
 
-
+   
 /* =========================================================
    씨앗 구매
 ========================================================= */
