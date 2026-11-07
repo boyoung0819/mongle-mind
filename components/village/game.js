@@ -4699,29 +4699,30 @@ function renderGardenUI() {
 
           if (!plot.plant) {
 
-            return `
-              <div
-                class="garden-plot empty"
-              >
+  return `
+    <div
+      class="garden-plot empty"
+      data-garden-plot="${index}"
+    >
 
-                <div
-                  class="garden-plot-number"
-                >
-                  밭 ${index + 1}
-                </div>
+      <div
+        class="garden-plot-number"
+      >
+        밭 ${index + 1}
+      </div>
 
-                <div
-                  class="garden-empty"
-                >
-                  🌱<br>
-                  씨앗을 골라<br>
-                  이곳에 심어 보세요
-                </div>
+      <div
+        class="garden-empty"
+      >
+        🌱<br>
+        씨앗을 골라<br>
+        이곳에 심어 보세요
+      </div>
 
-              </div>
-            `;
+    </div>
+  `;
 
-          }
+}
 
           const plant =
             GARDEN_PLANTS[
