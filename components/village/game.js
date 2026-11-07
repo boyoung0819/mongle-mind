@@ -3200,30 +3200,35 @@ function handleQuestClick(e) {
 }
 
 function claimQuest(id) {
+
   const quest =
     QUESTS.find(
       q => q.id === id
     );
 
-  if (!quest) return;
-
-  if (
-    state.questClaims.includes(id)
-  ) {
+  if (!quest) {
     return;
   }
+
+  /*
+    현재 퀘스트 진행도 확인
+  */
 
   const progress =
     Number(
       quest.getProgress()
     );
 
-  /* 중요:
-     조건을 만족하지 않았으면
-     절대로 보상을 지급하지 않는다.
+  /*
+    아직 완료하지 않았으면
+    보상을 지급하지 않음
   */
 
-  if (progress < quest.goal) {
+  if (
+    progress <
+    quest.goal
+  ) {
+
     toast(
       "아직 퀘스트를 완료하지 않았어요."
     );
@@ -3231,20 +3236,71 @@ function claimQuest(id) {
     return;
   }
 
-  state.questClaims.push(id);
+  /*
+    보상 지급
+  */
 
   state.petCurrency +=
-    quest.rewardPetCurrency;
+    Number(
+      quest.rewardPetCurrency
+    ) || 0;
 
   state.coins +=
-    quest.rewardCoins;
+    Number(
+      quest.rewardCoins
+    ) || 0;
+
+  /*
+    경험치
+  */
 
   xp(10);
 
+  /*
+    중요:
+    questClaims에 영구 저장하지 않는다.
+    
+    대신 현재 퀘스트의 진행 기준을
+    초기화하기 위해 완료 횟수를 기록한다.
+  */
+
+  if (
+    !state.questCompletions
+  ) {
+    state.questCompletions = {};
+  }
+
+  state.questCompletions[id] =
+    (
+      Number(
+        state.questCompletions[id]
+      ) || 0
+    ) + 1;
+
+  /*
+    퀘스트 진행 기준 초기화
+  */
+
+  if (
+    quest.resetProgress
+  ) {
+
+    quest.resetProgress();
+
+  }
+
   save();
 
+  /*
+    화면 갱신
+  */
+
+  renderQuestUI();
+
   toast(
-    `퀘스트 완료! ✨ 별빛 +${quest.rewardPetCurrency}${
+    `퀘스트 완료! ✨ 별빛 +${
+      quest.rewardPetCurrency
+    }${
       quest.rewardCoins
         ? ` · 🪙 코인 +${quest.rewardCoins}`
         : ""
