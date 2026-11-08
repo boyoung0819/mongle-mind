@@ -13568,6 +13568,8 @@ setTimeout(
 
       addMindCareXP(2);
 
+      completeMindCareToday("cloud");
+
     }
   );
 
