@@ -3663,18 +3663,8 @@ function updateUI() {
       );
     });
 
-  const journal =
-    $("journalText");
-
-  if (
-    journal &&
-    journal.value !==
-      state.journalText
-  ) {
-    journal.value =
-      state.journalText;
-  }
-
+updateJournalUI();
+   
   const roomLabel =
     $("roomDecorLabel");
 
