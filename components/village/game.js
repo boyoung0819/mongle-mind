@@ -14189,6 +14189,34 @@ const mindCareStyle =
   document.createElement("style");
 
 mindCareStyle.textContent = `
+@keyframes quietCloudMove {
+
+  from {
+    transform:
+      translateX(-20px);
+  }
+
+  to {
+    transform:
+      translateX(80px);
+  }
+
+}
+
+
+@keyframes quietCloudMove2 {
+
+  from {
+    transform:
+      translateX(30px);
+  }
+
+  to {
+    transform:
+      translateX(-70px);
+  }
+
+}
   @keyframes mindCloudMove {
     from {
       transform: translateX(-8px);
