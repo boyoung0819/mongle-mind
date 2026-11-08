@@ -3558,6 +3558,266 @@ function claimQuest(id) {
   );
 
 }
+
+/* =========================================================
+   날짜별 마음 기록
+========================================================= */
+
+function getTodayJournalDate() {
+  const now = new Date();
+
+  const y = now.getFullYear();
+
+  const m = String(
+    now.getMonth() + 1
+  ).padStart(2, "0");
+
+  const d = String(
+    now.getDate()
+  ).padStart(2, "0");
+
+  return `${y}-${m}-${d}`;
+}
+
+
+function ensureJournalState() {
+
+  if (
+    !state.journalHistory ||
+    typeof state.journalHistory !== "object"
+  ) {
+    state.journalHistory = {};
+  }
+
+  if (
+    typeof state.journalText !== "string"
+  ) {
+    state.journalText = "";
+  }
+
+  if (
+    !state.journalDate
+  ) {
+    state.journalDate =
+      getTodayJournalDate();
+  }
+
+  /*
+     예전에 작성한 기존 마음 기록이 있다면
+     날짜별 기록으로 한 번 옮겨 줍니다.
+  */
+  if (
+    state.journalText &&
+    Object.keys(
+      state.journalHistory
+    ).length === 0
+  ) {
+
+    state.journalHistory[
+      state.journalDate
+    ] = {
+      mood:
+        state.mood || null,
+
+      text:
+        state.journalText
+    };
+  }
+
+  if (
+    !state.journalSelectedDate
+  ) {
+    state.journalSelectedDate =
+      getTodayJournalDate();
+  }
+}
+
+
+function getJournalRecord(date) {
+
+  ensureJournalState();
+
+  return (
+    state.journalHistory[date] || {
+      mood: null,
+      text: ""
+    }
+  );
+}
+
+
+function formatJournalDate(date) {
+
+  const parts =
+    date.split("-");
+
+  if (
+    parts.length !== 3
+  ) {
+    return date;
+  }
+
+  return (
+    `${parts[0]}년 ` +
+    `${Number(parts[1])}월 ` +
+    `${Number(parts[2])}일`
+  );
+}
+
+
+function updateJournalUI() {
+
+  ensureJournalState();
+
+  const picker =
+    $("journalDatePicker");
+
+  const label =
+    $("journalDateLabel");
+
+  const readOnly =
+    $("journalReadOnly");
+
+  const input =
+    $("journalText");
+
+  const saveButton =
+    $("journalSave");
+
+  const moodSaved =
+    $("moodSaved");
+
+  const editNotice =
+    $("journalEditNotice");
+
+
+  const selectedDate =
+    state.journalSelectedDate ||
+    getTodayJournalDate();
+
+  const today =
+    getTodayJournalDate();
+
+  const isToday =
+    selectedDate === today;
+
+
+  const record =
+    getJournalRecord(
+      selectedDate
+    );
+
+
+  /* 날짜 선택 */
+
+  if (picker) {
+
+    picker.value =
+      selectedDate;
+
+    picker.max =
+      today;
+  }
+
+
+  /* 날짜 표시 */
+
+  if (label) {
+
+    label.textContent =
+      formatJournalDate(
+        selectedDate
+      );
+  }
+
+
+  /* 읽기 전용 안내 */
+
+  if (readOnly) {
+
+    readOnly.textContent =
+      isToday
+        ? "오늘의 기록은 자유롭게 작성하고 수정할 수 있어요."
+        : "지난 기록은 읽기만 할 수 있어요.";
+  }
+
+
+  /* 마음 글 */
+
+  if (input) {
+
+    if (
+      input.value !==
+      record.text
+    ) {
+      input.value =
+        record.text;
+    }
+
+    input.readOnly =
+      !isToday;
+
+    input.classList.toggle(
+      "journal-readonly",
+      !isToday
+    );
+  }
+
+
+  /* 저장 버튼 */
+
+  if (saveButton) {
+
+    saveButton.disabled =
+      !isToday;
+
+    saveButton.textContent =
+      isToday
+        ? "마음 기록 저장하기"
+        : "지난 기록은 수정할 수 없어요";
+  }
+
+
+  /* 수정 안내 */
+
+  if (editNotice) {
+
+    editNotice.textContent =
+      isToday
+        ? "오늘의 기록은 저장한 뒤에도 자유롭게 수정할 수 있어요."
+        : "지난 기록은 수정할 수 없어요.";
+  }
+
+
+  /* 기분 버튼 */
+
+  document
+    .querySelectorAll(".mood")
+    .forEach(button => {
+
+      button.classList.toggle(
+        "selected",
+        button.dataset.mood ===
+          record.mood
+      );
+
+      button.disabled =
+        !isToday;
+    });
+
+
+  /* 기분 표시 */
+
+  if (moodSaved) {
+
+    moodSaved.textContent =
+      record.mood
+        ? moodNames[
+            record.mood
+          ]
+        : "기분을 기록하지 않아도 괜찮아요.";
+  }
+}
    
 /* =========================================================
    UI
