@@ -12630,56 +12630,64 @@ function openMongleCloud() {
       cloud.style.bottom =
         "-45px";
 
-      cloud.style.width =
-        `${120 + Math.random() * 35}px`;
+cloud.style.width =
+  `${180 + Math.random() * 45}px`;
 
-      cloud.style.minHeight =
-        "72px";
+cloud.style.minHeight =
+  "90px";
 
-      cloud.style.padding =
-        "18px 20px";
+cloud.style.padding =
+  "20px 24px";
 
-      cloud.style.boxSizing =
-        "border-box";
+cloud.style.boxSizing =
+  "border-box";
 
-      cloud.style.display =
-        "flex";
+cloud.style.display =
+  "flex";
 
-      cloud.style.alignItems =
-        "center";
+cloud.style.alignItems =
+  "center";
 
-      cloud.style.justifyContent =
-        "center";
+cloud.style.justifyContent =
+  "center";
 
-      cloud.style.textAlign =
-        "center";
+cloud.style.textAlign =
+  "center";
 
-      cloud.style.borderRadius =
-        "50px";
+cloud.style.borderRadius =
+  "60px";
 
-      cloud.style.background =
-        "rgba(255,255,255,.94)";
+cloud.style.background =
+  "rgba(255,255,255,.97)";
 
-      cloud.style.color =
-        "#74829a";
+cloud.style.color =
+  "#66758f";
 
-      cloud.style.fontSize =
-        "13px";
+cloud.style.fontSize =
+  "15px";
 
-      cloud.style.lineHeight =
-        "1.5";
+cloud.style.fontWeight =
+  "600";
 
-      cloud.style.boxShadow =
-        "0 12px 30px rgba(100,120,160,.13)";
+cloud.style.lineHeight =
+  "1.6";
 
-      cloud.style.opacity =
-        "0";
+cloud.style.boxShadow =
+  `
+    0 12px 30px
+    rgba(100,120,160,.16),
+    0 0 0 8px
+    rgba(255,255,255,.16)
+  `;
 
-      cloud.style.transform =
-        "translateY(20px) scale(.85)";
+cloud.style.opacity =
+  "0";
 
-      cloud.style.transition =
-        "transform 5s ease-out, opacity 1s ease";
+cloud.style.transform =
+  "translate(-50%, 25px) scale(.72)";
+
+cloud.style.transition =
+  "transform 7s cubic-bezier(.2,.7,.2,1), opacity 1.2s ease";
 
 
       /*
