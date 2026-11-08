@@ -6493,20 +6493,82 @@ const journalInput =
 const journalSave =
   $("journalSave");
 
-if (journalInput) {
-  journalInput.value =
-    state.journalText ||
-    "";
+const journalDatePicker =
+  $("journalDatePicker");
+
+
+/* =========================================================
+   날짜 선택
+========================================================= */
+
+if (journalDatePicker) {
+
+  journalDatePicker.addEventListener(
+    "change",
+    () => {
+
+      const today =
+        getTodayJournalDate();
+
+      let selectedDate =
+        journalDatePicker.value;
+
+      /*
+         미래 날짜는 선택할 수 없도록 합니다.
+      */
+      if (
+        !selectedDate ||
+        selectedDate > today
+      ) {
+        selectedDate =
+          today;
+
+        journalDatePicker.value =
+          today;
+      }
+
+      state.journalSelectedDate =
+        selectedDate;
+
+      updateJournalUI();
+
+      save();
+    }
+  );
 }
 
-/* 상태 버튼 클릭 */
+
+/* =========================================================
+   기분 선택
+========================================================= */
 
 document
   .querySelectorAll(".mood")
   .forEach(button => {
+
     button.addEventListener(
       "click",
       () => {
+
+        ensureJournalState();
+
+        const today =
+          getTodayJournalDate();
+
+        const selectedDate =
+          state.journalSelectedDate ||
+          today;
+
+        /*
+           지난 기록은 수정할 수 없습니다.
+        */
+        if (
+          selectedDate !==
+          today
+        ) {
+          return;
+        }
+
         const mood =
           button.dataset.mood;
 
@@ -6514,29 +6576,36 @@ document
           return;
         }
 
+
+        /*
+           오늘 날짜의 기록을 가져옵니다.
+        */
+        const record =
+          getJournalRecord(
+            selectedDate
+          );
+
+
+        record.mood =
+          mood;
+
+
+        state.journalHistory[
+          selectedDate
+        ] = record;
+
+
+        /*
+           기존 상태와도 연결해 둡니다.
+        */
         state.mood =
           mood;
 
+
         save();
 
-        document
-          .querySelectorAll(".mood")
-          .forEach(b => {
-            b.classList.toggle(
-              "selected",
-              b.dataset.mood ===
-                state.mood
-            );
-          });
+        updateJournalUI();
 
-        const moodSaved =
-          $("moodSaved");
-
-        if (moodSaved) {
-          moodSaved.textContent =
-            moodNames[mood] ||
-            "오늘의 마음을 기록했어요.";
-        }
 
         toast(
           "오늘의 마음을 선택했어요. 💜"
@@ -6545,36 +6614,122 @@ document
     );
   });
 
-/* 글 기록 저장 */
+
+/* =========================================================
+   글 기록 저장
+========================================================= */
 
 if (journalSave) {
+
   journalSave.addEventListener(
     "click",
     () => {
-      state.journalText =
+
+      ensureJournalState();
+
+      const today =
+        getTodayJournalDate();
+
+      const selectedDate =
+        state.journalSelectedDate ||
+        today;
+
+
+      /*
+         오늘만 저장할 수 있습니다.
+      */
+      if (
+        selectedDate !==
+        today
+      ) {
+        return;
+      }
+
+
+      const text =
         journalInput
-          ? journalInput.value.slice(
-              0,
-              1200
-            )
+          ? journalInput.value
+              .slice(
+                0,
+                1200
+              )
           : "";
 
-      state.journalDate =
-        new Date().toLocaleDateString(
-          "ko-KR"
+
+      const oldRecord =
+        getJournalRecord(
+          selectedDate
         );
 
-      state.stats.journals++;
+
+      /*
+         오늘 날짜의 기존 기록이
+         처음 저장되는 경우에만
+         기록 횟수를 1 증가시킵니다.
+
+         같은 날 여러 번 수정해도
+         journals가 계속 증가하지 않습니다.
+      */
+      const wasEmpty =
+        !oldRecord.text &&
+        !oldRecord.mood;
+
+
+      state.journalHistory[
+        selectedDate
+      ] = {
+
+        mood:
+          oldRecord.mood ||
+          null,
+
+        text:
+          text
+      };
+
+
+      /*
+         기존 상태와 연결
+      */
+      state.journalText =
+        text;
+
+      state.journalDate =
+        selectedDate;
+
+
+      /*
+         오늘 처음 기록했을 때만
+         활동 통계를 증가시킵니다.
+      */
+      if (
+        wasEmpty
+      ) {
+
+        state.stats.journals++;
+
+      }
+
 
       save();
 
+      updateJournalUI();
+
+
       toast(
-        "오늘의 마음을 기록했어요."
+        "오늘의 마음을 기록했어요. 💜"
       );
     }
   );
 }
-   
+
+/* =========================================================
+   처음 화면에 날짜별 기록 반영
+========================================================= */
+
+ensureJournalState();
+
+updateJournalUI();
 /* =========================================================
    호흡
 ========================================================= */
