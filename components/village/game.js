@@ -2773,6 +2773,7 @@ function clearGroup(group) {
 }
 
 function createPetModel(petId) {
+
   clearGroup(pet);
 
   const data =
@@ -2789,89 +2790,1108 @@ function createPetModel(petId) {
   const earMat =
     M(data.earColor);
 
-  /* 몸 */
+  const darkMat =
+    M(0x43343b);
 
-  ball(
-    petBodyGroup,
-    0,
-    0.42,
-    0,
-    0.45,
-    0.36,
-    0.4,
-    bodyMat
-  );
+  const whiteMat =
+    M(0xfff9ef);
 
-  /* 머리 */
+  const bellyMat =
+    M(0xf7f2ec);
 
-  ball(
-    petBodyGroup,
-    0,
-    0.78,
-    -0.02,
-    0.34,
-    0.32,
-    0.32,
-    bodyMat
-  );
+  /* =========================================================
+     🐰 토끼
+  ========================================================= */
 
-  /* 귀 */
+  if (petId === "bunny") {
 
-  if (petId === "cat") {
-    for (const x of [-0.21, 0.21]) {
-      const ear = add(
-        new THREE.ConeGeometry(
-          0.14,
-          0.38,
-          4
-        ),
-        earMat,
-        petBodyGroup,
-        x,
-        1.05,
-        -0.02
-      );
+    ball(
+      petBodyGroup,
+      0,
+      0.42,
+      0,
+      0.45,
+      0.38,
+      0.42,
+      bodyMat
+    );
 
-      ear.rotation.z =
-        x < 0 ? -0.25 : 0.25;
-    }
-  } else if (petId === "fox") {
-    for (const x of [-0.22, 0.22]) {
-      const ear = add(
-        new THREE.ConeGeometry(
-          0.16,
-          0.45,
-          5
-        ),
-        earMat,
-        petBodyGroup,
-        x,
-        1.05,
-        -0.02
-      );
+    ball(
+      petBodyGroup,
+      0,
+      0.82,
+      -0.02,
+      0.34,
+      0.32,
+      0.32,
+      bodyMat
+    );
 
-      ear.rotation.z =
-        x < 0 ? -0.2 : 0.2;
-    }
-  } else if (petId === "star") {
-    for (let i = 0; i < 5; i++) {
-      const a =
-        i * Math.PI * 2 / 5;
+    /* 긴 귀 */
+
+    for (const x of [-0.18, 0.18]) {
 
       ball(
         petBodyGroup,
-        Math.cos(a) * 0.25,
-        0.82 +
-          Math.sin(a) * 0.25,
-        -0.03,
+        x,
+        1.16,
+        -0.02,
+        0.11,
+        0.32,
+        0.10,
+        earMat
+      );
+
+    }
+
+    /* 꼬리 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.42,
+      -0.43,
+      0.20,
+      0.20,
+      0.20,
+      whiteMat
+    );
+  }
+
+
+  /* =========================================================
+     🐶 강아지
+  ========================================================= */
+
+  else if (petId === "puppy") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0,
+      0.47,
+      0.39,
+      0.44,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.82,
+      0.02,
+      0.37,
+      0.34,
+      0.35,
+      bodyMat
+    );
+
+    /* 처진 귀 */
+
+    for (const x of [-0.25, 0.25]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        0.88,
+        0.02,
         0.13,
-        0.13,
-        0.13,
+        0.28,
+        0.18,
+        earMat
+      );
+
+    }
+
+    /* 주둥이 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.72,
+      0.31,
+      0.16,
+      0.12,
+      0.12,
+      bellyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.74,
+      0.40,
+      0.055,
+      0.045,
+      0.04,
+      darkMat
+    );
+
+    /* 꼬리 */
+
+    const puppyTail =
+      ball(
+        petBodyGroup,
+        0.34,
+        0.48,
+        -0.36,
+        0.15,
+        0.24,
+        0.15,
         bodyMat
       );
+
+    puppyTail.rotation.z =
+      -0.5;
+  }
+
+
+  /* =========================================================
+     🐱 고양이
+  ========================================================= */
+
+  else if (petId === "cat") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0,
+      0.43,
+      0.36,
+      0.40,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.82,
+      -0.02,
+      0.34,
+      0.32,
+      0.32,
+      bodyMat
+    );
+
+    /* 뾰족한 귀 */
+
+    for (const x of [-0.20, 0.20]) {
+
+      const ear =
+        add(
+          new THREE.ConeGeometry(
+            0.15,
+            0.42,
+            5
+          ),
+          earMat,
+          petBodyGroup,
+          x,
+          1.08,
+          -0.02
+        );
+
+      ear.rotation.z =
+        x < 0
+          ? -0.18
+          : 0.18;
     }
-  } else {
+
+    /* 긴 꼬리 */
+
+    const tail =
+      add(
+        new THREE.TorusGeometry(
+          0.20,
+          0.07,
+          8,
+          16,
+          Math.PI * 1.45
+        ),
+        bodyMat,
+        petBodyGroup,
+        0.28,
+        0.52,
+        -0.30
+      );
+
+    tail.rotation.y =
+      Math.PI / 2;
+  }
+
+
+  /* =========================================================
+     🦊 여우
+  ========================================================= */
+
+  else if (petId === "fox") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0,
+      0.44,
+      0.37,
+      0.41,
+      bodyMat
+    );
+
+    /* 여우 머리 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.84,
+      -0.02,
+      0.36,
+      0.34,
+      0.34,
+      bodyMat
+    );
+
+    /* 큰 귀 */
+
+    for (const x of [-0.23, 0.23]) {
+
+      const ear =
+        add(
+          new THREE.ConeGeometry(
+            0.17,
+            0.50,
+            5
+          ),
+          earMat,
+          petBodyGroup,
+          x,
+          1.12,
+          -0.02
+        );
+
+      ear.rotation.z =
+        x < 0
+          ? -0.20
+          : 0.20;
+    }
+
+    /* 뾰족한 주둥이 */
+
+    const muzzle =
+      add(
+        new THREE.ConeGeometry(
+          0.16,
+          0.34,
+          5
+        ),
+        bodyMat,
+        petBodyGroup,
+        0,
+        0.70,
+        0.30
+      );
+
+    muzzle.rotation.x =
+      Math.PI / 2;
+
+    /* 풍성한 꼬리 */
+
+    const tail =
+      add(
+        new THREE.ConeGeometry(
+          0.22,
+          0.65,
+          8
+        ),
+        earMat,
+        petBodyGroup,
+        0.38,
+        0.46,
+        -0.35
+      );
+
+    tail.rotation.x =
+      Math.PI / 2;
+  }
+
+
+  /* =========================================================
+     🐻 곰
+  ========================================================= */
+
+  else if (petId === "bear") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0,
+      0.50,
+      0.42,
+      0.45,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.82,
+      -0.02,
+      0.37,
+      0.34,
+      0.34,
+      bodyMat
+    );
+
+    /* 둥근 귀 */
+
+    for (const x of [-0.24, 0.24]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        1.04,
+        -0.02,
+        0.14,
+        0.14,
+        0.12,
+        earMat
+      );
+
+    }
+
+    /* 배 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.40,
+      0.37,
+      0.25,
+      0.25,
+      0.07,
+      bellyMat
+    );
+  }
+
+
+  /* =========================================================
+     🦌 사슴
+  ========================================================= */
+
+  else if (petId === "deer") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0,
+      0.44,
+      0.38,
+      0.40,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.84,
+      -0.02,
+      0.33,
+      0.34,
+      0.32,
+      bodyMat
+    );
+
+    /* 긴 귀 */
+
+    for (const x of [-0.22, 0.22]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        1.08,
+        -0.02,
+        0.10,
+        0.24,
+        0.08,
+        earMat
+      );
+
+    }
+
+    /* 뿔 */
+
+    for (const x of [-0.13, 0.13]) {
+
+      const antler =
+        new THREE.Group();
+
+      antler.position.set(
+        x,
+        1.15,
+        -0.02
+      );
+
+      petBodyGroup.add(
+        antler
+      );
+
+      const stem =
+        add(
+          new THREE.CylinderGeometry(
+            0.035,
+            0.045,
+            0.30,
+            6
+          ),
+          earMat,
+          antler,
+          0,
+          0.12,
+          0
+        );
+
+      const branch =
+        add(
+          new THREE.CylinderGeometry(
+            0.025,
+            0.035,
+            0.16,
+            6
+          ),
+          earMat,
+          antler,
+          x < 0
+            ? -0.06
+            : 0.06,
+          0.22,
+          0
+        );
+
+      branch.rotation.z =
+        x < 0
+          ? -0.55
+          : 0.55;
+    }
+  }
+
+
+  /* =========================================================
+     🦦 수달
+  ========================================================= */
+
+  else if (petId === "otter") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0,
+      0.48,
+      0.38,
+      0.50,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.82,
+      -0.04,
+      0.34,
+      0.32,
+      0.32,
+      bodyMat
+    );
+
+    /* 작은 둥근 귀 */
+
     for (const x of [-0.21, 0.21]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        1.02,
+        -0.02,
+        0.09,
+        0.09,
+        0.07,
+        earMat
+      );
+
+    }
+
+    /* 밝은 배 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0.42,
+      0.25,
+      0.27,
+      0.08,
+      bellyMat
+    );
+
+    /* 납작한 꼬리 */
+
+    box(
+      petBodyGroup,
+      0,
+      0.36,
+      -0.48,
+      0.28,
+      0.10,
+      0.35,
+      earMat
+    );
+  }
+
+
+  /* =========================================================
+     🦝 너구리
+  ========================================================= */
+
+  else if (petId === "raccoon") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.43,
+      0,
+      0.46,
+      0.38,
+      0.43,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.82,
+      -0.02,
+      0.35,
+      0.33,
+      0.33,
+      bodyMat
+    );
+
+    /* 둥근 귀 */
+
+    for (const x of [-0.22, 0.22]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        1.04,
+        -0.02,
+        0.12,
+        0.12,
+        0.10,
+        earMat
+      );
+
+    }
+
+    /* 눈 주변 마스크 */
+
+    box(
+      petBodyGroup,
+      0,
+      0.80,
+      0.285,
+      0.43,
+      0.13,
+      0.025,
+      darkMat
+    );
+
+    /* 눈 다시 표시 */
+
+    for (const x of [-0.12, 0.12]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        0.81,
+        0.31,
+        0.035,
+        0.045,
+        0.025,
+        whiteMat
+      );
+
+      ball(
+        petBodyGroup,
+        x,
+        0.81,
+        0.335,
+        0.018,
+        0.025,
+        0.015,
+        darkMat
+      );
+
+    }
+
+    /* 줄무늬 꼬리 */
+
+    for (let i = 0; i < 4; i++) {
+
+      ball(
+        petBodyGroup,
+        0,
+        0.45 + i * 0.06,
+        -0.45 - i * 0.02,
+        0.19 - i * 0.02,
+        0.10,
+        0.14,
+        i % 2 === 0
+          ? earMat
+          : bodyMat
+      );
+
+    }
+  }
+
+
+  /* =========================================================
+     🐧 펭귄
+  ========================================================= */
+
+  else if (petId === "penguin") {
+
+    /* 검은 몸 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.46,
+      0,
+      0.43,
+      0.52,
+      0.38,
+      darkMat
+    );
+
+    /* 둥근 머리 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.90,
+      -0.02,
+      0.34,
+      0.33,
+      0.32,
+      darkMat
+    );
+
+    /* 하얀 배 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.46,
+      0.34,
+      0.29,
+      0.40,
+      0.08,
+      whiteMat
+    );
+
+    /* 얼굴 */
+
+    ball(
+      petBodyGroup,
+      -0.12,
+      0.94,
+      0.29,
+      0.045,
+      0.055,
+      0.025,
+      whiteMat
+    );
+
+    ball(
+      petBodyGroup,
+      0.12,
+      0.94,
+      0.29,
+      0.045,
+      0.055,
+      0.025,
+      whiteMat
+    );
+
+    /* 부리 */
+
+    const beak =
+      new THREE.ConeGeometry(
+        0.07,
+        0.16,
+        4
+      );
+
+    const beakMesh =
+      add(
+        beak,
+        M(0xf0a85c),
+        petBodyGroup,
+        0,
+        0.87,
+        0.34
+      );
+
+    beakMesh.rotation.x =
+      Math.PI / 2;
+
+    /* 날개 */
+
+    ball(
+      petBodyGroup,
+      -0.43,
+      0.48,
+      0,
+      0.10,
+      0.30,
+      0.18,
+      darkMat
+    );
+
+    ball(
+      petBodyGroup,
+      0.43,
+      0.48,
+      0,
+      0.10,
+      0.30,
+      0.18,
+      darkMat
+    );
+
+    /* 발 */
+
+    for (const x of [-0.16, 0.16]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        0.06,
+        0.08,
+        0.13,
+        0.06,
+        0.20,
+        M(0xf0a85c)
+      );
+
+    }
+  }
+
+
+  /* =========================================================
+     🐉 용
+  ========================================================= */
+
+  else if (petId === "dragon") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.45,
+      0,
+      0.46,
+      0.40,
+      0.44,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.84,
+      -0.02,
+      0.36,
+      0.34,
+      0.34,
+      bodyMat
+    );
+
+    /* 뿔 */
+
+    for (const x of [-0.16, 0.16]) {
+
+      const horn =
+        add(
+          new THREE.ConeGeometry(
+            0.07,
+            0.28,
+            5
+          ),
+          earMat,
+          petBodyGroup,
+          x,
+          1.12,
+          -0.02
+        );
+
+      horn.rotation.z =
+        x < 0
+          ? -0.18
+          : 0.18;
+    }
+
+    /* 날개 */
+
+    for (const x of [-0.42, 0.42]) {
+
+      const wing =
+        new THREE.ConeGeometry(
+          0.25,
+          0.50,
+          3
+        );
+
+      const wingMesh =
+        add(
+          wing,
+          earMat,
+          petBodyGroup,
+          x,
+          0.62,
+          -0.05
+        );
+
+      wingMesh.rotation.z =
+        x < 0
+          ? -1.0
+          : 1.0;
+    }
+
+    /* 용 꼬리 */
+
+    const tail =
+      add(
+        new THREE.ConeGeometry(
+          0.16,
+          0.55,
+          6
+        ),
+        earMat,
+        petBodyGroup,
+        0,
+        0.40,
+        -0.48
+      );
+
+    tail.rotation.x =
+      Math.PI / 2;
+  }
+
+
+  /* =========================================================
+     🦄 유니콘
+  ========================================================= */
+
+  else if (petId === "unicorn") {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.44,
+      0,
+      0.44,
+      0.39,
+      0.42,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.84,
+      -0.02,
+      0.35,
+      0.34,
+      0.34,
+      bodyMat
+    );
+
+    /* 귀 */
+
+    for (const x of [-0.20, 0.20]) {
+
+      const ear =
+        add(
+          new THREE.ConeGeometry(
+            0.10,
+            0.25,
+            5
+          ),
+          earMat,
+          petBodyGroup,
+          x,
+          1.08,
+          -0.02
+        );
+
+      ear.rotation.z =
+        x < 0
+          ? -0.18
+          : 0.18;
+    }
+
+    /* 뿔 */
+
+    const horn =
+      add(
+        new THREE.ConeGeometry(
+          0.07,
+          0.38,
+          6
+        ),
+        M(0xf4d57b),
+        petBodyGroup,
+        0,
+        1.20,
+        0
+      );
+
+    /* 갈기 */
+
+    for (let i = 0; i < 4; i++) {
+
+      ball(
+        petBodyGroup,
+        -0.23,
+        0.78 + i * 0.10,
+        -0.12,
+        0.07,
+        0.10,
+        0.06,
+        i % 2 === 0
+          ? M(0xd9a8ec)
+          : M(0x9dcff0)
+      );
+
+    }
+
+    /* 꼬리 */
+
+    const tail =
+      ball(
+        petBodyGroup,
+        0,
+        0.45,
+        -0.43,
+        0.18,
+        0.25,
+        0.16,
+        M(0xd9a8ec)
+      );
+
+    tail.rotation.x =
+      -0.35;
+  }
+
+
+  /* =========================================================
+     ⭐ 별빛친구
+  ========================================================= */
+
+  else if (petId === "star") {
+
+    /* 중앙 몸 */
+
+    ball(
+      petBodyGroup,
+      0,
+      0.62,
+      0,
+      0.42,
+      0.42,
+      0.25,
+      bodyMat
+    );
+
+    /* 별 모양 돌기 */
+
+    for (let i = 0; i < 5; i++) {
+
+      const angle =
+        i * Math.PI * 2 / 5;
+
+      const spike =
+        add(
+          new THREE.ConeGeometry(
+            0.15,
+            0.38,
+            5
+          ),
+          bodyMat,
+          petBodyGroup,
+          Math.cos(angle) * 0.32,
+          0.62 +
+            Math.sin(angle) * 0.32,
+          0
+        );
+
+      spike.rotation.z =
+        -Math.sin(angle) * 1.1;
+    }
+
+    /* 얼굴 */
+
+    for (const x of [-0.11, 0.11]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        0.68,
+        0.25,
+        0.035,
+        0.045,
+        0.025,
+        darkMat
+      );
+
+    }
+  }
+
+
+  /* =========================================================
+     기본 안전장치
+  ========================================================= */
+
+  else {
+
+    ball(
+      petBodyGroup,
+      0,
+      0.42,
+      0,
+      0.45,
+      0.36,
+      0.40,
+      bodyMat
+    );
+
+    ball(
+      petBodyGroup,
+      0,
+      0.78,
+      -0.02,
+      0.34,
+      0.32,
+      0.32,
+      bodyMat
+    );
+
+    for (const x of [-0.21, 0.21]) {
+
       ball(
         petBodyGroup,
         x,
@@ -2882,69 +3902,75 @@ function createPetModel(petId) {
         0.12,
         earMat
       );
+
     }
   }
 
-  /* 눈 */
 
-  for (const x of [-0.12, 0.12]) {
+  /* =========================================================
+     공통 얼굴
+  ========================================================= */
+
+  if (
+    petId !== "penguin" &&
+    petId !== "raccoon"
+  ) {
+
+    for (const x of [-0.12, 0.12]) {
+
+      ball(
+        petBodyGroup,
+        x,
+        0.80,
+        0.28,
+        0.035,
+        0.045,
+        0.025,
+        darkMat
+      );
+
+    }
+  }
+
+
+  /* =========================================================
+     공통 볼터치
+  ========================================================= */
+
+  if (
+    petId !== "penguin"
+  ) {
+
     ball(
       petBodyGroup,
-      x,
-      0.8,
-      0.28,
+      -0.18,
+      0.69,
+      0.27,
+      0.055,
       0.035,
-      0.045,
-      0.025,
-      m.dark
+      0.02,
+      m.pink
     );
-  }
 
-  /* 볼 */
-
-  ball(
-    petBodyGroup,
-    -0.18,
-    0.69,
-    0.27,
-    0.055,
-    0.035,
-    0.02,
-    m.pink
-  );
-
-  ball(
-    petBodyGroup,
-    0.18,
-    0.69,
-    0.27,
-    0.055,
-    0.035,
-    0.02,
-    m.pink
-  );
-
-  /* 꼬리 */
-
-  if (petId !== "star") {
     ball(
       petBodyGroup,
-      0,
-      0.42,
-      -0.38,
       0.18,
-      0.18,
-      0.18,
-      bodyMat
+      0.69,
+      0.27,
+      0.055,
+      0.035,
+      0.02,
+      m.pink
     );
+
   }
 
-  /* 액세서리 */
+
+  /* =========================================================
+     액세서리
+  ========================================================= */
 
   applyPetAccessories();
-
-  renderedPetKey =
-    getPetRenderKey();
 }
    
 function applyPetAccessories() {
