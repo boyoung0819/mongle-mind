@@ -10905,237 +10905,644 @@ function getMindCareActivity() {
 
 function openRainRest() {
 
-  const box =
+  const activity =
     getMindCareActivity();
 
-  if (!box) {
+  if (!activity) {
     return;
   }
 
   clearMindCareTimers();
-  stopRainSound();
 
-  box.innerHTML = `
+  activity.innerHTML = `
+
     <div
       style="
         position:relative;
         overflow:hidden;
-        min-height:330px;
+        min-height:560px;
         border-radius:28px;
-        padding:28px 20px;
         background:
           linear-gradient(
-            160deg,
-            #9ebbd5 0%,
-            #b9c9df 48%,
-            #d7d3e6 100%
+            180deg,
+            #9fb8c8 0%,
+            #b9cbd2 38%,
+            #8099a0 100%
           );
-        text-align:center;
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.35),
-          0 12px 35px rgba(90,100,140,.12);
+          0 18px 45px
+          rgba(70,90,100,.16);
       "
     >
 
-      <!-- 어두운 구름 -->
-
+      <!-- 하늘 -->
       <div
-        style="
-          position:absolute;
-          top:18px;
-          left:-20px;
-          font-size:52px;
-          opacity:.35;
-          animation:mindCloudMove 9s ease-in-out infinite alternate;
-        "
-      >
-        ☁️
-      </div>
-
-      <div
-        style="
-          position:absolute;
-          top:42px;
-          right:-10px;
-          font-size:42px;
-          opacity:.28;
-          animation:mindCloudMove2 12s ease-in-out infinite alternate;
-        "
-      >
-        ☁️
-      </div>
-
-      <!-- 비 -->
-
-      <div
-        id="rainDrops"
         style="
           position:absolute;
           inset:0;
-          pointer-events:none;
-          overflow:hidden;
-        "
-      ></div>
-
-      <!-- 바닥 반사 -->
-
-      <div
-        style="
-          position:absolute;
-          left:0;
-          right:0;
-          bottom:0;
-          height:70px;
           background:
+            radial-gradient(
+              circle at 25% 20%,
+              rgba(255,255,255,.32),
+              transparent 24%
+            ),
             linear-gradient(
-              to top,
-              rgba(110,135,165,.25),
-              transparent
+              180deg,
+              rgba(255,255,255,.10),
+              transparent 55%
             );
           pointer-events:none;
         "
       ></div>
 
-      <!-- 내용 -->
+
+      <!-- 구름 -->
+      <div
+        style="
+          position:absolute;
+          top:48px;
+          left:8%;
+          width:170px;
+          height:55px;
+          border-radius:50px;
+          background:rgba(245,250,252,.42);
+          filter:blur(1px);
+          animation:
+            mindCloudMove 8s ease-in-out infinite alternate;
+        "
+      ></div>
 
       <div
         style="
-          position:relative;
-          z-index:5;
-          padding-top:25px;
+          position:absolute;
+          top:90px;
+          right:5%;
+          width:210px;
+          height:60px;
+          border-radius:50px;
+          background:rgba(240,248,250,.35);
+          filter:blur(1px);
+          animation:
+            mindCloudMove2 10s ease-in-out infinite alternate;
+        "
+      ></div>
+
+
+      <!-- 뒤쪽 나무 -->
+      <div
+        style="
+          position:absolute;
+          left:4%;
+          bottom:125px;
+          width:115px;
+          height:270px;
         "
       >
 
         <div
           style="
-            font-size:48px;
-            margin-bottom:6px;
-            filter:drop-shadow(0 5px 8px rgba(70,90,120,.15));
+            position:absolute;
+            left:51px;
+            bottom:0;
+            width:18px;
+            height:150px;
+            border-radius:12px;
+            background:#675b55;
+          "
+        ></div>
+
+        <div
+          style="
+            position:absolute;
+            left:0;
+            top:35px;
+            width:115px;
+            height:115px;
+            border-radius:50%;
+            background:#58766d;
+            box-shadow:
+              35px -25px 0 #66867b,
+              75px 10px 0 #506e66,
+              22px 30px 0 #719087;
+          "
+        ></div>
+
+      </div>
+
+
+      <!-- 오른쪽 나무 -->
+      <div
+        style="
+          position:absolute;
+          right:2%;
+          bottom:120px;
+          width:130px;
+          height:300px;
+        "
+      >
+
+        <div
+          style="
+            position:absolute;
+            right:55px;
+            bottom:0;
+            width:20px;
+            height:170px;
+            border-radius:12px;
+            background:#625752;
+          "
+        ></div>
+
+        <div
+          style="
+            position:absolute;
+            right:0;
+            top:35px;
+            width:125px;
+            height:125px;
+            border-radius:50%;
+            background:#52736a;
+            box-shadow:
+              -35px -22px 0 #67887e,
+              -72px 18px 0 #4c6c63,
+              -20px 35px 0 #71948a;
+          "
+        ></div>
+
+      </div>
+
+
+      <!-- 작은 연못 -->
+      <div
+        style="
+          position:absolute;
+          left:50%;
+          bottom:65px;
+          transform:translateX(-50%);
+          width:330px;
+          height:120px;
+          border-radius:50%;
+          background:
+            radial-gradient(
+              ellipse at center,
+              rgba(205,235,238,.75),
+              rgba(104,153,161,.72) 55%,
+              rgba(72,111,117,.60) 100%
+            );
+          box-shadow:
+            inset 0 8px 20px
+            rgba(255,255,255,.18),
+            0 12px 30px
+            rgba(40,70,75,.16);
+        "
+      >
+
+        <!-- 물결 -->
+        <div
+          style="
+            position:absolute;
+            left:50%;
+            top:45%;
+            width:70px;
+            height:20px;
+            transform:translate(-50%,-50%);
+            border:2px solid rgba(235,250,250,.52);
+            border-radius:50%;
+            animation:
+              pondRipple 3s ease-out infinite;
+          "
+        ></div>
+
+        <div
+          style="
+            position:absolute;
+            left:50%;
+            top:45%;
+            width:70px;
+            height:20px;
+            transform:translate(-50%,-50%);
+            border:2px solid rgba(235,250,250,.38);
+            border-radius:50%;
+            animation:
+              pondRipple 3s ease-out 1.5s infinite;
+          "
+        ></div>
+
+      </div>
+
+
+      <!-- 연못 옆 돌 -->
+      <div
+        style="
+          position:absolute;
+          left:28%;
+          bottom:75px;
+          width:38px;
+          height:20px;
+          border-radius:50%;
+          background:#718184;
+          transform:rotate(-8deg);
+        "
+      ></div>
+
+      <div
+        style="
+          position:absolute;
+          right:28%;
+          bottom:72px;
+          width:45px;
+          height:23px;
+          border-radius:50%;
+          background:#687a7d;
+          transform:rotate(12deg);
+        "
+      ></div>
+
+
+      <!-- 벤치 -->
+      <div
+        style="
+          position:absolute;
+          left:50%;
+          bottom:190px;
+          transform:translateX(-50%);
+          width:150px;
+          height:80px;
+        "
+      >
+
+        <div
+          style="
+            position:absolute;
+            top:10px;
+            left:0;
+            width:150px;
+            height:25px;
+            border-radius:10px;
+            background:#765f54;
+            box-shadow:
+              0 5px 0 #614d45;
+          "
+        ></div>
+
+        <div
+          style="
+            position:absolute;
+            top:42px;
+            left:0;
+            width:150px;
+            height:20px;
+            border-radius:8px;
+            background:#80685b;
+          "
+        ></div>
+
+        <div
+          style="
+            position:absolute;
+            left:18px;
+            top:35px;
+            width:10px;
+            height:45px;
+            background:#554943;
+            transform:rotate(8deg);
+          "
+        ></div>
+
+        <div
+          style="
+            position:absolute;
+            right:18px;
+            top:35px;
+            width:10px;
+            height:45px;
+            background:#554943;
+            transform:rotate(-8deg);
+          "
+        ></div>
+
+      </div>
+
+
+      <!-- 빗방울 영역 -->
+      <div
+        id="rainDrops"
+        style="
+          position:absolute;
+          inset:0;
+          overflow:hidden;
+          pointer-events:none;
+        "
+      ></div>
+
+
+      <!-- 떨어지는 낙엽 -->
+      <div
+        id="rainLeaves"
+        style="
+          position:absolute;
+          inset:0;
+          overflow:hidden;
+          pointer-events:none;
+        "
+      ></div>
+
+
+      <!-- 따뜻한 조명 -->
+      <div
+        style="
+          position:absolute;
+          left:22%;
+          bottom:170px;
+          width:12px;
+          height:12px;
+          border-radius:50%;
+          background:#ffe9a8;
+          box-shadow:
+            0 0 18px
+            8px rgba(255,230,150,.20);
+        "
+      ></div>
+
+      <div
+        style="
+          position:absolute;
+          right:21%;
+          bottom:165px;
+          width:12px;
+          height:12px;
+          border-radius:50%;
+          background:#ffe9a8;
+          box-shadow:
+            0 0 18px
+            8px rgba(255,230,150,.20);
+        "
+      ></div>
+
+
+      <!-- 안내 패널 -->
+      <div
+        style="
+          position:absolute;
+          left:20px;
+          right:20px;
+          top:20px;
+          padding:18px 20px;
+          border-radius:22px;
+          background:
+            rgba(40,60,70,.30);
+          backdrop-filter:blur(10px);
+          color:white;
+          box-shadow:
+            0 10px 30px
+            rgba(30,50,60,.12);
+        "
+      >
+
+        <div
+          style="
+            font-size:12px;
+            letter-spacing:.14em;
+            opacity:.72;
+            margin-bottom:5px;
           "
         >
-          🌧️
+          RAINY LITTLE REST
         </div>
 
-        <h3
+        <div
           style="
-            margin:0;
-            color:#27374a;
-            font-size:21px;
+            font-size:23px;
+            font-weight:700;
           "
         >
-          빗소리 쉼터
-        </h3>
+          잠깐, 여기서 쉬어가요
+        </div>
 
-        <p
+        <div
           style="
-            margin:10px 0 20px;
-            color:#33475c;
+            margin-top:7px;
             font-size:13px;
-            line-height:1.8;
+            line-height:1.6;
+            opacity:.82;
           "
         >
-          잠시 빗소리를 들으며 쉬어가요.<br>
-          아무것도 하지 않아도 괜찮아요.
-        </p>
+          빗소리를 들으며 아무것도 하지 않아도 괜찮아요.
+        </div>
 
-        <!-- 소리 상태 -->
+      </div>
+
+
+      <!-- 하단 컨트롤 -->
+      <div
+        style="
+          position:absolute;
+          left:20px;
+          right:20px;
+          bottom:20px;
+          display:flex;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+        "
+      >
+
+        <button
+          type="button"
+          id="rainSoundToggle"
+          style="
+            border:0;
+            border-radius:14px;
+            padding:11px 15px;
+            background:
+              rgba(255,255,255,.82);
+            color:#41545c;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          🔊 소리 켜짐
+        </button>
 
         <div
           style="
             display:flex;
             align-items:center;
-            justify-content:center;
             gap:8px;
-            margin-bottom:14px;
+            padding:10px 13px;
+            border-radius:14px;
+            background:
+              rgba(255,255,255,.72);
           "
         >
 
           <span
-            id="rainSoundIcon"
-            style="font-size:18px;"
-          >
-            🔊
-          </span>
-
-          <span
-            id="rainSoundStatus"
             style="
               font-size:12px;
-              color:#33475c;
+              color:#50616a;
             "
           >
-            빗소리가 재생되고 있어요
+            🔉
           </span>
-
-        </div>
-
-        <!-- 볼륨 -->
-
-        <div
-          style="
-            width:min(240px,80%);
-            margin:0 auto 18px;
-          "
-        >
 
           <input
             id="rainVolume"
             type="range"
             min="0"
-            max="100"
-            value="35"
+            max="1"
+            step="0.01"
+            value="${rainMasterVolume}"
             style="
-              width:100%;
-              accent-color:#738faf;
-              cursor:pointer;
+              width:110px;
             "
-          >
+          />
 
         </div>
 
-        <div
+        <button
+          type="button"
+          id="rainClose"
           style="
-            display:flex;
-            justify-content:center;
-            gap:8px;
-            flex-wrap:wrap;
+            margin-left:auto;
+            border:0;
+            border-radius:14px;
+            padding:11px 17px;
+            background:
+              rgba(255,255,255,.92);
+            color:#40545d;
+            font-weight:700;
+            cursor:pointer;
           "
         >
-
-          <button
-            type="button"
-            id="rainMute"
-            style="
-              border:0;
-              border-radius:999px;
-              padding:9px 14px;
-              background:rgba(255,255,255,.72);
-              color:#34485c;
-              cursor:pointer;
-              font-size:12px;
-            "
-          >
-            🔊 소리 끄기
-          </button>
-
-          <button
-            type="button"
-            id="rainFinish"
-            class="primary-button"
-          >
-            🌿 이제 괜찮아요
-          </button>
-
-        </div>
+          🌿 이제 괜찮아요
+        </button>
 
       </div>
 
     </div>
   `;
 
-  startRainAnimation();
+
+  /* =====================================================
+     🌧️ 빗소리 시작
+  ===================================================== */
 
   startRainSound();
+
+
+  /* =====================================================
+     🌧️ 빗방울 애니메이션
+  ===================================================== */
+
+  startRainAnimation();
+
+
+  /* =====================================================
+     🍃 낙엽
+  ===================================================== */
+
+  const leaves =
+    $("rainLeaves");
+
+  if (leaves) {
+
+    const createLeaf = () => {
+
+      if (!leaves.isConnected) {
+        return;
+      }
+
+      const leaf =
+        document.createElement("span");
+
+      leaf.textContent =
+        Math.random() > .5
+          ? "🍃"
+          : "🍂";
+
+      leaf.style.position =
+        "absolute";
+
+      leaf.style.left =
+        `${Math.random() * 100}%`;
+
+      leaf.style.top =
+        "-30px";
+
+      leaf.style.fontSize =
+        `${12 + Math.random() * 10}px`;
+
+      leaf.style.opacity =
+        `${0.35 + Math.random() * 0.35}`;
+
+      leaf.style.transition =
+        "transform 4.5s linear, opacity 4.5s linear";
+
+      leaves.appendChild(leaf);
+
+      requestAnimationFrame(() => {
+
+        leaf.style.transform =
+          `translate(
+            ${-80 + Math.random() * 160}px,
+            ${500 + Math.random() * 100}px
+          )
+          rotate(
+            ${180 + Math.random() * 360}deg
+          )`;
+
+        leaf.style.opacity =
+          "0";
+
+      });
+
+      setTimeout(() => {
+
+        leaf.remove();
+
+      }, 4800);
+
+    };
+
+
+    const leafTimer =
+      setInterval(
+        createLeaf,
+        2300
+      );
+
+    mindCareRainTimer =
+      leafTimer;
+
+  }
+
+
+  /* =====================================================
+     🌿 버튼
+  ===================================================== */
+
+  const toggle =
+    $("rainSoundToggle");
+
+  if (toggle) {
+
+    toggle.addEventListener(
+      "click",
+      () => {
+
+        const muted =
+          toggleRainSound();
+
+        toggle.textContent =
+          muted
+            ? "🔇 소리 꺼짐"
+            : "🔊 소리 켜짐";
+
+      }
+    );
+
+  }
+
 
   const volume =
     $("rainVolume");
@@ -11147,7 +11554,7 @@ function openRainRest() {
       () => {
 
         setRainVolume(
-          Number(volume.value) / 100
+          volume.value
         );
 
       }
@@ -11155,102 +11562,72 @@ function openRainRest() {
 
   }
 
-  const mute =
-    $("rainMute");
 
-  if (mute) {
+  const close =
+    $("rainClose");
 
-    mute.onclick = () => {
+  if (close) {
 
-      const muted =
-        toggleRainSound();
+    close.addEventListener(
+      "click",
+      () => {
 
-      mute.textContent =
-        muted
-          ? "🔇 소리 켜기"
-          : "🔊 소리 끄기";
+        stopRainSound();
 
-      const icon =
-        $("rainSoundIcon");
+        clearMindCareTimers();
 
-      const status =
-        $("rainSoundStatus");
-
-      if (icon) {
-        icon.textContent =
-          muted ? "🔇" : "🔊";
-      }
-
-      if (status) {
-        status.textContent =
-          muted
-            ? "빗소리를 잠시 쉬게 했어요"
-            : "빗소리가 재생되고 있어요";
-      }
-
-    };
-
-  }
-
-  const finish =
-    $("rainFinish");
-
-  if (finish) {
-
-    finish.onclick = () => {
-
-      stopRainSound();
-      clearMindCareTimers();
-
-      box.innerHTML = `
-        <div
-          style="
-            padding:30px 18px;
-            text-align:center;
-            border-radius:24px;
-            background:
-              linear-gradient(
-                145deg,
-                #f1f7ff,
-                #f5f0ff
-              );
-          "
-        >
-
+        activity.innerHTML = `
           <div
             style="
-              font-size:40px;
-              margin-bottom:8px;
+              padding:30px;
+              text-align:center;
+              border-radius:22px;
+              background:
+                linear-gradient(
+                  135deg,
+                  #eef6f5,
+                  #f7f2f8
+                );
             "
           >
-            ☁️
+
+            <div
+              style="
+                font-size:36px;
+                margin-bottom:12px;
+              "
+            >
+              🌿
+            </div>
+
+            <div
+              style="
+                font-size:20px;
+                font-weight:700;
+                color:#53646a;
+              "
+            >
+              잘 쉬었어요.
+            </div>
+
+            <div
+              style="
+                margin-top:8px;
+                color:#7b888c;
+                line-height:1.7;
+              "
+            >
+              지금의 나에게도<br>
+              잠깐 쉬어갈 시간이 필요했어요.
+            </div>
+
           </div>
+        `;
 
-          <strong
-            style="
-              font-size:16px;
-            "
-          >
-            잠시 잘 쉬었어요.
-          </strong>
+        addMindCareXP(3);
 
-          <p
-            style="
-              margin:9px 0 0;
-              font-size:12px;
-              line-height:1.6;
-              opacity:.62;
-            "
-          >
-            다시 천천히 돌아가도 괜찮아요.
-          </p>
-
-        </div>
-      `;
-
-      addMindCareXP(3);
-
-    };
+      }
+    );
 
   }
 
