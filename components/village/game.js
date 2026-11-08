@@ -3922,8 +3922,6 @@ function updateUI() {
           state.roomDecor
       );
     });
-
-updateJournalUI();
    
   const roomLabel =
     $("roomDecorLabel");
