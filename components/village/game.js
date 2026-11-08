@@ -12244,163 +12244,538 @@ function openMindColor() {
 
 function openMongleCloud() {
 
-  const box =
+  const activity =
     getMindCareActivity();
 
-  if (!box) {
+  if (!activity) {
     return;
   }
 
   clearMindCareTimers();
 
-  const thoughts = [
-    "걱정",
-    "해야 할 일",
-    "피곤함",
-    "복잡한 생각",
-    "오늘의 부담"
-  ];
+  activity.innerHTML = `
 
-  box.innerHTML = `
     <div
       style="
-        padding:24px 18px;
-        border-radius:24px;
+        position:relative;
+        overflow:hidden;
+        min-height:500px;
+        padding:28px;
+        border-radius:28px;
+
         background:
+          radial-gradient(
+            circle at 20% 20%,
+            rgba(255,255,255,.95),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 80% 30%,
+            rgba(220,238,255,.65),
+            transparent 32%
+          ),
           linear-gradient(
-            160deg,
-            #eef5ff,
-            #f7f0ff
+            145deg,
+            #edf5ff,
+            #f8f1ff
           );
-        text-align:center;
+
+        box-shadow:
+          0 18px 45px
+          rgba(100,120,160,.12);
       "
     >
 
-      <div style="font-size:36px;">
-        🫧
-      </div>
-
-      <h3
-        style="
-          margin:8px 0 4px;
-        "
-      >
-        잠시 내려놓고 싶은 것은?
-      </h3>
-
-      <p
-        style="
-          margin:0 0 18px;
-          font-size:12px;
-          opacity:.62;
-        "
-      >
-        하나를 골라 구름처럼 보내줘요.
-      </p>
-
+      <!-- 배경 몽글 -->
       <div
-        id="mongleCloudList"
         style="
-          display:flex;
-          flex-wrap:wrap;
-          justify-content:center;
-          gap:10px;
+          position:absolute;
+          width:150px;
+          height:150px;
+          border-radius:50%;
+          left:-45px;
+          top:100px;
+          background:rgba(255,255,255,.45);
+          filter:blur(4px);
         "
       ></div>
 
       <div
-        id="mongleCloudResult"
         style="
-          margin-top:18px;
-          min-height:24px;
+          position:absolute;
+          width:180px;
+          height:180px;
+          border-radius:50%;
+          right:-60px;
+          bottom:60px;
+          background:rgba(220,230,255,.38);
+          filter:blur(5px);
+        "
+      ></div>
+
+
+      <!-- 제목 -->
+      <div
+        style="
+          position:relative;
+          z-index:2;
+          text-align:center;
+        "
+      >
+
+        <div
+          style="
+            font-size:12px;
+            letter-spacing:.15em;
+            color:#8290a8;
+            margin-bottom:8px;
+          "
+        >
+          LET IT FLOAT
+        </div>
+
+        <div
+          style="
+            font-size:25px;
+            font-weight:750;
+            color:#59677f;
+          "
+        >
+          잠깐 내려놓아도 괜찮아요
+        </div>
+
+        <div
+          style="
+            margin-top:9px;
+            color:#8b96a9;
+            font-size:14px;
+            line-height:1.7;
+          "
+        >
+          지금 마음에 걸리는 것을 적어보세요.<br>
+          적은 마음은 몽글이가 하늘로 가져갈 거예요.
+        </div>
+
+      </div>
+
+
+      <!-- 입력 -->
+      <div
+        style="
+          position:relative;
+          z-index:3;
+          max-width:520px;
+          margin:28px auto 0;
+        "
+      >
+
+        <textarea
+          id="mongleCloudInput"
+          maxlength="80"
+          placeholder="예: 오늘은 조금 피곤했어"
+          style="
+            width:100%;
+            min-height:100px;
+            resize:none;
+
+            box-sizing:border-box;
+
+            border:
+              1px solid
+              rgba(150,165,190,.25);
+
+            border-radius:20px;
+
+            padding:17px;
+
+            background:
+              rgba(255,255,255,.78);
+
+            color:#59677f;
+
+            font-size:14px;
+            line-height:1.6;
+
+            outline:none;
+
+            box-shadow:
+              0 8px 25px
+              rgba(100,120,160,.07);
+          "
+        ></textarea>
+
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-top:10px;
+          "
+        >
+
+          <span
+            id="mongleCloudCount"
+            style="
+              font-size:12px;
+              color:#9ba5b6;
+            "
+          >
+            0 / 80
+          </span>
+
+          <button
+            id="mongleCloudRelease"
+            type="button"
+            style="
+              border:0;
+              border-radius:15px;
+
+              padding:
+                11px 18px;
+
+              background:
+                linear-gradient(
+                  135deg,
+                  #aebee8,
+                  #cdb9e8
+                );
+
+              color:white;
+
+              font-weight:700;
+
+              cursor:pointer;
+
+              box-shadow:
+                0 8px 20px
+                rgba(130,145,190,.18);
+            "
+          >
+            🫧 내려놓기
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- 몽글이가 떠오르는 공간 -->
+      <div
+        id="mongleCloudSky"
+        style="
+          position:relative;
+          z-index:2;
+
+          height:180px;
+
+          margin:
+            18px auto 0;
+
+          max-width:650px;
+
+          overflow:hidden;
+
+          border-radius:24px;
+
+          background:
+            linear-gradient(
+              180deg,
+              rgba(255,255,255,.34),
+              rgba(225,237,255,.20)
+            );
+        "
+      >
+
+        <div
+          style="
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform:
+              translate(-50%,-50%);
+
+            color:#a2adbf;
+            font-size:13px;
+
+            pointer-events:none;
+          "
+        >
+          여기에 몽글이가 떠올라요
+        </div>
+
+      </div>
+
+
+      <!-- 결과 -->
+      <div
+        id="mongleCloudMessage"
+        style="
+          position:relative;
+          z-index:3;
+
+          min-height:28px;
+
+          margin-top:14px;
+
+          text-align:center;
+
+          color:#79879c;
+
           font-size:13px;
         "
       ></div>
 
+
     </div>
   `;
 
-  const list =
-    $("mongleCloudList");
 
-  thoughts.forEach(
-    thought => {
+  /* =====================================================
+     요소
+  ===================================================== */
 
-      const button =
-        document.createElement("button");
+  const input =
+    $("mongleCloudInput");
 
-      button.type =
-        "button";
+  const count =
+    $("mongleCloudCount");
 
-      button.textContent =
-        `☁️ ${thought}`;
+  const release =
+    $("mongleCloudRelease");
 
-      button.style.cssText = `
-        border:0;
-        border-radius:999px;
-        padding:10px 15px;
-        background:rgba(255,255,255,.82);
-        box-shadow:0 5px 15px rgba(100,110,150,.08);
-        cursor:pointer;
-        font-size:12px;
-      `;
+  const sky =
+    $("mongleCloudSky");
 
-      button.addEventListener(
-        "click",
+  const message =
+    $("mongleCloudMessage");
+
+
+  if (
+    !input ||
+    !count ||
+    !release ||
+    !sky ||
+    !message
+  ) {
+    return;
+  }
+
+
+  /* =====================================================
+     글자 수
+  ===================================================== */
+
+  input.addEventListener(
+    "input",
+    () => {
+
+      count.textContent =
+        `${input.value.length} / 80`;
+
+    }
+  );
+
+
+  /* =====================================================
+     몽글이 만들기
+  ===================================================== */
+
+  release.addEventListener(
+    "click",
+    () => {
+
+      const text =
+        input.value.trim();
+
+      if (!text) {
+
+        message.textContent =
+          "마음에 있는 말을 한 줄만 적어봐요.";
+
+        input.focus();
+
+        return;
+      }
+
+
+      /* -----------------------------------------------
+         기존 안내 문구 숨기기
+      ----------------------------------------------- */
+
+      const placeholder =
+        sky.querySelector(
+          "div"
+        );
+
+      if (placeholder) {
+        placeholder.style.display =
+          "none";
+      }
+
+
+      /* -----------------------------------------------
+         몽글이
+      ----------------------------------------------- */
+
+      const cloud =
+        document.createElement("div");
+
+      cloud.style.position =
+        "absolute";
+
+      cloud.style.left =
+        `${18 + Math.random() * 64}%`;
+
+      cloud.style.bottom =
+        "-45px";
+
+      cloud.style.width =
+        `${120 + Math.random() * 35}px`;
+
+      cloud.style.minHeight =
+        "72px";
+
+      cloud.style.padding =
+        "18px 20px";
+
+      cloud.style.boxSizing =
+        "border-box";
+
+      cloud.style.display =
+        "flex";
+
+      cloud.style.alignItems =
+        "center";
+
+      cloud.style.justifyContent =
+        "center";
+
+      cloud.style.textAlign =
+        "center";
+
+      cloud.style.borderRadius =
+        "50px";
+
+      cloud.style.background =
+        "rgba(255,255,255,.94)";
+
+      cloud.style.color =
+        "#74829a";
+
+      cloud.style.fontSize =
+        "13px";
+
+      cloud.style.lineHeight =
+        "1.5";
+
+      cloud.style.boxShadow =
+        "0 12px 30px rgba(100,120,160,.13)";
+
+      cloud.style.opacity =
+        "0";
+
+      cloud.style.transform =
+        "translateY(20px) scale(.85)";
+
+      cloud.style.transition =
+        "transform 5s ease-out, opacity 1s ease";
+
+
+      /*
+       * 문장이 너무 길어도
+       * 화면을 깨뜨리지 않도록 제한
+       */
+      cloud.textContent =
+        text.slice(0, 80);
+
+
+      sky.appendChild(
+        cloud
+      );
+
+
+      /* -----------------------------------------------
+         등장
+      ----------------------------------------------- */
+
+      requestAnimationFrame(
         () => {
 
-          button.style.transition =
-            "transform .5s ease, opacity .5s ease";
+          cloud.style.opacity =
+            "1";
 
-          button.style.transform =
-            "translateY(-28px) scale(.6)";
-
-          button.style.opacity =
-            "0";
-
-          setTimeout(
-            () => {
-              button.remove();
-            },
-            500
-          );
-
-          const result =
-            $("mongleCloudResult");
-
-          if (result) {
-
-            result.innerHTML = `
-              <strong>
-                ☁️ ${thought}
-              </strong>
-              <br>
-              <span
-                style="
-                  opacity:.62;
-                  font-size:11px;
-                "
-              >
-                지금은 잠시 내려놓아도 괜찮아요.
-              </span>
-            `;
-
-          }
-
-          addMindCareXP(2);
+          cloud.style.transform =
+            "translateY(0) scale(1)";
 
         }
       );
 
-      list.appendChild(
-        button
+
+      /* -----------------------------------------------
+         천천히 떠오르기
+      ----------------------------------------------- */
+
+      setTimeout(
+        () => {
+
+          if (!cloud.isConnected) {
+            return;
+          }
+
+          cloud.style.transform =
+            "translateY(-145px) scale(.82)";
+
+          cloud.style.opacity =
+            "0";
+
+        },
+        900
       );
+
+
+      /* -----------------------------------------------
+         사라진 뒤 정리
+      ----------------------------------------------- */
+
+      setTimeout(
+        () => {
+
+          cloud.remove();
+
+        },
+        6000
+      );
+
+
+      /* -----------------------------------------------
+         메시지
+      ----------------------------------------------- */
+
+      message.textContent =
+        "🫧 잠깐 내려놓았어요.";
+
+
+      /* -----------------------------------------------
+         입력 초기화
+      ----------------------------------------------- */
+
+      input.value = "";
+
+      count.textContent =
+        "0 / 80";
+
+
+      /* -----------------------------------------------
+         작은 보상
+      ----------------------------------------------- */
+
+      addMindCareXP(2);
 
     }
   );
 
 }
-
 
 /* =========================================================
    🌙 조용한 쉼
