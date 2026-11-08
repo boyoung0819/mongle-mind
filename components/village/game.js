@@ -9920,7 +9920,22 @@ function animate(t) {
   avatar.position.y =
     0;
 
-  /* 펫 따라오기 */
+  /* =========================================================
+     펫 따라오기 + 현재 선택 펫 동기화
+  ========================================================= */
+
+  const currentPetKey =
+    getPetRenderKey();
+
+  if (
+    currentPetKey !== renderedPetKey
+  ) {
+
+    createPetModel(
+      state.selectedPet
+    );
+
+  }
 
   pet.position.set(
     avatar.position.x +
