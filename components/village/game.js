@@ -10604,6 +10604,58 @@ updateJournalUI();
 ========================================================= */
 
 let mindCareReady = false;
+/* =========================================================
+   🌿 오늘의 마음 돌보기 기록
+========================================================= */
+
+let mindCareToday = {
+  rain: false,
+  color: false,
+  cloud: false,
+  quiet: false
+};
+
+function completeMindCareToday(type) {
+
+  if (!mindCareToday[type]) {
+    mindCareToday[type] = true;
+  }
+
+  updateMindCareTodayUI();
+}
+
+function updateMindCareTodayUI() {
+
+  const items =
+    document.querySelectorAll(
+      "[data-mind-care-today]"
+    );
+
+  items.forEach(item => {
+
+    const type =
+      item.dataset.mindCareToday;
+
+    const done =
+      mindCareToday[type];
+
+    item.textContent =
+      done
+        ? "✓ 완료"
+        : "아직 안 했어요";
+
+    item.style.color =
+      done
+        ? "#708f7b"
+        : "#9aa4b3";
+
+    item.style.background =
+      done
+        ? "rgba(185,221,208,.35)"
+        : "rgba(255,255,255,.6)";
+
+  });
+}
 let mindCareRainTimer = null;
 let mindCareClouds = [];
 
