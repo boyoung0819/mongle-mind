@@ -10913,35 +10913,59 @@ function openRainRest() {
   }
 
   clearMindCareTimers();
+  stopRainSound();
 
   box.innerHTML = `
     <div
       style="
         position:relative;
         overflow:hidden;
-        min-height:260px;
-        border-radius:24px;
+        min-height:330px;
+        border-radius:28px;
         padding:28px 20px;
         background:
           linear-gradient(
             160deg,
-            #b9d8ed,
-            #d8d9f0
+            #9ebbd5 0%,
+            #b9c9df 48%,
+            #d7d3e6 100%
           );
         text-align:center;
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,.35),
+          0 12px 35px rgba(90,100,140,.12);
       "
     >
+
+      <!-- 어두운 구름 -->
 
       <div
         style="
           position:absolute;
-          inset:0;
-          opacity:.3;
-          pointer-events:none;
+          top:18px;
+          left:-20px;
+          font-size:52px;
+          opacity:.35;
+          animation:mindCloudMove 9s ease-in-out infinite alternate;
         "
       >
-        ☁️　☁️　　 ☁️
+        ☁️
       </div>
+
+      <div
+        style="
+          position:absolute;
+          top:42px;
+          right:-10px;
+          font-size:42px;
+          opacity:.28;
+          animation:mindCloudMove2 12s ease-in-out infinite alternate;
+        "
+      >
+        ☁️
+      </div>
+
+      <!-- 비 -->
 
       <div
         id="rainDrops"
@@ -10949,20 +10973,44 @@ function openRainRest() {
           position:absolute;
           inset:0;
           pointer-events:none;
+          overflow:hidden;
         "
       ></div>
+
+      <!-- 바닥 반사 -->
+
+      <div
+        style="
+          position:absolute;
+          left:0;
+          right:0;
+          bottom:0;
+          height:70px;
+          background:
+            linear-gradient(
+              to top,
+              rgba(110,135,165,.25),
+              transparent
+            );
+          pointer-events:none;
+        "
+      ></div>
+
+      <!-- 내용 -->
 
       <div
         style="
           position:relative;
-          z-index:2;
+          z-index:5;
+          padding-top:25px;
         "
       >
 
         <div
           style="
-            font-size:42px;
-            margin-bottom:8px;
+            font-size:48px;
+            margin-bottom:6px;
+            filter:drop-shadow(0 5px 8px rgba(70,90,120,.15));
           "
         >
           🌧️
@@ -10971,31 +11019,114 @@ function openRainRest() {
         <h3
           style="
             margin:0;
-            font-size:20px;
+            color:#27374a;
+            font-size:21px;
           "
         >
-          잠시 비를 바라봐요
+          빗소리 쉼터
         </h3>
 
         <p
           style="
-            margin:10px 0 18px;
+            margin:10px 0 20px;
+            color:#33475c;
             font-size:13px;
-            line-height:1.7;
-            opacity:.72;
+            line-height:1.8;
           "
         >
-          아무것도 하지 않아도 괜찮아요.<br>
-          잠깐 여기 머물러도 좋아요.
+          잠시 빗소리를 들으며 쉬어가요.<br>
+          아무것도 하지 않아도 괜찮아요.
         </p>
 
-        <button
-          type="button"
-          id="rainFinish"
-          class="primary-button"
+        <!-- 소리 상태 -->
+
+        <div
+          style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            margin-bottom:14px;
+          "
         >
-          🌿 이제 괜찮아요
-        </button>
+
+          <span
+            id="rainSoundIcon"
+            style="font-size:18px;"
+          >
+            🔊
+          </span>
+
+          <span
+            id="rainSoundStatus"
+            style="
+              font-size:12px;
+              color:#33475c;
+            "
+          >
+            빗소리가 재생되고 있어요
+          </span>
+
+        </div>
+
+        <!-- 볼륨 -->
+
+        <div
+          style="
+            width:min(240px,80%);
+            margin:0 auto 18px;
+          "
+        >
+
+          <input
+            id="rainVolume"
+            type="range"
+            min="0"
+            max="100"
+            value="35"
+            style="
+              width:100%;
+              accent-color:#738faf;
+              cursor:pointer;
+            "
+          >
+
+        </div>
+
+        <div
+          style="
+            display:flex;
+            justify-content:center;
+            gap:8px;
+            flex-wrap:wrap;
+          "
+        >
+
+          <button
+            type="button"
+            id="rainMute"
+            style="
+              border:0;
+              border-radius:999px;
+              padding:9px 14px;
+              background:rgba(255,255,255,.72);
+              color:#34485c;
+              cursor:pointer;
+              font-size:12px;
+            "
+          >
+            🔊 소리 끄기
+          </button>
+
+          <button
+            type="button"
+            id="rainFinish"
+            class="primary-button"
+          >
+            🌿 이제 괜찮아요
+          </button>
+
+        </div>
 
       </div>
 
@@ -11004,6 +11135,63 @@ function openRainRest() {
 
   startRainAnimation();
 
+  startRainSound();
+
+  const volume =
+    $("rainVolume");
+
+  if (volume) {
+
+    volume.addEventListener(
+      "input",
+      () => {
+
+        setRainVolume(
+          Number(volume.value) / 100
+        );
+
+      }
+    );
+
+  }
+
+  const mute =
+    $("rainMute");
+
+  if (mute) {
+
+    mute.onclick = () => {
+
+      const muted =
+        toggleRainSound();
+
+      mute.textContent =
+        muted
+          ? "🔇 소리 켜기"
+          : "🔊 소리 끄기";
+
+      const icon =
+        $("rainSoundIcon");
+
+      const status =
+        $("rainSoundStatus");
+
+      if (icon) {
+        icon.textContent =
+          muted ? "🔇" : "🔊";
+      }
+
+      if (status) {
+        status.textContent =
+          muted
+            ? "빗소리를 잠시 쉬게 했어요"
+            : "빗소리가 재생되고 있어요";
+      }
+
+    };
+
+  }
+
   const finish =
     $("rainFinish");
 
@@ -11011,34 +11199,52 @@ function openRainRest() {
 
     finish.onclick = () => {
 
+      stopRainSound();
       clearMindCareTimers();
 
       box.innerHTML = `
         <div
           style="
-            padding:28px 18px;
+            padding:30px 18px;
             text-align:center;
-            border-radius:22px;
-            background:#f6f2ff;
+            border-radius:24px;
+            background:
+              linear-gradient(
+                145deg,
+                #f1f7ff,
+                #f5f0ff
+              );
           "
         >
-          <div style="font-size:34px;">
+
+          <div
+            style="
+              font-size:40px;
+              margin-bottom:8px;
+            "
+          >
             ☁️
           </div>
 
-          <strong>
+          <strong
+            style="
+              font-size:16px;
+            "
+          >
             잠시 잘 쉬었어요.
           </strong>
 
           <p
             style="
-              margin:8px 0 0;
+              margin:9px 0 0;
               font-size:12px;
+              line-height:1.6;
               opacity:.62;
             "
           >
             다시 천천히 돌아가도 괜찮아요.
           </p>
+
         </div>
       `;
 
@@ -11049,8 +11255,7 @@ function openRainRest() {
   }
 
 }
-
-
+   
 /* =========================================================
    빗방울 애니메이션
 ========================================================= */
@@ -11078,8 +11283,7 @@ function startRainAnimation() {
         const drop =
           document.createElement("span");
 
-        drop.textContent =
-          "│";
+        drop.textContent = "│";
 
         drop.style.position =
           "absolute";
@@ -11088,16 +11292,22 @@ function startRainAnimation() {
           `${Math.random() * 100}%`;
 
         drop.style.top =
-          "-20px";
+          `${-20 - Math.random() * 80}px`;
 
         drop.style.fontSize =
-          `${10 + Math.random() * 8}px`;
+          `${9 + Math.random() * 10}px`;
+
+        drop.style.color =
+          "rgba(235,245,255,.75)";
 
         drop.style.opacity =
-          `${0.2 + Math.random() * 0.35}`;
+          `${0.18 + Math.random() * 0.35}`;
+
+        drop.style.filter =
+          "blur(.2px)";
 
         drop.style.transition =
-          "transform 1.6s linear, opacity 1.6s linear";
+          "transform 1.2s linear, opacity 1.2s linear";
 
         area.appendChild(drop);
 
@@ -11105,7 +11315,7 @@ function startRainAnimation() {
           () => {
 
             drop.style.transform =
-              `translateY(${260 + Math.random() * 80}px)`;
+              `translateY(${380 + Math.random() * 100}px)`;
 
             drop.style.opacity =
               "0";
@@ -11114,18 +11324,363 @@ function startRainAnimation() {
         );
 
         setTimeout(
-          () => drop.remove(),
-          1800
+          () => {
+            drop.remove();
+          },
+          1400
         );
 
         count++;
 
       },
-      120
+      90
     );
 
 }
 
+/* =========================================================
+   🌧️ 빗소리 Web Audio
+========================================================= */
+
+let rainAudioContext = null;
+let rainNoiseSource = null;
+let rainNoiseGain = null;
+let rainFilter = null;
+let rainMuted = false;
+let rainMasterVolume = 0.35;
+let rainDropTimer = null;
+
+
+/* =========================================================
+   빗소리 시작
+========================================================= */
+
+function startRainSound() {
+
+  try {
+
+    if (!rainAudioContext) {
+
+      rainAudioContext =
+        new (
+          window.AudioContext ||
+          window.webkitAudioContext
+        )();
+
+    }
+
+    if (
+      rainAudioContext.state ===
+      "suspended"
+    ) {
+
+      rainAudioContext.resume();
+
+    }
+
+    stopRainSound(false);
+
+    const ctx =
+      rainAudioContext;
+
+    /*
+       부드러운 백색 잡음 생성
+    */
+
+    const buffer =
+      ctx.createBuffer(
+        1,
+        ctx.sampleRate * 2,
+        ctx.sampleRate
+      );
+
+    const data =
+      buffer.getChannelData(0);
+
+    for (
+      let i = 0;
+      i < data.length;
+      i++
+    ) {
+
+      data[i] =
+        Math.random() * 2 - 1;
+
+    }
+
+    rainNoiseSource =
+      ctx.createBufferSource();
+
+    rainNoiseSource.buffer =
+      buffer;
+
+    rainNoiseSource.loop =
+      true;
+
+
+    /*
+       저음 + 고음이 너무 강하지 않도록 필터
+    */
+
+    rainFilter =
+      ctx.createBiquadFilter();
+
+    rainFilter.type =
+      "lowpass";
+
+    rainFilter.frequency.value =
+      4200;
+
+    rainFilter.Q.value =
+      0.35;
+
+
+    /*
+       전체 볼륨
+    */
+
+    rainNoiseGain =
+      ctx.createGain();
+
+    rainNoiseGain.gain.value =
+      rainMuted
+        ? 0
+        : rainMasterVolume;
+
+
+    rainNoiseSource
+      .connect(rainFilter)
+      .connect(rainNoiseGain)
+      .connect(ctx.destination);
+
+    rainNoiseSource.start();
+
+    /*
+       가끔 작은 빗방울 소리
+    */
+
+    startRainDropsSound();
+
+  }
+  catch (error) {
+
+    console.warn(
+      "빗소리를 시작할 수 없어요.",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   빗소리 정지
+========================================================= */
+
+function stopRainSound(
+  closeContext = false
+) {
+
+  if (rainDropTimer) {
+
+    clearInterval(
+      rainDropTimer
+    );
+
+    rainDropTimer =
+      null;
+
+  }
+
+  if (rainNoiseSource) {
+
+    try {
+      rainNoiseSource.stop();
+    }
+    catch (error) {}
+
+    rainNoiseSource.disconnect();
+    rainNoiseSource =
+      null;
+
+  }
+
+  if (rainFilter) {
+
+    rainFilter.disconnect();
+    rainFilter =
+      null;
+
+  }
+
+  if (rainNoiseGain) {
+
+    rainNoiseGain.disconnect();
+    rainNoiseGain =
+      null;
+
+  }
+
+  if (
+    closeContext &&
+    rainAudioContext
+  ) {
+
+    rainAudioContext.close();
+
+    rainAudioContext =
+      null;
+
+  }
+
+}
+
+
+/* =========================================================
+   작은 빗방울 소리
+========================================================= */
+
+function startRainDropsSound() {
+
+  if (!rainAudioContext) {
+    return;
+  }
+
+  rainDropTimer =
+    setInterval(
+      () => {
+
+        if (!rainAudioContext) {
+          return;
+        }
+
+        if (rainMuted) {
+          return;
+        }
+
+        playSmallRainDrop();
+
+      },
+      450 + Math.random() * 900
+    );
+
+}
+
+
+/* =========================================================
+   가까운 빗방울 하나
+========================================================= */
+
+function playSmallRainDrop() {
+
+  const ctx =
+    rainAudioContext;
+
+  if (!ctx) {
+    return;
+  }
+
+  const now =
+    ctx.currentTime;
+
+  const oscillator =
+    ctx.createOscillator();
+
+  const gain =
+    ctx.createGain();
+
+  oscillator.type =
+    "sine";
+
+  oscillator.frequency.setValueAtTime(
+    1100 + Math.random() * 900,
+    now
+  );
+
+  oscillator.frequency.exponentialRampToValueAtTime(
+    500 + Math.random() * 300,
+    now + 0.08
+  );
+
+  gain.gain.setValueAtTime(
+    0,
+    now
+  );
+
+  gain.gain.linearRampToValueAtTime(
+    0.035,
+    now + 0.008
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,
+    now + 0.10
+  );
+
+  oscillator
+    .connect(gain)
+    .connect(ctx.destination);
+
+  oscillator.start(now);
+
+  oscillator.stop(
+    now + 0.12
+  );
+
+}
+
+
+/* =========================================================
+   볼륨
+========================================================= */
+
+function setRainVolume(
+  value
+) {
+
+  rainMasterVolume =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        Number(value) || 0
+      )
+    );
+
+  if (rainNoiseGain) {
+
+    rainNoiseGain.gain.value =
+      rainMuted
+        ? 0
+        : rainMasterVolume;
+
+  }
+
+}
+
+
+/* =========================================================
+   음소거
+========================================================= */
+
+function toggleRainSound() {
+
+  rainMuted =
+    !rainMuted;
+
+  if (rainNoiseGain) {
+
+    rainNoiseGain.gain.value =
+      rainMuted
+        ? 0
+        : rainMasterVolume;
+
+  }
+
+  return rainMuted;
+
+}   
 
 /* =========================================================
    🎨 마음 색 고르기
