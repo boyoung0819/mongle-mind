@@ -14191,7 +14191,9 @@ function openQuietRest() {
       event.stopPropagation();
 
       addMindCareXP(2);
-
+       
+      completeMindCareToday("quiet");
+       
       message.innerHTML =
         `
           🌙 잘 쉬었어요.<br>
