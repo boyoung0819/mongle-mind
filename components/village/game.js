@@ -28,7 +28,9 @@ const defaults = {
   nav: "home",
   roomDecor: "lavender",
   journalText: "",
-  journalDate: "",
+journalDate: "",
+journalHistory: {},
+journalSelectedDate: "",
 
   /* 퀘스트 */
   questClaims: [],
