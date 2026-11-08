@@ -10720,10 +10720,10 @@ function ensureMindCareUI() {
       "
     >
 
-      <button
-        type="button"
-        class="mind-care-action"
-        data-mind-care="rain"
+<button
+  type="button"
+  class="mind-care-action"
+  data-mind-care="rain"
         style="
           border:1px solid rgba(120,140,180,.18);
           border-radius:20px;
@@ -10745,24 +10745,36 @@ function ensureMindCareUI() {
           빗소리 쉼터
         </strong>
 
-        <span
-          style="
-            display:block;
-            margin-top:5px;
-            font-size:12px;
-            opacity:.62;
-            line-height:1.5;
-          "
-        >
-          잠시 비를 바라보며 쉬어요.
-        </span>
+<span
+  style="
+    display:block;
+    margin-top:5px;
+    font-size:12px;
+    opacity:.62;
+    line-height:1.5;
+  "
+>
+  잠시 비를 바라보며 쉬어요.
+</span>
+
+<span
+  data-mind-care-today="rain"
+  style="
+    display:block;
+    margin-top:6px;
+    font-size:11px;
+    color:#9aa4b3;
+  "
+>
+  아직 안 했어요
+</span>
       </button>
 
 
       <button
         type="button"
         class="mind-care-action"
-        data-mind-care="color"
+data-mind-care="color"
         style="
           border:1px solid rgba(180,150,190,.18);
           border-radius:20px;
@@ -10784,24 +10796,36 @@ function ensureMindCareUI() {
           마음 색 고르기
         </strong>
 
-        <span
-          style="
-            display:block;
-            margin-top:5px;
-            font-size:12px;
-            opacity:.62;
-            line-height:1.5;
-          "
-        >
-          지금의 마음과 가까운 색을 골라요.
-        </span>
-      </button>
+<span
+  style="
+    display:block;
+    margin-top:5px;
+    font-size:12px;
+    opacity:.62;
+    line-height:1.5;
+  "
+>
+  지금의 마음과 가까운 색을 골라요.
+</span>
 
+<span
+  data-mind-care-today="color"
+  style="
+    display:block;
+    margin-top:6px;
+    font-size:11px;
+    color:#9aa4b3;
+  "
+>
+  아직 안 했어요
+</span>
+
+</button>
 
       <button
         type="button"
         class="mind-care-action"
-        data-mind-care="cloud"
+data-mind-care="cloud"
         style="
           border:1px solid rgba(150,160,180,.18);
           border-radius:20px;
@@ -10834,13 +10858,24 @@ function ensureMindCareUI() {
         >
           잠시 내려놓고 싶은 생각을 골라요.
         </span>
+        <span
+  data-mind-care-today="cloud"
+  style="
+    display:block;
+    margin-top:6px;
+    font-size:11px;
+    color:#9aa4b3;
+  "
+>
+  아직 안 했어요
+</span>
       </button>
 
 
       <button
         type="button"
         class="mind-care-action"
-        data-mind-care="quiet"
+data-mind-care="quiet"
         style="
           border:1px solid rgba(170,150,180,.18);
           border-radius:20px;
@@ -10873,6 +10908,17 @@ function ensureMindCareUI() {
         >
           아무것도 하지 않고 잠시 머물러요.
         </span>
+<span
+  data-mind-care-today="quiet"
+  style="
+    display:block;
+    margin-top:6px;
+    font-size:11px;
+    color:#9aa4b3;
+  "
+>
+  아직 안 했어요
+</span>
       </button>
 
     </div>
@@ -10893,7 +10939,6 @@ function ensureMindCareUI() {
 
   bindMindCareButtons();
 }
-
 
 /* =========================================================
    마음 돌보기 버튼
