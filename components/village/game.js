@@ -12688,7 +12688,103 @@ cloud.style.transform =
 
 cloud.style.transition =
   "transform 7s cubic-bezier(.2,.7,.2,1), opacity 1.2s ease";
+/* =====================================================
+   ✨ 몽글이 빛가루
+===================================================== */
 
+const sparkleCount = 7;
+
+for (
+  let i = 0;
+  i < sparkleCount;
+  i++
+) {
+
+  const sparkle =
+    document.createElement("span");
+
+  sparkle.textContent =
+    i % 2 === 0
+      ? "✦"
+      : "·";
+
+  sparkle.style.position =
+    "absolute";
+
+  sparkle.style.left =
+    `${25 + Math.random() * 50}%`;
+
+  sparkle.style.bottom =
+    `${20 + Math.random() * 25}px`;
+
+  sparkle.style.color =
+    "rgba(255,255,255,.9)";
+
+  sparkle.style.fontSize =
+    `${10 + Math.random() * 9}px`;
+
+  sparkle.style.opacity =
+    "0";
+
+  sparkle.style.pointerEvents =
+    "none";
+
+  sparkle.style.zIndex =
+    "5";
+
+  sparkle.style.transition =
+    `
+      transform 4s ease-out,
+      opacity 1s ease
+    `;
+
+  sky.appendChild(
+    sparkle
+  );
+
+
+  requestAnimationFrame(
+    () => {
+
+      sparkle.style.opacity =
+        "1";
+
+      sparkle.style.transform =
+        `
+          translate(
+            ${-35 + Math.random() * 70}px,
+            ${-130 - Math.random() * 100}px
+          )
+          scale(
+            ${0.7 + Math.random() * 0.8}
+          )
+        `;
+
+    }
+  );
+
+
+  setTimeout(
+    () => {
+
+      sparkle.style.opacity =
+        "0";
+
+    },
+    2500
+  );
+
+
+  setTimeout(
+    () => {
+
+      sparkle.remove();
+
+    },
+    4500
+  );
+
+}
 
       /*
        * 문장이 너무 길어도
