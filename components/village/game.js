@@ -5210,7 +5210,7 @@ function playPetGachaEffectFive(results) {
 
     setTimeout(
       showNext,
-      1400
+      3000
     );
 
   }
