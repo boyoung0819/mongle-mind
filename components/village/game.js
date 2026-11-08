@@ -4113,43 +4113,112 @@ function showGachaResult(
 ========================================================= */
 
 function equipPetHat(id) {
+
   const item =
     PET_HATS[id];
 
   if (!item) return;
 
+
   const petId =
     state.selectedPet;
 
-  if (!state.petAccessories[petId]) {
+
+  if (
+    !state.petAccessories[petId]
+  ) {
+
     state.petAccessories[petId] = {
       hat: "none",
       outfit: "none"
     };
   }
 
+
   if (
-    id !== "none" &&
-    item.price > 0 &&
-    state.petCoins < item.price
+    !Array.isArray(
+      state.petOwnedHats
+    )
   ) {
+
+    state.petOwnedHats = [
+      "none"
+    ];
+  }
+
+
+  /* 아무것도 안 쓰기 */
+
+  if (
+    id === "none"
+  ) {
+
+    state.petAccessories[
+      petId
+    ].hat = "none";
+
+    createPetModel(
+      state.selectedPet
+    );
+
+    save();
+
+    renderPetUI();
+
     toast(
-      "펫 코인이 부족해요."
+      "모자를 벗었어요."
     );
 
     return;
   }
 
+
+  /* 처음 구매 */
+
+  const alreadyOwned =
+    state.petOwnedHats.includes(
+      id
+    );
+
+
   if (
-    id !== "none" &&
-    state.petAccessories[petId].hat !== id
+    !alreadyOwned
   ) {
+
+    if (
+      state.petCoins <
+      item.price
+    ) {
+
+      toast(
+        "펫 코인이 부족해요."
+      );
+
+      return;
+    }
+
+
     state.petCoins -=
       item.price;
+
+
+    state.petOwnedHats.push(
+      id
+    );
+
+
+    toast(
+      `${item.name}을 구매했어요! 이제 내 옷장에 영구 소장돼요. 🎀`
+    );
   }
 
-  state.petAccessories[petId].hat =
-    id;
+
+  /* 착용 */
+
+  state.petAccessories[
+    petId
+  ].hat = id;
+
 
   createPetModel(
     state.selectedPet
@@ -4157,49 +4226,128 @@ function equipPetHat(id) {
 
   save();
 
-  toast(
-    `${item.name}을 적용했어요.`
-  );
+  renderPetUI();
+
+
+  if (
+    alreadyOwned
+  ) {
+
+    toast(
+      `${item.name}을 착용했어요.`
+    );
+  }
 }
 
+
 function equipPetOutfit(id) {
+
   const item =
     PET_OUTFITS[id];
 
   if (!item) return;
 
+
   const petId =
     state.selectedPet;
 
-  if (!state.petAccessories[petId]) {
+
+  if (
+    !state.petAccessories[petId]
+  ) {
+
     state.petAccessories[petId] = {
       hat: "none",
       outfit: "none"
     };
   }
 
+
   if (
-    id !== "none" &&
-    item.price > 0 &&
-    state.petCoins < item.price
+    !Array.isArray(
+      state.petOwnedOutfits
+    )
   ) {
+
+    state.petOwnedOutfits = [
+      "none"
+    ];
+  }
+
+
+  /* 아무것도 입지 않기 */
+
+  if (
+    id === "none"
+  ) {
+
+    state.petAccessories[
+      petId
+    ].outfit = "none";
+
+
+    createPetModel(
+      state.selectedPet
+    );
+
+    save();
+
+    renderPetUI();
+
     toast(
-      "펫 코인이 부족해요."
+      "옷을 벗었어요."
     );
 
     return;
   }
 
+
+  /* 처음 구매 */
+
+  const alreadyOwned =
+    state.petOwnedOutfits.includes(
+      id
+    );
+
+
   if (
-    id !== "none" &&
-    state.petAccessories[petId].outfit !== id
+    !alreadyOwned
   ) {
+
+    if (
+      state.petCoins <
+      item.price
+    ) {
+
+      toast(
+        "펫 코인이 부족해요."
+      );
+
+      return;
+    }
+
+
     state.petCoins -=
       item.price;
+
+
+    state.petOwnedOutfits.push(
+      id
+    );
+
+
+    toast(
+      `${item.name}을 구매했어요! 이제 내 옷장에 영구 소장돼요. 👗`
+    );
   }
 
-  state.petAccessories[petId].outfit =
-    id;
+
+  /* 착용 */
+
+  state.petAccessories[
+    petId
+  ].outfit = id;
+
 
   createPetModel(
     state.selectedPet
@@ -4207,11 +4355,19 @@ function equipPetOutfit(id) {
 
   save();
 
-  toast(
-    `${item.name}을 적용했어요.`
-  );
-}
+  renderPetUI();
 
+
+  if (
+    alreadyOwned
+  ) {
+
+    toast(
+      `${item.name}을 착용했어요.`
+    );
+  }
+}
+   
 /* =========================================================
    펫 조각 상점
 ========================================================= */
