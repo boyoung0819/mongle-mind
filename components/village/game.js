@@ -12224,6 +12224,61 @@ function clearMindCareTimers() {
 ========================================================= */
 
 ensureMindCareUI();
+
+
+/* =========================================================
+   🌿 마음 돌보기 디자인
+========================================================= */
+
+const mindCareStyle =
+  document.createElement("style");
+
+mindCareStyle.textContent = `
+  @keyframes mindCloudMove {
+    from {
+      transform: translateX(-8px);
+    }
+
+    to {
+      transform: translateX(35px);
+    }
+  }
+
+  @keyframes mindCloudMove2 {
+    from {
+      transform: translateX(20px);
+    }
+
+    to {
+      transform: translateX(-35px);
+    }
+  }
+
+  .mind-care-action {
+    transition:
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .mind-care-action:hover {
+    transform:
+      translateY(-3px);
+
+    box-shadow:
+      0 10px 25px
+      rgba(100,110,150,.10);
+  }
+
+  .mind-care-action:active {
+    transform:
+      translateY(0)
+      scale(.98);
+  }
+`;
+
+document.head.appendChild(
+  mindCareStyle
+);
    
 /* =========================================================
    호흡
