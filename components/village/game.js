@@ -5059,16 +5059,14 @@ function drawPet() {
 
 
 /* =========================================================
-   5회 연속 뽑기
+   펫 5회 뽑기
 ========================================================= */
 
 function drawPetFive() {
 
   const cost = 20;
 
-  if (
-    state.petCurrency < cost
-  ) {
+  if (state.petCurrency < cost) {
 
     toast(
       "별빛 20개가 필요해요. ✨"
@@ -5077,22 +5075,14 @@ function drawPetFive() {
     return;
   }
 
-
   state.petCurrency -= cost;
 
+  state.stats.petDraws =
+    (state.stats.petDraws || 0) + 5;
 
   const results = [];
 
-
-  for (
-    let i = 0;
-    i < 5;
-    i++
-  ) {
-
-    state.stats.petDraws =
-      (state.stats.petDraws || 0) + 1;
-
+  for (let i = 0; i < 5; i++) {
 
     const roll =
       Math.random() * 100;
@@ -5102,31 +5092,23 @@ function drawPetFive() {
     let result =
       PETS.puppy;
 
-
     for (
       const petData of PET_LIST
     ) {
 
-      if (
-        petData.id === "bunny"
-      ) {
+      if (petData.id === "bunny") {
         continue;
       }
 
-      sum +=
-        petData.rate;
+      sum += petData.rate;
 
-      if (
-        roll <= sum
-      ) {
-
-        result =
-          petData;
-
+      if (roll <= sum) {
+        result = petData;
         break;
       }
     }
 
+    let duplicate = false;
 
     if (
       state.ownedPets.includes(
@@ -5134,12 +5116,10 @@ function drawPetFive() {
       )
     ) {
 
+      duplicate = true;
+
       state.petCoins +=
         result.duplicateCoins;
-
-      results.push(
-        `${result.icon} 중복`
-      );
 
     } else {
 
@@ -5159,26 +5139,86 @@ function drawPetFive() {
           hat: "none",
           outfit: "none"
         };
+
       }
 
-      results.push(
-        `${result.icon} ${result.name}`
-      );
     }
-  }
 
+    results.push({
+      pet: result,
+      duplicate: duplicate
+    });
+
+  }
 
   save();
 
-  showGachaResult(
-    "✨ 5회 뽑기 완료!",
-    results.join(" · "),
-    "새로운 친구와 중복 보상을 모두 확인했어요."
+  renderPetUI();
+
+  playPetGachaEffectFive(
+    results
   );
 
-  renderPetUI();
 }
 
+/* =========================================================
+   펫 5회 뽑기 이펙트
+========================================================= */
+
+function playPetGachaEffectFive(results) {
+
+  let index = 0;
+
+  function showNext() {
+
+    if (index >= results.length) {
+
+      const resultText =
+        results
+          .map(item => {
+
+            const p =
+              item.pet;
+
+            return item.duplicate
+              ? `${p.icon} ${p.name} · 중복`
+              : `${p.icon} ${p.name}`;
+
+          })
+          .join("  ·  ");
+
+      showGachaResult(
+        "✨ 5회 뽑기 완료!",
+        resultText,
+        "새로운 친구와 펫 코인을 확인해 보세요!"
+      );
+
+      renderPetUI();
+
+      return;
+    }
+
+    const item =
+      results[index];
+
+    index++;
+
+    playPetGachaEffect(
+      item.pet,
+      item.duplicate
+    );
+
+    setTimeout(
+      showNext,
+      1400
+    );
+
+  }
+
+  showNext();
+
+}   
+   
 function showGachaResult(
   title,
   name,
