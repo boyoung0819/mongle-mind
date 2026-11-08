@@ -13479,135 +13479,642 @@ setTimeout(
 
 function openQuietRest() {
 
-  const box =
+  const activity =
     getMindCareActivity();
 
-  if (!box) {
+  if (!activity) {
     return;
   }
 
   clearMindCareTimers();
 
-  box.innerHTML = `
+  activity.innerHTML = `
+
     <div
+      id="quietRestSpace"
       style="
         position:relative;
-        min-height:220px;
         overflow:hidden;
-        border-radius:24px;
+
+        min-height:520px;
+
+        padding:30px;
+
+        border-radius:30px;
+
         background:
+          radial-gradient(
+            circle at 70% 18%,
+            rgba(255,255,255,.16),
+            transparent 12%
+          ),
+          radial-gradient(
+            circle at 20% 75%,
+            rgba(142,170,220,.16),
+            transparent 25%
+          ),
           linear-gradient(
             160deg,
-            #dcd7ef,
-            #f0e5e1
+            #18233f,
+            #27385c 55%,
+            #4b5279
           );
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        text-align:center;
+
+        box-shadow:
+          0 22px 55px
+          rgba(45,55,100,.22);
+
+        cursor:pointer;
       "
     >
+
+      <!-- 🌙 달 -->
+
+      <div
+        id="quietMoon"
+        style="
+          position:absolute;
+
+          width:105px;
+          height:105px;
+
+          right:11%;
+          top:55px;
+
+          border-radius:50%;
+
+          background:
+            radial-gradient(
+              circle at 35% 30%,
+              #ffffff,
+              #f6f0d2 65%,
+              #e6dcae
+            );
+
+          box-shadow:
+            0 0 30px
+            rgba(255,248,210,.35),
+
+            0 0 80px
+            rgba(255,248,210,.16);
+
+          transition:
+            transform 1s ease;
+        "
+      ></div>
+
+
+      <!-- 🌌 별 영역 -->
+
+      <div
+        id="quietStars"
+        style="
+          position:absolute;
+          inset:0;
+
+          overflow:hidden;
+
+          pointer-events:none;
+        "
+      ></div>
+
+
+      <!-- ☁️ 멀리 있는 구름 -->
 
       <div
         style="
           position:absolute;
-          inset:0;
-          opacity:.55;
-          font-size:20px;
-          line-height:3;
-          word-spacing:18px;
+
+          width:260px;
+          height:80px;
+
+          left:-80px;
+          bottom:105px;
+
+          border-radius:50%;
+
+          background:
+            rgba(180,195,225,.08);
+
+          filter:blur(10px);
+
+          animation:
+            quietCloudMove 18s
+            ease-in-out infinite
+            alternate;
+
+          pointer-events:none;
         "
-      >
-        ✦　　☾　　✧
-        <br>
-       　✧　　·　　☁️
-        <br>
-        ✦　　·　　✧
-      </div>
+      ></div>
+
+
+      <div
+        style="
+          position:absolute;
+
+          width:320px;
+          height:90px;
+
+          right:-120px;
+          bottom:80px;
+
+          border-radius:50%;
+
+          background:
+            rgba(180,195,225,.07);
+
+          filter:blur(12px);
+
+          animation:
+            quietCloudMove2 22s
+            ease-in-out infinite
+            alternate;
+
+          pointer-events:none;
+        "
+      ></div>
+
+
+      <!-- 🌿 언덕 -->
+
+      <div
+        style="
+          position:absolute;
+
+          left:-10%;
+          right:-10%;
+          bottom:-85px;
+
+          height:190px;
+
+          border-radius:
+            50% 50% 0 0;
+
+          background:
+            linear-gradient(
+              180deg,
+              #17243b,
+              #101b2e
+            );
+
+          pointer-events:none;
+        "
+      ></div>
+
+
+      <!-- ✨ 안내 -->
 
       <div
         style="
           position:relative;
-          z-index:2;
-          padding:24px;
+
+          z-index:5;
+
+          text-align:center;
+
+          padding-top:20px;
+
+          color:white;
         "
       >
 
         <div
           style="
-            font-size:38px;
+            font-size:12px;
+
+            letter-spacing:.18em;
+
+            color:
+              rgba(255,255,255,.55);
+
             margin-bottom:10px;
           "
         >
-          🌙
+          QUIET NIGHT
         </div>
 
-        <h3
+
+        <div
           style="
-            margin:0;
+            font-size:26px;
+
+            font-weight:750;
+
+            letter-spacing:-.03em;
           "
         >
-          잠시 아무것도 하지 않아도 괜찮아요.
-        </h3>
+          잠시 아무것도 하지 않아도 괜찮아요
+        </div>
 
-        <p
+
+        <div
           style="
-            margin:10px 0 18px;
-            font-size:12px;
-            opacity:.65;
+            margin-top:10px;
+
+            font-size:14px;
+
+            line-height:1.8;
+
+            color:
+              rgba(255,255,255,.68);
           "
         >
-          화면을 바라보며 잠깐 쉬어가요.
-        </p>
-
-        <button
-          type="button"
-          id="quietFinish"
-          class="primary-button"
-        >
-          ✨ 이제 돌아가기
-        </button>
+          밤하늘을 바라보듯 천천히 머물러보세요.<br>
+          화면을 한 번 눌러 작은 별빛을 만들어도 좋아요.
+        </div>
 
       </div>
+
+
+      <!-- 🌟 가운데 메시지 -->
+
+      <div
+        id="quietRestMessage"
+        style="
+          position:absolute;
+
+          z-index:6;
+
+          left:50%;
+          top:53%;
+
+          transform:
+            translate(-50%,-50%);
+
+          width:min(430px,80%);
+
+          padding:18px 22px;
+
+          box-sizing:border-box;
+
+          border-radius:24px;
+
+          background:
+            rgba(255,255,255,.08);
+
+          border:
+            1px solid
+            rgba(255,255,255,.12);
+
+          backdrop-filter:
+            blur(8px);
+
+          text-align:center;
+
+          color:
+            rgba(255,255,255,.78);
+
+          font-size:14px;
+
+          line-height:1.7;
+
+          pointer-events:none;
+        "
+      >
+        오늘은 여기서<br>
+        잠깐 쉬어가요.
+      </div>
+
+
+      <!-- 🌙 닫기 -->
+
+      <button
+        id="quietRestClose"
+        type="button"
+        style="
+          position:absolute;
+
+          z-index:10;
+
+          left:50%;
+          bottom:25px;
+
+          transform:
+            translateX(-50%);
+
+          border:0;
+
+          padding:12px 22px;
+
+          border-radius:999px;
+
+          background:
+            rgba(255,255,255,.14);
+
+          color:
+            rgba(255,255,255,.9);
+
+          font-size:13px;
+
+          cursor:pointer;
+
+          backdrop-filter:
+            blur(8px);
+
+          transition:
+            transform .2s ease,
+            background .2s ease;
+        "
+      >
+        🌙 이만 쉬어갈게요
+      </button>
 
     </div>
   `;
 
-  const finish =
-    $("quietFinish");
 
-  if (finish) {
+  const space =
+    $("quietRestSpace");
 
-    finish.onclick = () => {
+  const stars =
+    $("quietStars");
 
-      box.innerHTML = `
-        <div
-          style="
-            padding:25px;
-            text-align:center;
-            border-radius:22px;
-            background:#f5f0ff;
-          "
-        >
-          <div style="font-size:34px;">
-            🌿
-          </div>
+  const message =
+    $("quietRestMessage");
 
-          <strong>
-            천천히 잘 쉬었어요.
-          </strong>
-        </div>
+  const close =
+    $("quietRestClose");
+
+
+  if (
+    !space ||
+    !stars ||
+    !message ||
+    !close
+  ) {
+    return;
+  }
+
+
+  /* =====================================================
+     ✨ 별 만들기
+  ===================================================== */
+
+  for (
+    let i = 0;
+    i < 55;
+    i++
+  ) {
+
+    const star =
+      document.createElement("span");
+
+    star.textContent =
+      i % 9 === 0
+        ? "✦"
+        : "·";
+
+    star.style.position =
+      "absolute";
+
+    star.style.left =
+      `${Math.random() * 100}%`;
+
+    star.style.top =
+      `${Math.random() * 75}%`;
+
+    star.style.color =
+      "rgba(255,255,255,.85)";
+
+    star.style.fontSize =
+      `${4 + Math.random() * 8}px`;
+
+    star.style.opacity =
+      `${.25 + Math.random() * .65}`;
+
+    star.style.transition =
+      `
+        opacity
+        ${1.5 + Math.random() * 2}s
+        ease-in-out
       `;
 
-      addMindCareXP(3);
+    stars.appendChild(
+      star
+    );
 
-    };
+
+    setInterval(
+      () => {
+
+        if (!star.isConnected) {
+          return;
+        }
+
+        star.style.opacity =
+          `${.2 + Math.random() * .75}`;
+
+      },
+      1200 + Math.random() * 1800
+    );
 
   }
 
+
+  /* =====================================================
+     🌠 화면 클릭 → 별빛
+  ===================================================== */
+
+  space.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target === close
+      ) {
+        return;
+      }
+
+
+      const rect =
+        space.getBoundingClientRect();
+
+      const x =
+        event.clientX -
+        rect.left;
+
+      const y =
+        event.clientY -
+        rect.top;
+
+
+      const star =
+        document.createElement("span");
+
+      star.textContent =
+        "✦";
+
+      star.style.position =
+        "absolute";
+
+      star.style.left =
+        `${x}px`;
+
+      star.style.top =
+        `${y}px`;
+
+      star.style.zIndex =
+        "8";
+
+      star.style.color =
+        "#fff8d8";
+
+      star.style.fontSize =
+        "18px";
+
+      star.style.pointerEvents =
+        "none";
+
+      star.style.transform =
+        "translate(-50%,-50%) scale(.3)";
+
+      star.style.opacity =
+        "0";
+
+      star.style.transition =
+        `
+          transform 1.2s ease-out,
+          opacity 1.2s ease-out
+        `;
+
+      space.appendChild(
+        star
+      );
+
+
+      requestAnimationFrame(
+        () => {
+
+          star.style.opacity =
+            "1";
+
+          star.style.transform =
+            `
+              translate(-50%,-50%)
+              scale(1.5)
+            `;
+
+        }
+      );
+
+
+      setTimeout(
+        () => {
+
+          star.style.opacity =
+            "0";
+
+          star.style.transform =
+            `
+              translate(-50%,-50%)
+              scale(.4)
+            `;
+
+        },
+        550
+      );
+
+
+      setTimeout(
+        () => {
+
+          star.remove();
+
+        },
+        1400
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     🌙 달 살짝 움직이기
+  ===================================================== */
+
+  const moon =
+    $("quietMoon");
+
+  if (moon) {
+
+    setTimeout(
+      () => {
+
+        moon.style.transform =
+          "translateY(-8px)";
+
+      },
+      100
+    );
+
+  }
+
+
+  /* =====================================================
+     🌙 닫기
+  ===================================================== */
+
+  close.addEventListener(
+    "mouseenter",
+    () => {
+
+      close.style.transform =
+        "translateX(-50%) translateY(-3px)";
+
+      close.style.background =
+        "rgba(255,255,255,.22)";
+
+    }
+  );
+
+
+  close.addEventListener(
+    "mouseleave",
+    () => {
+
+      close.style.transform =
+        "translateX(-50%)";
+
+      close.style.background =
+        "rgba(255,255,255,.14)";
+
+    }
+  );
+
+
+  close.addEventListener(
+    "click",
+    event => {
+
+      event.stopPropagation();
+
+      addMindCareXP(2);
+
+      message.innerHTML =
+        `
+          🌙 잘 쉬었어요.<br>
+          <span style="
+            font-size:12px;
+            color:rgba(255,255,255,.55);
+          ">
+            천천히 다시 돌아가도 괜찮아요.
+          </span>
+        `;
+
+      close.textContent =
+        "✓ 오늘의 작은 쉼 완료";
+
+      close.disabled =
+        true;
+
+      close.style.opacity =
+        ".65";
+
+    }
+  );
+
 }
-
-
+   
 /* =========================================================
    작은 경험치 보상
 ========================================================= */
