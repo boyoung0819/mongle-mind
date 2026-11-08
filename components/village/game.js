@@ -149,6 +149,26 @@ if (typeof state.petCoins !== "number") {
   state.petCoins = 0;
 }
 
+/* =========================================================
+   펫 옷장 영구 소장 데이터
+========================================================= */
+
+if (
+  !Array.isArray(state.petOwnedHats)
+) {
+  state.petOwnedHats = [
+    "none"
+  ];
+}
+
+if (
+  !Array.isArray(state.petOwnedOutfits)
+) {
+  state.petOwnedOutfits = [
+    "none"
+  ];
+}   
+   
 if (!state.selectedPet || !state.ownedPets.includes(state.selectedPet)) {
   state.selectedPet = "bunny";
 }
