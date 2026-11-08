@@ -611,253 +611,327 @@
   </main>
 
 
+<!-- =========================
+     마음 돌보기
+========================= -->
+<main
+  class="screen content-screen"
+  data-screen="journal"
+  hidden
+>
+
+  <div class="screen-toolbar">
+
+    <button
+      class="back-button"
+      data-home
+      type="button"
+    >
+      ← 홈으로
+    </button>
+
+    <span>
+      정답은 없어요. 지금 마음 그대로
+    </span>
+
+  </div>
+
+
+  <section class="content-hero journal-hero">
+
+    <div>
+
+      <span class="eyebrow">
+        MIND CARE
+      </span>
+
+      <h2>
+        오늘의 마음을<br>
+        가만히 들여다봐요.
+      </h2>
+
+      <p>
+        기록하지 않아도 괜찮고, 언제든 멈춰도 괜찮아요.
+      </p>
+
+    </div>
+
+    <div class="big-emoji">
+      ☁️
+    </div>
+
+  </section>
+
+
   <!-- =========================
-       마음 돌보기
+       날짜 선택
   ========================== -->
-  <main
-    class="screen content-screen"
-    data-screen="journal"
-    hidden
-  >
+  <section class="content-card journal-date-card">
 
-    <div class="screen-toolbar">
+    <div class="section-title">
 
-      <button
-        class="back-button"
-        data-home
-        type="button"
+      <div>
+
+        <span class="eyebrow">
+          MY JOURNAL
+        </span>
+
+        <h2>
+          마음 기록 보기
+        </h2>
+
+      </div>
+
+      <span
+        class="soft-pill"
+        id="journalDateLabel"
       >
-        ← 홈으로
-      </button>
-
-      <span>
-        정답은 없어요. 지금 마음 그대로
+        오늘
       </span>
 
     </div>
 
 
-    <section class="content-hero journal-hero">
+    <div class="journal-date-picker">
+
+      <label for="journalDatePicker">
+        기록 날짜
+      </label>
+
+      <input
+        type="date"
+        id="journalDatePicker"
+      />
+
+    </div>
+
+
+    <p
+      class="journal-readonly"
+      id="journalReadOnly"
+    >
+      오늘의 기록은 자유롭게 작성하고 수정할 수 있어요.
+    </p>
+
+  </section>
+
+
+  <!-- =========================
+       기분 기록
+  ========================== -->
+  <section class="content-card">
+
+    <div class="section-title">
 
       <div>
 
         <span class="eyebrow">
-          MIND CARE
+          HOW DO YOU FEEL?
         </span>
 
         <h2>
-          오늘의 마음을<br>
-          가만히 들여다봐요.
+          지금 기분은 어떤가요?
         </h2>
 
-        <p>
-          기록하지 않아도 괜찮고, 언제든 멈춰도 괜찮아요.
-        </p>
-
       </div>
 
-      <div class="big-emoji">
-        ☁️
-      </div>
+      <span class="tiny-label">
+        선택 사항
+      </span>
 
-    </section>
-
-
-    <section class="content-card">
-
-      <div class="section-title">
-
-        <div>
-
-          <span class="eyebrow">
-            HOW DO YOU FEEL?
-          </span>
-
-          <h2>
-            지금 기분은 어떤가요?
-          </h2>
-
-        </div>
-
-        <span class="tiny-label">
-          선택 사항
-        </span>
-
-      </div>
+    </div>
 
 
-      <div class="mood-row">
+    <div class="mood-row">
 
-        <button
-          class="mood"
-          data-mood="calm"
-          type="button"
-        >
-          🌿
-          <small>차분</small>
-        </button>
-
-        <button
-          class="mood"
-          data-mood="happy"
-          type="button"
-        >
-          ☀️
-          <small>기쁨</small>
-        </button>
-
-        <button
-          class="mood"
-          data-mood="tired"
-          type="button"
-        >
-          🌙
-          <small>지침</small>
-        </button>
-
-        <button
-          class="mood"
-          data-mood="worried"
-          type="button"
-        >
-          ☁️
-          <small>걱정</small>
-        </button>
-
-      </div>
-
-
-      <div
-        class="mood-saved"
-        id="moodSaved"
+      <button
+        class="mood"
+        data-mood="calm"
+        type="button"
       >
-        기분을 기록하지 않아도 괜찮아요.
-      </div>
-
-    </section>
-
-
-    <section class="content-card">
-
-      <div class="section-title">
-
-        <div>
-
-          <span class="eyebrow">
-            A LITTLE NOTE
-          </span>
-
-          <h2>
-            마음 한 줄 남기기
-          </h2>
-
-        </div>
-
-      </div>
-
-
-      <textarea
-        id="journalText"
-        class="journal-input"
-        maxlength="1200"
-        placeholder="오늘 어떤 일이 있었나요? 한 단어만 적어도 좋아요."
-      ></textarea>
+        🌿
+        <small>차분</small>
+      </button>
 
 
       <button
-        class="primary-button"
-        id="journalSave"
+        class="mood"
+        data-mood="happy"
         type="button"
       >
-        마음 기록 저장하기
+        ☀️
+        <small>기쁨</small>
       </button>
 
-    </section>
+
+      <button
+        class="mood"
+        data-mood="tired"
+        type="button"
+      >
+        🌙
+        <small>지침</small>
+      </button>
 
 
-    <section class="content-card breath-card">
+      <button
+        class="mood"
+        data-mood="worried"
+        type="button"
+      >
+        ☁️
+        <small>걱정</small>
+      </button>
 
-      <div class="section-title">
+    </div>
 
-        <div>
 
-          <span class="eyebrow">
-            TAKE A BREATH
-          </span>
+    <div
+      class="mood-saved"
+      id="moodSaved"
+    >
+      기분을 기록하지 않아도 괜찮아요.
+    </div>
 
-          <h2>
-            30초 호흡 쉬어가기
-          </h2>
+  </section>
 
-        </div>
 
-        <span class="soft-pill">
-          원할 때만
+  <!-- =========================
+       마음 한 줄
+  ========================== -->
+  <section class="content-card">
+
+    <div class="section-title">
+
+      <div>
+
+        <span class="eyebrow">
+          A LITTLE NOTE
         </span>
+
+        <h2>
+          마음 한 줄 남기기
+        </h2>
 
       </div>
 
+    </div>
 
-      <p class="helper-text">
-        편안한 만큼만 따라 해요.
-        불편하면 언제든 멈춰도 괜찮아요.
+
+    <textarea
+      id="journalText"
+      class="journal-input"
+      maxlength="1200"
+      placeholder="오늘 어떤 일이 있었나요? 한 단어만 적어도 좋아요."
+    ></textarea>
+
+
+    <div
+      class="journal-edit-notice"
+      id="journalEditNotice"
+    >
+      오늘의 기록은 저장한 뒤에도 자유롭게 수정할 수 있어요.
+    </div>
+
+
+    <button
+      class="primary-button"
+      id="journalSave"
+      type="button"
+    >
+      마음 기록 저장하기
+    </button>
+
+  </section>
+
+
+  <!-- =========================
+       호흡
+  ========================== -->
+  <section class="content-card breath-card">
+
+    <div class="section-title">
+
+      <div>
+
+        <span class="eyebrow">
+          TAKE A BREATH
+        </span>
+
+        <h2>
+          30초 호흡 쉬어가기
+        </h2>
+
+      </div>
+
+      <span class="soft-pill">
+        원할 때만
+      </span>
+
+    </div>
+
+
+    <p class="helper-text">
+      편안한 만큼만 따라 해요.
+      불편하면 언제든 멈춰도 괜찮아요.
+    </p>
+
+
+    <button
+      class="rest-button"
+      id="breathBtn"
+      type="button"
+    >
+
+      <span class="breath-orb">
+        ◌
+      </span>
+
+      <span id="breathLabel">
+        함께 천천히 호흡하기
+      </span>
+
+      <span class="button-arrow">
+        →
+      </span>
+
+    </button>
+
+
+    <div
+      class="breath-box"
+      id="breathBox"
+      hidden
+    >
+
+      <div
+        class="breath-circle"
+        id="breathCircle"
+      >
+        <span id="breathText">
+          편안한 자세로
+        </span>
+      </div>
+
+
+      <p id="breathInstruction">
+        준비되면 시작해요.
       </p>
 
 
       <button
-        class="rest-button"
-        id="breathBtn"
+        class="text-button"
+        id="stopBreath"
         type="button"
       >
-
-        <span class="breath-orb">
-          ◌
-        </span>
-
-        <span id="breathLabel">
-          함께 천천히 호흡하기
-        </span>
-
-        <span class="button-arrow">
-          →
-        </span>
-
+        그만하기
       </button>
 
+    </div>
 
-      <div
-        class="breath-box"
-        id="breathBox"
-        hidden
-      >
+  </section>
 
-        <div
-          class="breath-circle"
-          id="breathCircle"
-        >
-          <span id="breathText">
-            편안한 자세로
-          </span>
-        </div>
-
-        <p id="breathInstruction">
-          준비되면 시작해요.
-        </p>
-
-        <button
-          class="text-button"
-          id="stopBreath"
-          type="button"
-        >
-          그만하기
-        </button>
-
-      </div>
-
-    </section>
-
-  </main>
-
+</main>
 
   <!-- =========================
        퀘스트
