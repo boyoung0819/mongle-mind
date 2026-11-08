@@ -3997,6 +3997,340 @@ function injectGachaStyles() {
 }
 
 injectGachaStyles();
+
+/* =========================================================
+   실제 펫 뽑기 연출
+========================================================= */
+
+function getPetRarityColor(
+  rarityClass
+) {
+
+  if (
+    rarityClass === "common"
+  ) {
+    return "#9b93a5";
+  }
+
+  if (
+    rarityClass === "rare"
+  ) {
+    return "#659bc5";
+  }
+
+  if (
+    rarityClass === "super"
+  ) {
+    return "#956bd0";
+  }
+
+  if (
+    rarityClass === "legend"
+  ) {
+    return "#d29438";
+  }
+
+  if (
+    rarityClass === "special"
+  ) {
+    return "#df69ad";
+  }
+
+  return "#806a91";
+}
+
+
+function playPetGachaEffect(
+  result,
+  duplicate = false
+) {
+
+  const old =
+    document.querySelector(
+      ".mm-gacha-overlay"
+    );
+
+  if (old) {
+    old.remove();
+  }
+
+
+  const overlay =
+    document.createElement("div");
+
+  overlay.className =
+    "mm-gacha-overlay";
+
+
+  const stage =
+    document.createElement("div");
+
+  stage.className =
+    "mm-gacha-stage";
+
+
+  /* 파티클 */
+
+  const particleIcons = [
+    "✨",
+    "✦",
+    "⭐",
+    "💫",
+    "🌟"
+  ];
+
+  for (
+    let i = 0;
+    i < 26;
+    i++
+  ) {
+
+    const particle =
+      document.createElement("div");
+
+    particle.className =
+      "mm-gacha-particle";
+
+    particle.textContent =
+      particleIcons[
+        Math.floor(
+          Math.random() *
+          particleIcons.length
+        )
+      ];
+
+    particle.style.left =
+      `${15 + Math.random() * 70}%`;
+
+    particle.style.top =
+      `${30 + Math.random() * 40}%`;
+
+    particle.style.setProperty(
+      "--x",
+      `${(Math.random() - .5) * 430}px`
+    );
+
+    particle.style.setProperty(
+      "--y",
+      `${(Math.random() - .5) * 430}px`
+    );
+
+    particle.style.animationDelay =
+      `${Math.random() * .5}s`;
+
+    stage.appendChild(
+      particle
+    );
+  }
+
+
+  const capsule =
+    document.createElement("div");
+
+  capsule.className =
+    "mm-gacha-capsule";
+
+  capsule.innerHTML = `
+    <div
+      class="mm-gacha-capsule-icon"
+    >
+      ✨
+    </div>
+  `;
+
+  stage.appendChild(
+    capsule
+  );
+
+
+  const loadingText =
+    document.createElement("div");
+
+  loadingText.style.fontWeight =
+    "900";
+
+  loadingText.style.color =
+    "#76608b";
+
+  loadingText.textContent =
+    "별빛이 모이고 있어요...";
+
+  stage.appendChild(
+    loadingText
+  );
+
+
+  overlay.appendChild(
+    stage
+  );
+
+  document.body.appendChild(
+    overlay
+  );
+
+
+  let delay = 1150;
+
+
+  if (
+    result.rarityClass ===
+    "rare"
+  ) {
+    delay = 1400;
+  }
+
+  if (
+    result.rarityClass ===
+    "super"
+  ) {
+    delay = 1650;
+  }
+
+  if (
+    result.rarityClass ===
+    "legend"
+  ) {
+    delay = 2000;
+  }
+
+  if (
+    result.rarityClass ===
+    "special"
+  ) {
+    delay = 2450;
+  }
+
+
+  setTimeout(() => {
+
+    stage.innerHTML = "";
+
+
+    /* 다시 파티클 */
+
+    for (
+      let i = 0;
+      i < 30;
+      i++
+    ) {
+
+      const particle =
+        document.createElement("div");
+
+      particle.className =
+        "mm-gacha-particle";
+
+      particle.textContent =
+        particleIcons[
+          Math.floor(
+            Math.random() *
+            particleIcons.length
+          )
+        ];
+
+      particle.style.left =
+        `${10 + Math.random() * 80}%`;
+
+      particle.style.top =
+        `${20 + Math.random() * 60}%`;
+
+      particle.style.setProperty(
+        "--x",
+        `${(Math.random() - .5) * 500}px`
+      );
+
+      particle.style.setProperty(
+        "--y",
+        `${(Math.random() - .5) * 500}px`
+      );
+
+      stage.appendChild(
+        particle
+      );
+    }
+
+
+    const reveal =
+      document.createElement("div");
+
+    reveal.className =
+      "mm-gacha-reveal";
+
+
+    const color =
+      getPetRarityColor(
+        result.rarityClass
+      );
+
+
+    reveal.innerHTML = `
+
+      <div
+        class="mm-gacha-reveal-icon"
+      >
+        ${result.icon}
+      </div>
+
+      <div
+        class="mm-gacha-reveal-rarity"
+        style="
+          color:${color};
+        "
+      >
+        ${result.rarity}
+        · ${result.rate}%
+      </div>
+
+      <div
+        class="mm-gacha-reveal-name"
+      >
+        ${result.name}
+      </div>
+
+      <div
+        class="mm-gacha-reveal-desc"
+      >
+        ${
+          duplicate
+            ? `이미 만난 친구예요!<br>
+               🪙 펫 코인 ${result.duplicateCoins}개를 받았어요.`
+            : `새로운 친구가 도감에 추가되었어요!`
+        }
+      </div>
+
+      <button
+        class="mm-gacha-close"
+      >
+        확인
+      </button>
+
+    `;
+
+
+    stage.appendChild(
+      reveal
+    );
+
+
+    const close =
+      reveal.querySelector(
+        ".mm-gacha-close"
+      );
+
+
+    if (close) {
+
+      close.addEventListener(
+        "click",
+        () => {
+          overlay.remove();
+        }
+      );
+
+    }
+
+  }, delay);
+}
    
 /* =========================================================
    펫 화면 생성
