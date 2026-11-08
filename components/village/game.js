@@ -3440,6 +3440,565 @@ function injectPetStyles() {
 injectPetStyles();
 
 /* =========================================================
+   펫 뽑기 연출 스타일
+========================================================= */
+
+function injectGachaStyles() {
+
+  if (
+    document.getElementById(
+      "mongleGachaStyles"
+    )
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.id =
+    "mongleGachaStyles";
+
+  style.textContent = `
+
+    .mm-gacha-layout {
+      display:grid;
+      grid-template-columns:
+        minmax(0,1.35fr)
+        minmax(280px,.85fr);
+      gap:16px;
+      align-items:stretch;
+    }
+
+    .mm-gacha-main {
+      min-height:330px;
+      border-radius:24px;
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+
+      background:
+        radial-gradient(
+          circle at 50% 25%,
+          #ffffff 0%,
+          #f7f0ff 45%,
+          #eee3fb 100%
+        );
+
+      border:1px solid #eadff5;
+    }
+
+    .mm-gacha-badge {
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#f4edfc;
+      color:#876ca2;
+      font-weight:800;
+    }
+
+    .mm-gacha-orb {
+      width:112px;
+      height:112px;
+      border-radius:50%;
+      position:relative;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background:
+        radial-gradient(
+          circle,
+          #ffffff 0%,
+          #eee2ff 38%,
+          #c5a4eb 72%,
+          #9d79ca 100%
+        );
+
+      box-shadow:
+        0 0 22px
+        rgba(180,145,225,.45),
+        0 0 65px
+        rgba(199,166,239,.28);
+
+      animation:
+        mmGachaFloat
+        2.4s ease-in-out infinite;
+    }
+
+    .mm-gacha-orb::before {
+      content:"";
+      position:absolute;
+      inset:-12px;
+      border-radius:50%;
+      border:1px solid
+        rgba(177,143,224,.3);
+
+      animation:
+        mmGachaRing
+        2s ease-out infinite;
+    }
+
+    .mm-gacha-orb-core {
+      width:62px;
+      height:62px;
+      border-radius:50%;
+
+      background:
+        radial-gradient(
+          circle,
+          #ffffff,
+          #e5d4ff
+        );
+
+      box-shadow:
+        inset 0 0 20px
+        rgba(255,255,255,.9);
+    }
+
+    .mm-gacha-orb-star {
+      position:absolute;
+      z-index:2;
+      font-size:32px;
+
+      filter:
+        drop-shadow(
+          0 0 9px
+          rgba(255,255,255,.95)
+        );
+
+      animation:
+        mmGachaStar
+        1.5s ease-in-out infinite;
+    }
+
+    .mm-gacha-question {
+      margin-top:17px;
+      font-size:20px;
+      font-weight:900;
+      color:#56466b;
+    }
+
+    .mm-gacha-description {
+      margin-top:6px;
+      font-size:11px;
+      line-height:1.6;
+      color:#9c91a6;
+    }
+
+    .mm-gacha-buttons {
+      width:100%;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+      margin-top:17px;
+    }
+
+    .mm-gacha-buttons
+    .mm-pet-button {
+      margin-top:0;
+    }
+
+    .mm-gacha-rates {
+      border-radius:24px;
+      padding:20px;
+      background:#fff;
+      border:1px solid #eadff5;
+    }
+
+    .mm-gacha-rates-title {
+      font-size:17px;
+      font-weight:900;
+      color:#57466c;
+    }
+
+    .mm-gacha-rates-sub {
+      margin-top:4px;
+      margin-bottom:12px;
+      font-size:11px;
+      color:#a39aa9;
+    }
+
+    .mm-rarity-row {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+
+      padding:11px 12px;
+      margin-top:7px;
+
+      border-radius:14px;
+      background:#faf8fc;
+
+      border-left:4px solid #c9c2d1;
+    }
+
+    .mm-rarity-row.rare {
+      border-left-color:#86aed1;
+    }
+
+    .mm-rarity-row.super {
+      border-left-color:#a57bd6;
+    }
+
+    .mm-rarity-row.legend {
+      border-left-color:#dda64f;
+    }
+
+    .mm-rarity-row.special {
+      border-left-color:#e77db7;
+
+      background:
+        linear-gradient(
+          135deg,
+          #fff9fd,
+          #f6edff
+        );
+    }
+
+    .mm-rarity-name {
+      font-weight:900;
+      font-size:12px;
+      color:#57466c;
+    }
+
+    .mm-rarity-pets {
+      margin-top:3px;
+      font-size:9px;
+      line-height:1.45;
+      color:#a39aaa;
+    }
+
+    .mm-rarity-rate {
+      font-size:15px;
+      font-weight:900;
+      color:#74598d;
+      white-space:nowrap;
+    }
+
+    .mm-gacha-rate-note {
+      margin-top:12px;
+      font-size:9px;
+      line-height:1.5;
+      color:#aaa1ad;
+    }
+
+
+    /* 실제 뽑기 화면 */
+
+    .mm-gacha-overlay {
+      position:fixed;
+      inset:0;
+      z-index:999999;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background:
+        radial-gradient(
+          circle at center,
+          rgba(135,101,177,.2),
+          rgba(35,24,48,.82)
+        );
+
+      backdrop-filter:blur(7px);
+
+      animation:
+        mmOverlayIn
+        .25s ease;
+    }
+
+    .mm-gacha-stage {
+      width:min(430px,88vw);
+      min-height:390px;
+
+      position:relative;
+      overflow:hidden;
+
+      border-radius:30px;
+      padding:30px;
+
+      text-align:center;
+
+      background:
+        radial-gradient(
+          circle at 50% 25%,
+          #ffffff,
+          #f1e5ff 55%,
+          #d9c2f1
+        );
+
+      box-shadow:
+        0 30px 100px
+        rgba(15,8,25,.4);
+
+      animation:
+        mmStageIn
+        .5s
+        cubic-bezier(.2,.9,.2,1);
+    }
+
+    .mm-gacha-capsule {
+      width:150px;
+      height:150px;
+
+      margin:25px auto;
+
+      border-radius:50%;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background:
+        radial-gradient(
+          circle,
+          #ffffff 0%,
+          #eee1ff 35%,
+          #c2a0eb 68%,
+          #966bc5 100%
+        );
+
+      box-shadow:
+        0 0 25px
+        rgba(204,171,244,.9),
+        0 0 80px
+        rgba(200,163,241,.7);
+
+      animation:
+        mmCapsuleShake
+        1s ease-in-out infinite;
+    }
+
+    .mm-gacha-capsule-icon {
+      font-size:70px;
+
+      filter:
+        drop-shadow(
+          0 8px 15px
+          rgba(80,50,110,.2)
+        );
+    }
+
+    .mm-gacha-reveal {
+      animation:
+        mmReveal
+        .7s
+        cubic-bezier(.2,1.5,.3,1);
+    }
+
+    .mm-gacha-reveal-icon {
+      font-size:86px;
+      margin-top:5px;
+
+      filter:
+        drop-shadow(
+          0 12px 15px
+          rgba(80,50,110,.18)
+        );
+    }
+
+    .mm-gacha-reveal-rarity {
+      margin-top:5px;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .mm-gacha-reveal-name {
+      margin-top:5px;
+      font-size:27px;
+      font-weight:900;
+      color:#50405f;
+    }
+
+    .mm-gacha-reveal-desc {
+      margin-top:8px;
+      font-size:12px;
+      line-height:1.5;
+      color:#918598;
+    }
+
+    .mm-gacha-close {
+      border:0;
+      margin-top:20px;
+
+      padding:10px 28px;
+
+      border-radius:14px;
+
+      background:#9876c2;
+      color:#fff;
+
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .mm-gacha-particle {
+      position:absolute;
+      pointer-events:none;
+
+      font-size:20px;
+
+      animation:
+        mmParticle
+        1.4s
+        ease-out
+        forwards;
+    }
+
+
+    @keyframes mmGachaFloat {
+      0%,100% {
+        transform:translateY(0);
+      }
+
+      50% {
+        transform:translateY(-8px);
+      }
+    }
+
+    @keyframes mmGachaStar {
+      0%,100% {
+        transform:scale(.9)
+        rotate(-8deg);
+      }
+
+      50% {
+        transform:scale(1.2)
+        rotate(8deg);
+      }
+    }
+
+    @keyframes mmGachaRing {
+      0% {
+        transform:scale(.8);
+        opacity:.7;
+      }
+
+      100% {
+        transform:scale(1.4);
+        opacity:0;
+      }
+    }
+
+    @keyframes mmOverlayIn {
+      from {
+        opacity:0;
+      }
+
+      to {
+        opacity:1;
+      }
+    }
+
+    @keyframes mmStageIn {
+      from {
+        opacity:0;
+        transform:
+          scale(.82)
+          translateY(20px);
+      }
+
+      to {
+        opacity:1;
+        transform:
+          scale(1)
+          translateY(0);
+      }
+    }
+
+    @keyframes mmCapsuleShake {
+      0%,100% {
+        transform:
+          scale(1)
+          rotate(0);
+      }
+
+      25% {
+        transform:
+          scale(1.04)
+          rotate(-5deg);
+      }
+
+      75% {
+        transform:
+          scale(1.07)
+          rotate(5deg);
+      }
+    }
+
+    @keyframes mmReveal {
+      0% {
+        opacity:0;
+        transform:
+          scale(.2)
+          rotate(-15deg);
+      }
+
+      70% {
+        opacity:1;
+        transform:
+          scale(1.15)
+          rotate(5deg);
+      }
+
+      100% {
+        transform:
+          scale(1)
+          rotate(0);
+      }
+    }
+
+    @keyframes mmParticle {
+      0% {
+        opacity:0;
+        transform:
+          translate(0,0)
+          scale(.3);
+      }
+
+      20% {
+        opacity:1;
+      }
+
+      100% {
+        opacity:0;
+        transform:
+          translate(
+            var(--x),
+            var(--y)
+          )
+          scale(1.2);
+      }
+    }
+
+    @media(max-width:760px) {
+
+      .mm-gacha-layout {
+        grid-template-columns:1fr;
+      }
+
+      .mm-gacha-buttons {
+        grid-template-columns:1fr;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(style);
+}
+
+injectGachaStyles();
+   
+/* =========================================================
    펫 화면 생성
 ========================================================= */
 
