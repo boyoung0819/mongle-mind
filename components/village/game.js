@@ -12724,23 +12724,22 @@ cloud.style.transition =
          천천히 떠오르기
       ----------------------------------------------- */
 
-      setTimeout(
-        () => {
+setTimeout(
+  () => {
 
-          if (!cloud.isConnected) {
-            return;
-          }
+    if (!cloud.isConnected) {
+      return;
+    }
 
-          cloud.style.transform =
-            "translateY(-145px) scale(.82)";
+    cloud.style.transform =
+      "translate(-50%, -210px) scale(.88)";
 
-          cloud.style.opacity =
-            "0";
+    cloud.style.opacity =
+      "0";
 
-        },
-        900
-      );
-
+  },
+  1200
+);
 
       /* -----------------------------------------------
          사라진 뒤 정리
