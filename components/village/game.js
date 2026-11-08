@@ -3973,11 +3973,19 @@ if (
   applyPetAccessories();
 }
    
+/* =========================================================
+   펫 액세서리
+   마을에서도 잘 보이도록 크기와 위치를 조정
+========================================================= */
+
 function applyPetAccessories() {
-  if (!petBodyGroup) return;
+
+  if (!petBodyGroup) {
+    return;
+  }
 
   const petId =
-    state.selectedPet;
+    state.selectedPet || "bunny";
 
   const acc =
     state.petAccessories[petId] || {
@@ -3985,7 +3993,7 @@ function applyPetAccessories() {
       outfit: "none"
     };
 
-  /* 액세서리 그룹 제거 */
+  /* 기존 액세서리 제거 */
 
   const old =
     petBodyGroup.getObjectByName(
@@ -4004,160 +4012,390 @@ function applyPetAccessories() {
 
   petBodyGroup.add(group);
 
-  /* 모자 */
+
+  /* =========================================================
+     🎩 모자
+  ========================================================= */
+
+  /* 🌸 꽃 머리핀 */
 
   if (acc.hat === "flower") {
+
+    /* 가운데 꽃 */
+
     ball(
       group,
       0,
-      1.08,
-      0,
-      0.13,
-      0.08,
-      0.13,
+      1.14,
+      0.03,
+      0.16,
+      0.09,
+      0.16,
       M(0xf19bb4)
     );
 
+    /* 꽃잎 */
+
     for (let i = 0; i < 5; i++) {
-      const a =
+
+      const angle =
         i * Math.PI * 2 / 5;
 
       ball(
         group,
-        Math.cos(a) * 0.12,
-        1.08,
-        Math.sin(a) * 0.12,
-        0.07,
+        Math.cos(angle) * 0.15,
+        1.14 +
+          Math.sin(angle) * 0.08,
         0.04,
-        0.07,
+        0.085,
+        0.055,
+        0.085,
         M(0xffd5e2)
       );
+
     }
   }
 
+
+  /* 🧢 포근 베레모 */
+
   if (acc.hat === "beret") {
+
     ball(
       group,
       0,
-      1.05,
+      1.10,
       0,
-      0.3,
-      0.09,
-      0.27,
+      0.34,
+      0.12,
+      0.30,
       M(0xb998d9)
+    );
+
+    /* 베레모 꼭지 */
+
+    ball(
+      group,
+      0,
+      1.21,
+      0,
+      0.07,
+      0.06,
+      0.07,
+      M(0x9f80c5)
     );
   }
 
+
+  /* 👑 별 왕관 */
+
   if (acc.hat === "crown") {
-    for (let i = 0; i < 3; i++) {
-      const tooth = add(
-        new THREE.ConeGeometry(
-          0.06,
-          0.22,
-          5
-        ),
+
+    /* 왕관 바닥 */
+
+    const crownBase =
+      new THREE.TorusGeometry(
+        0.25,
+        0.045,
+        6,
+        18
+      );
+
+    const crown =
+      add(
+        crownBase,
         m.gold,
         group,
-        -0.12 + i * 0.12,
-        1.1,
+        0,
+        1.12,
         0
       );
 
+    crown.rotation.x =
+      Math.PI / 2;
+
+
+    /* 왕관 뾰족한 부분 */
+
+    for (let i = 0; i < 3; i++) {
+
+      const tooth =
+        add(
+          new THREE.ConeGeometry(
+            0.075,
+            0.28,
+            5
+          ),
+          m.gold,
+          group,
+          -0.17 +
+            i * 0.17,
+          1.25,
+          0
+        );
+
       tooth.rotation.z =
-        i === 1 ? 0 : 0.12;
+        i === 0
+          ? -0.12
+          : i === 2
+          ? 0.12
+          : 0;
     }
+
+
+    /* 가운데 보석 */
+
+    ball(
+      group,
+      0,
+      1.13,
+      0.27,
+      0.055,
+      0.055,
+      0.04,
+      M(0xf5a7d5)
+    );
   }
+
+
+  /* 🍃 숲의 잎모자 */
 
   if (acc.hat === "leaf") {
-    const leaf = ball(
-      group,
-      0,
-      1.08,
-      0,
-      0.24,
-      0.06,
-      0.12,
-      m.leaf2
-    );
+
+    const leaf =
+      ball(
+        group,
+        0.04,
+        1.13,
+        0,
+        0.30,
+        0.08,
+        0.16,
+        m.leaf2
+      );
 
     leaf.rotation.z =
-      -0.25;
+      -0.30;
+
+
+    /* 잎맥 */
+
+    const vein =
+      box(
+        group,
+        0.04,
+        1.13,
+        0.08,
+        0.23,
+        0.025,
+        0.025,
+        m.leaf
+      );
+
+    vein.rotation.z =
+      -0.30;
   }
 
-  /* 옷 */
+
+  /* =========================================================
+     🧣 옷
+  ========================================================= */
+
+  /* 🧣 포근 목도리 */
 
   if (acc.outfit === "scarf") {
-    const scarf = add(
-      new THREE.TorusGeometry(
-        0.29,
-        0.07,
-        8,
-        24
-      ),
-      M(0xef9da9),
-      group,
-      0,
-      0.68,
-      0
-    );
+
+    const scarf =
+      add(
+        new THREE.TorusGeometry(
+          0.36,
+          0.085,
+          10,
+          28
+        ),
+        M(0xef9da9),
+        group,
+        0,
+        0.64,
+        0
+      );
 
     scarf.rotation.x =
       Math.PI / 2;
+
+
+    /* 목도리 끝 */
+
+    box(
+      group,
+      0.20,
+      0.52,
+      0.04,
+      0.12,
+      0.34,
+      0.07,
+      M(0xef9da9)
+    );
+
+    box(
+      group,
+      0.29,
+      0.50,
+      0.05,
+      0.12,
+      0.27,
+      0.07,
+      M(0xf4b2bb)
+    );
   }
 
+
+  /* 🪽 작은 망토 */
+
   if (acc.outfit === "cape") {
-    const cape = add(
-      new THREE.ConeGeometry(
-        0.48,
-        0.65,
-        4,
-        1,
-        true
-      ),
-      M(0x9f8fd2),
-      group,
-      0,
-      0.45,
-      -0.18
-    );
+
+    /* 목 부분 */
+
+    const capeCollar =
+      add(
+        new THREE.TorusGeometry(
+          0.33,
+          0.075,
+          8,
+          24
+        ),
+        M(0x9f8fd2),
+        group,
+        0,
+        0.66,
+        0
+      );
+
+    capeCollar.rotation.x =
+      Math.PI / 2;
+
+
+    /* 몸을 감싸는 망토 */
+
+    const cape =
+      add(
+        new THREE.ConeGeometry(
+          0.55,
+          0.72,
+          16,
+          1,
+          true
+        ),
+        M(0x9f8fd2),
+        group,
+        0,
+        0.38,
+        -0.02
+      );
 
     cape.rotation.x =
       Math.PI;
+
+
+    /* 망토 안쪽 */
+
+    const innerCape =
+      add(
+        new THREE.ConeGeometry(
+          0.43,
+          0.62,
+          16,
+          1,
+          true
+        ),
+        M(0xc7b5ed),
+        group,
+        0,
+        0.39,
+        0.01
+      );
+
+    innerCape.rotation.x =
+      Math.PI;
   }
 
+
+  /* 🎀 리본 장식 */
+
   if (acc.outfit === "ribbon") {
-    ball(
-      group,
-      -0.15,
-      0.6,
-      0.3,
-      0.12,
-      0.07,
-      0.04,
-      M(0xef86a6)
-    );
+
+    /* 왼쪽 리본 */
 
     ball(
       group,
+      -0.18,
+      0.63,
+      0.35,
       0.15,
-      0.6,
-      0.3,
-      0.12,
-      0.07,
-      0.04,
+      0.10,
+      0.045,
       M(0xef86a6)
     );
+
+    /* 오른쪽 리본 */
+
+    ball(
+      group,
+      0.18,
+      0.63,
+      0.35,
+      0.15,
+      0.10,
+      0.045,
+      M(0xef86a6)
+    );
+
+    /* 가운데 매듭 */
 
     ball(
       group,
       0,
-      0.6,
-      0.3,
-      0.06,
-      0.06,
-      0.04,
+      0.63,
+      0.38,
+      0.075,
+      0.075,
+      0.055,
       M(0xf1c76f)
     );
+
+
+    /* 리본 꼬리 */
+
+    const leftTail =
+      box(
+        group,
+        -0.08,
+        0.48,
+        0.34,
+        0.08,
+        0.25,
+        0.035,
+        M(0xef86a6)
+      );
+
+    leftTail.rotation.z =
+      -0.25;
+
+
+    const rightTail =
+      box(
+        group,
+        0.08,
+        0.48,
+        0.34,
+        0.08,
+        0.25,
+        0.035,
+        M(0xef86a6)
+      );
+
+    rightTail.rotation.z =
+      0.25;
   }
 }
 
