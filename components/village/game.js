@@ -3822,72 +3822,241 @@ if (action === "drawFive") {
    펫 뽑기
 ========================================================= */
 
+/* =========================================================
+   펫 뽑기
+========================================================= */
+
 function drawPet() {
-  if (state.petCurrency < 1) {
+
+  const cost = 5;
+
+  if (state.petCurrency < cost) {
+
     toast(
-      "별빛이 부족해요. 퀘스트를 완료해 보세요!"
+      "별빛 5개가 필요해요. ✨"
     );
 
     return;
   }
 
-  state.petCurrency -= 1;
+  state.petCurrency -= cost;
 
   state.stats.petDraws =
     (state.stats.petDraws || 0) + 1;
+
 
   const roll =
     Math.random() * 100;
 
   let sum = 0;
-  let result = PETS.puppy;
 
-  for (const petData of PET_LIST) {
-    if (petData.id === "bunny") {
+  let result =
+    PETS.puppy;
+
+
+  for (
+    const petData of PET_LIST
+  ) {
+
+    if (
+      petData.id === "bunny"
+    ) {
       continue;
     }
 
-    sum += petData.rate;
+    sum +=
+      petData.rate;
 
-    if (roll <= sum) {
-      result = petData;
+    if (
+      roll <= sum
+    ) {
+
+      result =
+        petData;
+
       break;
     }
   }
 
-  if (state.ownedPets.includes(result.id)) {
+
+  /* 중복 펫 */
+
+  if (
+    state.ownedPets.includes(
+      result.id
+    )
+  ) {
+
     state.petCoins +=
       result.duplicateCoins;
 
     save();
 
     showGachaResult(
-      `중복 펫!`,
+      "중복 펫!",
       `${result.icon} ${result.name}`,
       `이미 가지고 있는 펫이라 🪙 펫 코인 ${result.duplicateCoins}개로 바뀌었어요.`
     );
 
+    renderPetUI();
+
     return;
   }
+
+
+  /* 새로운 펫 */
 
   state.ownedPets.push(
     result.id
   );
 
-  if (!state.petAccessories[result.id]) {
-    state.petAccessories[result.id] = {
+
+  if (
+    !state.petAccessories[
+      result.id
+    ]
+  ) {
+
+    state.petAccessories[
+      result.id
+    ] = {
       hat: "none",
       outfit: "none"
     };
   }
 
+
   save();
 
   showGachaResult(
-    `새로운 친구 등장!`,
+    "새로운 친구 등장!",
     `${result.icon} ${result.name}`,
     `${result.rarity} 펫을 새롭게 만났어요!`
   );
+
+  renderPetUI();
+}
+
+
+/* =========================================================
+   5회 연속 뽑기
+========================================================= */
+
+function drawPetFive() {
+
+  const cost = 20;
+
+  if (
+    state.petCurrency < cost
+  ) {
+
+    toast(
+      "별빛 20개가 필요해요. ✨"
+    );
+
+    return;
+  }
+
+
+  state.petCurrency -= cost;
+
+
+  const results = [];
+
+
+  for (
+    let i = 0;
+    i < 5;
+    i++
+  ) {
+
+    state.stats.petDraws =
+      (state.stats.petDraws || 0) + 1;
+
+
+    const roll =
+      Math.random() * 100;
+
+    let sum = 0;
+
+    let result =
+      PETS.puppy;
+
+
+    for (
+      const petData of PET_LIST
+    ) {
+
+      if (
+        petData.id === "bunny"
+      ) {
+        continue;
+      }
+
+      sum +=
+        petData.rate;
+
+      if (
+        roll <= sum
+      ) {
+
+        result =
+          petData;
+
+        break;
+      }
+    }
+
+
+    if (
+      state.ownedPets.includes(
+        result.id
+      )
+    ) {
+
+      state.petCoins +=
+        result.duplicateCoins;
+
+      results.push(
+        `${result.icon} 중복`
+      );
+
+    } else {
+
+      state.ownedPets.push(
+        result.id
+      );
+
+      if (
+        !state.petAccessories[
+          result.id
+        ]
+      ) {
+
+        state.petAccessories[
+          result.id
+        ] = {
+          hat: "none",
+          outfit: "none"
+        };
+      }
+
+      results.push(
+        `${result.icon} ${result.name}`
+      );
+    }
+  }
+
+
+  save();
+
+  showGachaResult(
+    "✨ 5회 뽑기 완료!",
+    results.join(" · "),
+    "새로운 친구와 중복 보상을 모두 확인했어요."
+  );
+
+  renderPetUI();
 }
 
 function showGachaResult(
