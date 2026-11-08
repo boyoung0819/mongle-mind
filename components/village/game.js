@@ -4936,14 +4936,16 @@ if (action === "drawFive") {
 ========================================================= */
 
 /* =========================================================
-   펫 뽑기
+   펫 1회 뽑기
 ========================================================= */
 
 function drawPet() {
 
   const cost = 5;
 
-  if (state.petCurrency < cost) {
+  if (
+    state.petCurrency < cost
+  ) {
 
     toast(
       "별빛 5개가 필요해요. ✨"
@@ -4952,7 +4954,9 @@ function drawPet() {
     return;
   }
 
+
   state.petCurrency -= cost;
+
 
   state.stats.petDraws =
     (state.stats.petDraws || 0) + 1;
@@ -4960,6 +4964,7 @@ function drawPet() {
 
   const roll =
     Math.random() * 100;
+
 
   let sum = 0;
 
@@ -4977,8 +4982,10 @@ function drawPet() {
       continue;
     }
 
+
     sum +=
       petData.rate;
+
 
     if (
       roll <= sum
@@ -4992,7 +4999,11 @@ function drawPet() {
   }
 
 
-  /* 중복 펫 */
+  let duplicate =
+    false;
+
+
+  /* 중복 */
 
   if (
     state.ownedPets.includes(
@@ -5000,54 +5011,50 @@ function drawPet() {
     )
   ) {
 
+    duplicate = true;
+
+
     state.petCoins +=
       result.duplicateCoins;
 
-    save();
-
-    showGachaResult(
-      "중복 펫!",
-      `${result.icon} ${result.name}`,
-      `이미 가지고 있는 펫이라 🪙 펫 코인 ${result.duplicateCoins}개로 바뀌었어요.`
-    );
-
-    renderPetUI();
-
-    return;
   }
-
 
   /* 새로운 펫 */
 
-  state.ownedPets.push(
-    result.id
-  );
+  else {
 
-
-  if (
-    !state.petAccessories[
+    state.ownedPets.push(
       result.id
-    ]
-  ) {
+    );
 
-    state.petAccessories[
-      result.id
-    ] = {
-      hat: "none",
-      outfit: "none"
-    };
+
+    if (
+      !state.petAccessories[
+        result.id
+      ]
+    ) {
+
+      state.petAccessories[
+        result.id
+      ] = {
+        hat: "none",
+        outfit: "none"
+      };
+
+    }
+
   }
 
 
   save();
 
-  showGachaResult(
-    "새로운 친구 등장!",
-    `${result.icon} ${result.name}`,
-    `${result.rarity} 펫을 새롭게 만났어요!`
-  );
-
   renderPetUI();
+
+
+  playPetGachaEffect(
+    result,
+    duplicate
+  );
 }
 
 
