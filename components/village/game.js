@@ -10598,6 +10598,1078 @@ if (journalSave) {
 ensureJournalState();
 
 updateJournalUI();
+
+/* =========================================================
+   🌿 마음 돌보기 - 작은 쉼 활동
+========================================================= */
+
+let mindCareReady = false;
+let mindCareRainTimer = null;
+let mindCareClouds = [];
+
+function ensureMindCareUI() {
+
+  if (mindCareReady) {
+    return;
+  }
+
+  const journalScreen =
+    document.querySelector(
+      '[data-screen="journal"]'
+    );
+
+  if (!journalScreen) {
+    return;
+  }
+
+  const breathCard =
+    journalScreen.querySelector(
+      ".breath-card"
+    );
+
+  if (!breathCard) {
+    return;
+  }
+
+  const section =
+    document.createElement("section");
+
+  section.className =
+    "content-card mind-care-activities";
+
+  section.innerHTML = `
+    <div class="section-title">
+      <div>
+        <span class="eyebrow">
+          LITTLE REST
+        </span>
+
+        <h2>
+          지금 필요한 작은 쉼
+        </h2>
+      </div>
+
+      <span class="soft-pill">
+        원할 때만
+      </span>
+    </div>
+
+    <p class="helper-text">
+      꼭 무언가를 해야 하는 건 아니에요.
+      마음에 맞는 활동 하나만 천천히 골라봐요.
+    </p>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:12px;
+        margin-top:16px;
+      "
+    >
+
+      <button
+        type="button"
+        class="mind-care-action"
+        data-mind-care="rain"
+        style="
+          border:1px solid rgba(120,140,180,.18);
+          border-radius:20px;
+          padding:20px 14px;
+          background:linear-gradient(145deg,#eef6ff,#f8f3ff);
+          cursor:pointer;
+          text-align:left;
+        "
+      >
+        <div style="font-size:28px;">🌧️</div>
+
+        <strong
+          style="
+            display:block;
+            margin-top:8px;
+            font-size:15px;
+          "
+        >
+          빗소리 쉼터
+        </strong>
+
+        <span
+          style="
+            display:block;
+            margin-top:5px;
+            font-size:12px;
+            opacity:.62;
+            line-height:1.5;
+          "
+        >
+          잠시 비를 바라보며 쉬어요.
+        </span>
+      </button>
+
+
+      <button
+        type="button"
+        class="mind-care-action"
+        data-mind-care="color"
+        style="
+          border:1px solid rgba(180,150,190,.18);
+          border-radius:20px;
+          padding:20px 14px;
+          background:linear-gradient(145deg,#fff5f7,#f5f1ff);
+          cursor:pointer;
+          text-align:left;
+        "
+      >
+        <div style="font-size:28px;">🎨</div>
+
+        <strong
+          style="
+            display:block;
+            margin-top:8px;
+            font-size:15px;
+          "
+        >
+          마음 색 고르기
+        </strong>
+
+        <span
+          style="
+            display:block;
+            margin-top:5px;
+            font-size:12px;
+            opacity:.62;
+            line-height:1.5;
+          "
+        >
+          지금의 마음과 가까운 색을 골라요.
+        </span>
+      </button>
+
+
+      <button
+        type="button"
+        class="mind-care-action"
+        data-mind-care="cloud"
+        style="
+          border:1px solid rgba(150,160,180,.18);
+          border-radius:20px;
+          padding:20px 14px;
+          background:linear-gradient(145deg,#f3f8ff,#f5f5ff);
+          cursor:pointer;
+          text-align:left;
+        "
+      >
+        <div style="font-size:28px;">🫧</div>
+
+        <strong
+          style="
+            display:block;
+            margin-top:8px;
+            font-size:15px;
+          "
+        >
+          몽글이 내려놓기
+        </strong>
+
+        <span
+          style="
+            display:block;
+            margin-top:5px;
+            font-size:12px;
+            opacity:.62;
+            line-height:1.5;
+          "
+        >
+          잠시 내려놓고 싶은 생각을 골라요.
+        </span>
+      </button>
+
+
+      <button
+        type="button"
+        class="mind-care-action"
+        data-mind-care="quiet"
+        style="
+          border:1px solid rgba(170,150,180,.18);
+          border-radius:20px;
+          padding:20px 14px;
+          background:linear-gradient(145deg,#f6f2ff,#fff8ef);
+          cursor:pointer;
+          text-align:left;
+        "
+      >
+        <div style="font-size:28px;">🌙</div>
+
+        <strong
+          style="
+            display:block;
+            margin-top:8px;
+            font-size:15px;
+          "
+        >
+          조용한 쉼
+        </strong>
+
+        <span
+          style="
+            display:block;
+            margin-top:5px;
+            font-size:12px;
+            opacity:.62;
+            line-height:1.5;
+          "
+        >
+          아무것도 하지 않고 잠시 머물러요.
+        </span>
+      </button>
+
+    </div>
+
+    <div
+      id="mindCareActivity"
+      style="
+        margin-top:16px;
+      "
+    ></div>
+  `;
+
+  breathCard.before(
+    section
+  );
+
+  mindCareReady = true;
+
+  bindMindCareButtons();
+}
+
+
+/* =========================================================
+   마음 돌보기 버튼
+========================================================= */
+
+function bindMindCareButtons() {
+
+  document
+    .querySelectorAll(
+      "[data-mind-care]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const type =
+            button.dataset.mindCare;
+
+          if (type === "rain") {
+            openRainRest();
+          }
+
+          if (type === "color") {
+            openMindColor();
+          }
+
+          if (type === "cloud") {
+            openMongleCloud();
+          }
+
+          if (type === "quiet") {
+            openQuietRest();
+          }
+
+        }
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   활동 영역
+========================================================= */
+
+function getMindCareActivity() {
+
+  return $(
+    "mindCareActivity"
+  );
+
+}
+
+
+/* =========================================================
+   🌧️ 빗소리 쉼터
+========================================================= */
+
+function openRainRest() {
+
+  const box =
+    getMindCareActivity();
+
+  if (!box) {
+    return;
+  }
+
+  clearMindCareTimers();
+
+  box.innerHTML = `
+    <div
+      style="
+        position:relative;
+        overflow:hidden;
+        min-height:260px;
+        border-radius:24px;
+        padding:28px 20px;
+        background:
+          linear-gradient(
+            160deg,
+            #b9d8ed,
+            #d8d9f0
+          );
+        text-align:center;
+      "
+    >
+
+      <div
+        style="
+          position:absolute;
+          inset:0;
+          opacity:.3;
+          pointer-events:none;
+        "
+      >
+        ☁️　☁️　　 ☁️
+      </div>
+
+      <div
+        id="rainDrops"
+        style="
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+        "
+      ></div>
+
+      <div
+        style="
+          position:relative;
+          z-index:2;
+        "
+      >
+
+        <div
+          style="
+            font-size:42px;
+            margin-bottom:8px;
+          "
+        >
+          🌧️
+        </div>
+
+        <h3
+          style="
+            margin:0;
+            font-size:20px;
+          "
+        >
+          잠시 비를 바라봐요
+        </h3>
+
+        <p
+          style="
+            margin:10px 0 18px;
+            font-size:13px;
+            line-height:1.7;
+            opacity:.72;
+          "
+        >
+          아무것도 하지 않아도 괜찮아요.<br>
+          잠깐 여기 머물러도 좋아요.
+        </p>
+
+        <button
+          type="button"
+          id="rainFinish"
+          class="primary-button"
+        >
+          🌿 이제 괜찮아요
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  startRainAnimation();
+
+  const finish =
+    $("rainFinish");
+
+  if (finish) {
+
+    finish.onclick = () => {
+
+      clearMindCareTimers();
+
+      box.innerHTML = `
+        <div
+          style="
+            padding:28px 18px;
+            text-align:center;
+            border-radius:22px;
+            background:#f6f2ff;
+          "
+        >
+          <div style="font-size:34px;">
+            ☁️
+          </div>
+
+          <strong>
+            잠시 잘 쉬었어요.
+          </strong>
+
+          <p
+            style="
+              margin:8px 0 0;
+              font-size:12px;
+              opacity:.62;
+            "
+          >
+            다시 천천히 돌아가도 괜찮아요.
+          </p>
+        </div>
+      `;
+
+      addMindCareXP(3);
+
+    };
+
+  }
+
+}
+
+
+/* =========================================================
+   빗방울 애니메이션
+========================================================= */
+
+function startRainAnimation() {
+
+  const area =
+    $("rainDrops");
+
+  if (!area) {
+    return;
+  }
+
+  let count = 0;
+
+  mindCareRainTimer =
+    setInterval(
+      () => {
+
+        if (!area.isConnected) {
+          clearMindCareTimers();
+          return;
+        }
+
+        const drop =
+          document.createElement("span");
+
+        drop.textContent =
+          "│";
+
+        drop.style.position =
+          "absolute";
+
+        drop.style.left =
+          `${Math.random() * 100}%`;
+
+        drop.style.top =
+          "-20px";
+
+        drop.style.fontSize =
+          `${10 + Math.random() * 8}px`;
+
+        drop.style.opacity =
+          `${0.2 + Math.random() * 0.35}`;
+
+        drop.style.transition =
+          "transform 1.6s linear, opacity 1.6s linear";
+
+        area.appendChild(drop);
+
+        requestAnimationFrame(
+          () => {
+
+            drop.style.transform =
+              `translateY(${260 + Math.random() * 80}px)`;
+
+            drop.style.opacity =
+              "0";
+
+          }
+        );
+
+        setTimeout(
+          () => drop.remove(),
+          1800
+        );
+
+        count++;
+
+      },
+      120
+    );
+
+}
+
+
+/* =========================================================
+   🎨 마음 색 고르기
+========================================================= */
+
+function openMindColor() {
+
+  const box =
+    getMindCareActivity();
+
+  if (!box) {
+    return;
+  }
+
+  clearMindCareTimers();
+
+  box.innerHTML = `
+    <div
+      style="
+        padding:24px 18px;
+        border-radius:24px;
+        background:#fffafc;
+        text-align:center;
+      "
+    >
+
+      <div style="font-size:36px;">
+        🎨
+      </div>
+
+      <h3
+        style="
+          margin:8px 0 4px;
+        "
+      >
+        지금 마음과 가까운 색은?
+      </h3>
+
+      <p
+        style="
+          margin:0 0 18px;
+          font-size:12px;
+          opacity:.62;
+        "
+      >
+        정답은 없어요. 그냥 끌리는 색을 골라봐요.
+      </p>
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(4,1fr);
+          gap:10px;
+        "
+      >
+
+        <button
+          type="button"
+          class="mind-color-choice"
+          data-color="#b9d9ef"
+          data-name="맑은 하늘"
+          style="
+            height:58px;
+            border:0;
+            border-radius:18px;
+            background:#b9d9ef;
+            cursor:pointer;
+          "
+        ></button>
+
+        <button
+          type="button"
+          class="mind-color-choice"
+          data-color="#cdb9ed"
+          data-name="포근한 보라"
+          style="
+            height:58px;
+            border:0;
+            border-radius:18px;
+            background:#cdb9ed;
+            cursor:pointer;
+          "
+        ></button>
+
+        <button
+          type="button"
+          class="mind-color-choice"
+          data-color="#b9d9c4"
+          data-name="편안한 초록"
+          style="
+            height:58px;
+            border:0;
+            border-radius:18px;
+            background:#b9d9c4;
+            cursor:pointer;
+          "
+        ></button>
+
+        <button
+          type="button"
+          class="mind-color-choice"
+          data-color="#f2c3ca"
+          data-name="따뜻한 분홍"
+          style="
+            height:58px;
+            border:0;
+            border-radius:18px;
+            background:#f2c3ca;
+            cursor:pointer;
+          "
+        ></button>
+
+      </div>
+
+      <div
+        id="mindColorResult"
+        style="
+          margin-top:16px;
+          min-height:22px;
+          font-size:13px;
+        "
+      ></div>
+
+    </div>
+  `;
+
+  document
+    .querySelectorAll(
+      ".mind-color-choice"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const color =
+            button.dataset.color;
+
+          const name =
+            button.dataset.name;
+
+          box.style.transition =
+            "background .7s ease";
+
+          box.style.background =
+            color;
+
+          const result =
+            $("mindColorResult");
+
+          if (result) {
+
+            result.innerHTML = `
+              <strong>
+                ${name}
+              </strong>
+              <br>
+              <span
+                style="
+                  opacity:.65;
+                  font-size:11px;
+                "
+              >
+                오늘의 마음을 이렇게 바라봐도 좋아요.
+              </span>
+            `;
+
+          }
+
+          addMindCareXP(2);
+
+        }
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   🫧 몽글이 내려놓기
+========================================================= */
+
+function openMongleCloud() {
+
+  const box =
+    getMindCareActivity();
+
+  if (!box) {
+    return;
+  }
+
+  clearMindCareTimers();
+
+  const thoughts = [
+    "걱정",
+    "해야 할 일",
+    "피곤함",
+    "복잡한 생각",
+    "오늘의 부담"
+  ];
+
+  box.innerHTML = `
+    <div
+      style="
+        padding:24px 18px;
+        border-radius:24px;
+        background:
+          linear-gradient(
+            160deg,
+            #eef5ff,
+            #f7f0ff
+          );
+        text-align:center;
+      "
+    >
+
+      <div style="font-size:36px;">
+        🫧
+      </div>
+
+      <h3
+        style="
+          margin:8px 0 4px;
+        "
+      >
+        잠시 내려놓고 싶은 것은?
+      </h3>
+
+      <p
+        style="
+          margin:0 0 18px;
+          font-size:12px;
+          opacity:.62;
+        "
+      >
+        하나를 골라 구름처럼 보내줘요.
+      </p>
+
+      <div
+        id="mongleCloudList"
+        style="
+          display:flex;
+          flex-wrap:wrap;
+          justify-content:center;
+          gap:10px;
+        "
+      ></div>
+
+      <div
+        id="mongleCloudResult"
+        style="
+          margin-top:18px;
+          min-height:24px;
+          font-size:13px;
+        "
+      ></div>
+
+    </div>
+  `;
+
+  const list =
+    $("mongleCloudList");
+
+  thoughts.forEach(
+    thought => {
+
+      const button =
+        document.createElement("button");
+
+      button.type =
+        "button";
+
+      button.textContent =
+        `☁️ ${thought}`;
+
+      button.style.cssText = `
+        border:0;
+        border-radius:999px;
+        padding:10px 15px;
+        background:rgba(255,255,255,.82);
+        box-shadow:0 5px 15px rgba(100,110,150,.08);
+        cursor:pointer;
+        font-size:12px;
+      `;
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          button.style.transition =
+            "transform .5s ease, opacity .5s ease";
+
+          button.style.transform =
+            "translateY(-28px) scale(.6)";
+
+          button.style.opacity =
+            "0";
+
+          setTimeout(
+            () => {
+              button.remove();
+            },
+            500
+          );
+
+          const result =
+            $("mongleCloudResult");
+
+          if (result) {
+
+            result.innerHTML = `
+              <strong>
+                ☁️ ${thought}
+              </strong>
+              <br>
+              <span
+                style="
+                  opacity:.62;
+                  font-size:11px;
+                "
+              >
+                지금은 잠시 내려놓아도 괜찮아요.
+              </span>
+            `;
+
+          }
+
+          addMindCareXP(2);
+
+        }
+      );
+
+      list.appendChild(
+        button
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   🌙 조용한 쉼
+========================================================= */
+
+function openQuietRest() {
+
+  const box =
+    getMindCareActivity();
+
+  if (!box) {
+    return;
+  }
+
+  clearMindCareTimers();
+
+  box.innerHTML = `
+    <div
+      style="
+        position:relative;
+        min-height:220px;
+        overflow:hidden;
+        border-radius:24px;
+        background:
+          linear-gradient(
+            160deg,
+            #dcd7ef,
+            #f0e5e1
+          );
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+      "
+    >
+
+      <div
+        style="
+          position:absolute;
+          inset:0;
+          opacity:.55;
+          font-size:20px;
+          line-height:3;
+          word-spacing:18px;
+        "
+      >
+        ✦　　☾　　✧
+        <br>
+       　✧　　·　　☁️
+        <br>
+        ✦　　·　　✧
+      </div>
+
+      <div
+        style="
+          position:relative;
+          z-index:2;
+          padding:24px;
+        "
+      >
+
+        <div
+          style="
+            font-size:38px;
+            margin-bottom:10px;
+          "
+        >
+          🌙
+        </div>
+
+        <h3
+          style="
+            margin:0;
+          "
+        >
+          잠시 아무것도 하지 않아도 괜찮아요.
+        </h3>
+
+        <p
+          style="
+            margin:10px 0 18px;
+            font-size:12px;
+            opacity:.65;
+          "
+        >
+          화면을 바라보며 잠깐 쉬어가요.
+        </p>
+
+        <button
+          type="button"
+          id="quietFinish"
+          class="primary-button"
+        >
+          ✨ 이제 돌아가기
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  const finish =
+    $("quietFinish");
+
+  if (finish) {
+
+    finish.onclick = () => {
+
+      box.innerHTML = `
+        <div
+          style="
+            padding:25px;
+            text-align:center;
+            border-radius:22px;
+            background:#f5f0ff;
+          "
+        >
+          <div style="font-size:34px;">
+            🌿
+          </div>
+
+          <strong>
+            천천히 잘 쉬었어요.
+          </strong>
+        </div>
+      `;
+
+      addMindCareXP(3);
+
+    };
+
+  }
+
+}
+
+
+/* =========================================================
+   작은 경험치 보상
+========================================================= */
+
+function addMindCareXP(amount) {
+
+  const value =
+    Number(amount || 0);
+
+  if (!value) {
+    return;
+  }
+
+  state.xp =
+    Number(state.xp || 0) +
+    value;
+
+  while (
+    state.xp >= 100
+  ) {
+
+    state.xp -= 100;
+
+    state.level =
+      Number(state.level || 1) +
+      1;
+
+    toast(
+      "🌱 마음 돌보기로 레벨이 올랐어요!"
+    );
+
+  }
+
+  save();
+  updateUI();
+
+}
+
+
+/* =========================================================
+   마음 돌보기 정리
+========================================================= */
+
+function clearMindCareTimers() {
+
+  if (mindCareRainTimer) {
+
+    clearInterval(
+      mindCareRainTimer
+    );
+
+    mindCareRainTimer =
+      null;
+
+  }
+
+}
+
+
+/* =========================================================
+   마음 돌보기 UI 준비
+========================================================= */
+
+ensureMindCareUI();
+   
 /* =========================================================
    호흡
 ========================================================= */
