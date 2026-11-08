@@ -12065,130 +12065,417 @@ function toggleRainSound() {
 
 function openMindColor() {
 
-  const box =
+  const activity =
     getMindCareActivity();
 
-  if (!box) {
+  if (!activity) {
     return;
   }
 
   clearMindCareTimers();
 
-  box.innerHTML = `
+  activity.innerHTML = `
+
     <div
+      id="mindColorSpace"
       style="
-        padding:24px 18px;
-        border-radius:24px;
-        background:#fffafc;
-        text-align:center;
+        position:relative;
+        overflow:hidden;
+
+        min-height:500px;
+
+        padding:30px;
+
+        border-radius:28px;
+
+        background:
+          linear-gradient(
+            145deg,
+            #f3effa,
+            #eef6f8
+          );
+
+        transition:
+          background 1s ease,
+          box-shadow 1s ease;
+
+        box-shadow:
+          0 18px 45px
+          rgba(100,110,150,.12);
       "
     >
 
-      <div style="font-size:36px;">
-        🎨
-      </div>
-
-      <h3
+      <!-- 빛 -->
+      <div
         style="
-          margin:8px 0 4px;
-        "
-      >
-        지금 마음과 가까운 색은?
-      </h3>
+          position:absolute;
+          width:230px;
+          height:230px;
 
-      <p
-        style="
-          margin:0 0 18px;
-          font-size:12px;
-          opacity:.62;
+          left:-80px;
+          top:-70px;
+
+          border-radius:50%;
+
+          background:
+            rgba(255,255,255,.45);
+
+          filter:blur(12px);
+
+          pointer-events:none;
         "
-      >
-        정답은 없어요. 그냥 끌리는 색을 골라봐요.
-      </p>
+      ></div>
+
 
       <div
         style="
+          position:absolute;
+          width:260px;
+          height:260px;
+
+          right:-100px;
+          bottom:-100px;
+
+          border-radius:50%;
+
+          background:
+            rgba(255,255,255,.35);
+
+          filter:blur(15px);
+
+          pointer-events:none;
+        "
+      ></div>
+
+
+      <!-- 제목 -->
+      <div
+        style="
+          position:relative;
+          z-index:2;
+
+          text-align:center;
+        "
+      >
+
+        <div
+          style="
+            font-size:12px;
+            letter-spacing:.15em;
+
+            color:#8792a6;
+
+            margin-bottom:8px;
+          "
+        >
+          MY LITTLE COLOR
+        </div>
+
+
+        <div
+          style="
+            font-size:25px;
+            font-weight:750;
+
+            color:#5d687d;
+          "
+        >
+          오늘 내 마음은 어떤 색일까요?
+        </div>
+
+
+        <div
+          style="
+            margin-top:9px;
+
+            color:#8c97a8;
+
+            font-size:14px;
+            line-height:1.7;
+          "
+        >
+          지금 가장 끌리는 색 하나를 골라보세요.<br>
+          정답은 없어요.
+        </div>
+
+      </div>
+
+
+      <!-- 색 선택 -->
+      <div
+        style="
+          position:relative;
+          z-index:3;
+
           display:grid;
-          grid-template-columns:repeat(4,1fr);
-          gap:10px;
+
+          grid-template-columns:
+            repeat(
+              5,
+              minmax(0,1fr)
+            );
+
+          gap:12px;
+
+          max-width:560px;
+
+          margin:32px auto 0;
         "
       >
 
         <button
           type="button"
           class="mind-color-choice"
-          data-color="#b9d9ef"
-          data-name="맑은 하늘"
+          data-color="#f6c7c7"
+          data-name="포근한 분홍"
+          data-message="조금 더 다정하게 나를 바라봐요."
           style="
-            height:58px;
+            aspect-ratio:1;
+
             border:0;
-            border-radius:18px;
-            background:#b9d9ef;
+
+            border-radius:22px;
+
+            background:#f6c7c7;
+
             cursor:pointer;
+
+            box-shadow:
+              0 8px 20px
+              rgba(150,100,110,.12);
+
+            transition:
+              transform .2s ease,
+              box-shadow .2s ease;
           "
+          aria-label="포근한 분홍"
         ></button>
+
 
         <button
           type="button"
           class="mind-color-choice"
-          data-color="#cdb9ed"
-          data-name="포근한 보라"
+          data-color="#f6dfaa"
+          data-name="따뜻한 노랑"
+          data-message="작은 빛 하나도 충분해요."
           style="
-            height:58px;
+            aspect-ratio:1;
+
             border:0;
-            border-radius:18px;
-            background:#cdb9ed;
+
+            border-radius:22px;
+
+            background:#f6dfaa;
+
             cursor:pointer;
+
+            box-shadow:
+              0 8px 20px
+              rgba(160,140,80,.12);
+
+            transition:
+              transform .2s ease,
+              box-shadow .2s ease;
           "
+          aria-label="따뜻한 노랑"
         ></button>
+
 
         <button
           type="button"
           class="mind-color-choice"
-          data-color="#b9d9c4"
+          data-color="#b9ddd0"
           data-name="편안한 초록"
+          data-message="천천히 숨을 고르듯 쉬어가요."
           style="
-            height:58px;
+            aspect-ratio:1;
+
             border:0;
-            border-radius:18px;
-            background:#b9d9c4;
+
+            border-radius:22px;
+
+            background:#b9ddd0;
+
             cursor:pointer;
+
+            box-shadow:
+              0 8px 20px
+              rgba(80,130,110,.12);
+
+            transition:
+              transform .2s ease,
+              box-shadow .2s ease;
           "
+          aria-label="편안한 초록"
         ></button>
+
 
         <button
           type="button"
           class="mind-color-choice"
-          data-color="#f2c3ca"
-          data-name="따뜻한 분홍"
+          data-color="#b9d7ef"
+          data-name="맑은 하늘"
+          data-message="마음에도 조금의 공간을 만들어줘요."
           style="
-            height:58px;
+            aspect-ratio:1;
+
             border:0;
-            border-radius:18px;
-            background:#f2c3ca;
+
+            border-radius:22px;
+
+            background:#b9d7ef;
+
             cursor:pointer;
+
+            box-shadow:
+              0 8px 20px
+              rgba(80,120,160,.12);
+
+            transition:
+              transform .2s ease,
+              box-shadow .2s ease;
           "
+          aria-label="맑은 하늘"
+        ></button>
+
+
+        <button
+          type="button"
+          class="mind-color-choice"
+          data-color="#cbbce7"
+          data-name="조용한 보라"
+          data-message="오늘은 조용히 머물러도 괜찮아요."
+          style="
+            aspect-ratio:1;
+
+            border:0;
+
+            border-radius:22px;
+
+            background:#cbbce7;
+
+            cursor:pointer;
+
+            box-shadow:
+              0 8px 20px
+              rgba(110,90,150,.12);
+
+            transition:
+              transform .2s ease,
+              box-shadow .2s ease;
+          "
+          aria-label="조용한 보라"
         ></button>
 
       </div>
 
+
+      <!-- 선택 결과 -->
       <div
         id="mindColorResult"
         style="
-          margin-top:16px;
-          min-height:22px;
-          font-size:13px;
+          position:relative;
+          z-index:3;
+
+          min-height:110px;
+
+          margin:
+            32px auto 0;
+
+          max-width:520px;
+
+          padding:
+            22px;
+
+          box-sizing:border-box;
+
+          border-radius:22px;
+
+          background:
+            rgba(255,255,255,.55);
+
+          text-align:center;
+
+          transition:
+            background .8s ease;
         "
-      ></div>
+      >
+
+        <div
+          style="
+            font-size:13px;
+            color:#9aa4b3;
+          "
+        >
+          마음에 드는 색을 하나 골라보세요.
+        </div>
+
+      </div>
+
 
     </div>
   `;
 
-  document
-    .querySelectorAll(
+
+  /* =====================================================
+     요소
+  ===================================================== */
+
+  const space =
+    $("mindColorSpace");
+
+  const result =
+    $("mindColorResult");
+
+  const choices =
+    document.querySelectorAll(
       ".mind-color-choice"
-    )
-    .forEach(button => {
+    );
+
+
+  if (
+    !space ||
+    !result ||
+    !choices.length
+  ) {
+    return;
+  }
+
+
+  /* =====================================================
+     색 선택
+  ===================================================== */
+
+  choices.forEach(
+    button => {
+
+      button.addEventListener(
+        "mouseenter",
+        () => {
+
+          button.style.transform =
+            "translateY(-5px) scale(1.03)";
+
+          button.style.boxShadow =
+            "0 14px 28px rgba(100,110,150,.18)";
+
+        }
+      );
+
+
+      button.addEventListener(
+        "mouseleave",
+        () => {
+
+          button.style.transform =
+            "translateY(0) scale(1)";
+
+          button.style.boxShadow =
+            "0 8px 20px rgba(100,110,150,.12)";
+
+        }
+      );
+
 
       button.addEventListener(
         "click",
@@ -12200,43 +12487,127 @@ function openMindColor() {
           const name =
             button.dataset.name;
 
-          box.style.transition =
-            "background .7s ease";
+          const message =
+            button.dataset.message;
 
-          box.style.background =
-            color;
 
-          const result =
-            $("mindColorResult");
+          /* -------------------------------------------
+             배경 변화
+          ------------------------------------------- */
 
-          if (result) {
-
-            result.innerHTML = `
-              <strong>
-                ${name}
-              </strong>
-              <br>
-              <span
-                style="
-                  opacity:.65;
-                  font-size:11px;
-                "
-              >
-                오늘의 마음을 이렇게 바라봐도 좋아요.
-              </span>
+          space.style.background =
+            `
+              linear-gradient(
+                145deg,
+                ${color},
+                #ffffff
+              )
             `;
 
-          }
+
+          space.style.boxShadow =
+            `
+              0 18px 45px
+              ${color}55
+            `;
+
+
+          /* -------------------------------------------
+             선택 표시
+          ------------------------------------------- */
+
+          choices.forEach(
+            other => {
+
+              other.style.transform =
+                "scale(1)";
+
+              other.style.boxShadow =
+                "0 8px 20px rgba(100,110,150,.12)";
+
+            }
+          );
+
+
+          button.style.transform =
+            "scale(1.08)";
+
+
+          button.style.boxShadow =
+            `
+              0 0 0 5px
+              rgba(255,255,255,.85),
+              0 15px 30px
+              rgba(100,110,150,.18)
+            `;
+
+
+          /* -------------------------------------------
+             결과
+          ------------------------------------------- */
+
+          result.style.background =
+            "rgba(255,255,255,.72)";
+
+
+          result.innerHTML = `
+
+            <div
+              style="
+                width:34px;
+                height:34px;
+
+                margin:0 auto 10px;
+
+                border-radius:50%;
+
+                background:${color};
+
+                box-shadow:
+                  0 5px 15px
+                  ${color}88;
+              "
+            ></div>
+
+
+            <div
+              style="
+                font-size:16px;
+                font-weight:700;
+
+                color:#5d687d;
+              "
+            >
+              오늘의 마음 · ${name}
+            </div>
+
+
+            <div
+              style="
+                margin-top:6px;
+
+                font-size:13px;
+
+                color:#8994a5;
+
+                line-height:1.6;
+              "
+            >
+              ${message}
+            </div>
+
+          `;
+
 
           addMindCareXP(2);
 
         }
       );
 
-    });
+    }
+  );
 
 }
-
 
 /* =========================================================
    🫧 몽글이 내려놓기
