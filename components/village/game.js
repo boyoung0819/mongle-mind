@@ -3568,59 +3568,136 @@ function renderPetUI() {
 
     <div class="mm-pet-section">
 
-      <div class="mm-pet-title">
-        <h3>🎁 펫 뽑기</h3>
-      </div>
+<div class="mm-pet-section">
 
-      <div style="
-        font-size:13px;
-        line-height:1.6;
-        opacity:.75;
-      ">
-        별빛을 사용해서 새로운 펫을 만나 보세요.
-        <br>
-        중복된 펫이 나오면 자동으로 펫 코인으로 바뀌어요.
-      </div>
+  <div class="mm-pet-title">
+    <h3>🎁 펫 뽑기</h3>
 
-<div style="
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:12px;
-">
-
-  <button
-    class="mm-pet-button"
-    data-pet-action="draw"
-    ${state.petCurrency < 5 ? "disabled" : ""}
-  >
-    ✨ 5개로 1회 뽑기
-  </button>
-
-  <button
-    class="mm-pet-button"
-    data-pet-action="drawFive"
-    ${state.petCurrency < 20 ? "disabled" : ""}
-  >
-    ✨ 20개로 5회 뽑기
-  </button>
-
-</div>
-
-<div style="
-  margin-top:8px;
-  font-size:11px;
-  opacity:.55;
-  text-align:center;
-">
-  별빛을 모아 새로운 친구를 만나 보세요.
-</div>
-
-<div
-  class="mm-gacha-result"
-  id="petGachaResult"
-></div>
+    <div class="mm-gacha-badge">
+      ✨ 별빛으로 친구 만나기
     </div>
+  </div>
+
+  <div class="mm-gacha-layout">
+
+    <!-- 왼쪽 : 뽑기 -->
+
+    <div class="mm-gacha-main">
+
+      <div class="mm-gacha-orb">
+        <div class="mm-gacha-orb-star">
+          ✨
+        </div>
+
+        <div class="mm-gacha-orb-core">
+        </div>
+      </div>
+
+      <div class="mm-gacha-question">
+        새로운 친구를 만나볼까요?
+      </div>
+
+      <div class="mm-gacha-description">
+        별빛을 모아 신비한 펫을 만나 보세요.
+        <br>
+        중복된 펫은 펫 코인으로 바뀌어요.
+      </div>
+
+      <div class="mm-gacha-buttons">
+
+        <button
+          class="mm-pet-button"
+          data-pet-action="draw"
+          ${state.petCurrency < 5 ? "disabled" : ""}
+        >
+          ✨ 5개로 1회 뽑기
+        </button>
+
+        <button
+          class="mm-pet-button"
+          data-pet-action="drawFive"
+          ${state.petCurrency < 20 ? "disabled" : ""}
+        >
+          ✨ 20개로 5회 뽑기
+        </button>
+
+      </div>
+
+      <div
+        class="mm-gacha-result"
+        id="petGachaResult"
+      ></div>
+
+    </div>
+
+
+    <!-- 오른쪽 : 확률표 -->
+
+    <div class="mm-gacha-rates">
+
+      <div class="mm-gacha-rates-title">
+        📊 등장 확률
+      </div>
+
+      <div class="mm-gacha-rates-sub">
+        희귀도가 높을수록 만나기 어려워요.
+      </div>
+
+      ${
+        PET_RARITIES.map(rarity => {
+
+          const pets =
+            PET_LIST.filter(
+              p =>
+                p.rarityClass ===
+                rarity.id
+            );
+
+          return `
+            <div
+              class="
+                mm-rarity-row
+                ${rarity.id}
+              "
+            >
+
+              <div class="mm-rarity-left">
+
+                <div class="mm-rarity-name">
+                  ${rarity.icon}
+                  ${rarity.name}
+                </div>
+
+                <div class="mm-rarity-pets">
+                  ${
+                    pets.map(
+                      p =>
+                        `${p.icon} ${p.name} ${p.rate}%`
+                    ).join(" · ")
+                  }
+                </div>
+
+              </div>
+
+              <div class="mm-rarity-rate">
+                ${rarity.rate}%
+              </div>
+
+            </div>
+          `;
+
+        }).join("")
+      }
+
+      <div class="mm-gacha-rate-note">
+        ※ 기본 펫 「몽글토끼」는 처음부터 함께해요.
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
     <div class="mm-pet-section">
 
