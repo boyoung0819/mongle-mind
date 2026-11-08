@@ -201,11 +201,13 @@ if (!state.roomDecor) {
 ========================================================= */
 
 const PETS = {
+
   bunny: {
     id: "bunny",
     name: "몽글토끼",
     icon: "🐰",
     rarity: "기본",
+    rarityClass: "basic",
     color: 0xfff4ec,
     earColor: 0xe8b9c2,
     rate: 0,
@@ -218,9 +220,10 @@ const PETS = {
     name: "구름강아지",
     icon: "🐶",
     rarity: "일반",
+    rarityClass: "common",
     color: 0xe8c39b,
     earColor: 0xc9956b,
-    rate: 38,
+    rate: 27,
     duplicateCoins: 15,
     fragmentNeed: 10
   },
@@ -230,9 +233,10 @@ const PETS = {
     name: "달빛고양이",
     icon: "🐱",
     rarity: "일반",
+    rarityClass: "common",
     color: 0xcfc7df,
     earColor: 0xa99dbc,
-    rate: 30,
+    rate: 23,
     duplicateCoins: 18,
     fragmentNeed: 10
   },
@@ -242,9 +246,10 @@ const PETS = {
     name: "살구여우",
     icon: "🦊",
     rarity: "희귀",
+    rarityClass: "rare",
     color: 0xf0a66c,
     earColor: 0xd77a4f,
-    rate: 18,
+    rate: 12,
     duplicateCoins: 25,
     fragmentNeed: 15
   },
@@ -254,6 +259,7 @@ const PETS = {
     name: "솜사탕곰",
     icon: "🐻",
     rarity: "희귀",
+    rarityClass: "rare",
     color: 0xc9a78d,
     earColor: 0xa98268,
     rate: 10,
@@ -261,20 +267,137 @@ const PETS = {
     fragmentNeed: 15
   },
 
+  deer: {
+    id: "deer",
+    name: "새벽사슴",
+    icon: "🦌",
+    rarity: "희귀",
+    rarityClass: "rare",
+    color: 0xe8c6a5,
+    earColor: 0xb98762,
+    rate: 9,
+    duplicateCoins: 35,
+    fragmentNeed: 15
+  },
+
+  otter: {
+    id: "otter",
+    name: "말랑수달",
+    icon: "🦦",
+    rarity: "초희귀",
+    rarityClass: "super",
+    color: 0xb88f78,
+    earColor: 0x9b725f,
+    rate: 7,
+    duplicateCoins: 40,
+    fragmentNeed: 18
+  },
+
+  raccoon: {
+    id: "raccoon",
+    name: "별밤너구리",
+    icon: "🦝",
+    rarity: "초희귀",
+    rarityClass: "super",
+    color: 0x8d91a6,
+    earColor: 0x686d82,
+    rate: 5,
+    duplicateCoins: 45,
+    fragmentNeed: 18
+  },
+
+  penguin: {
+    id: "penguin",
+    name: "눈송이펭귄",
+    icon: "🐧",
+    rarity: "전설",
+    rarityClass: "legend",
+    color: 0x8da9c9,
+    earColor: 0x6c809f,
+    rate: 4,
+    duplicateCoins: 60,
+    fragmentNeed: 20
+  },
+
+  dragon: {
+    id: "dragon",
+    name: "새벽용",
+    icon: "🐉",
+    rarity: "전설",
+    rarityClass: "legend",
+    color: 0xa98ed4,
+    earColor: 0x7d63ae,
+    rate: 2,
+    duplicateCoins: 80,
+    fragmentNeed: 25
+  },
+
+  unicorn: {
+    id: "unicorn",
+    name: "별구름유니콘",
+    icon: "🦄",
+    rarity: "특별",
+    rarityClass: "special",
+    color: 0xf1c9e8,
+    earColor: 0xd8a8df,
+    rate: 0.5,
+    duplicateCoins: 120,
+    fragmentNeed: 30
+  },
+
   star: {
     id: "star",
     name: "별빛친구",
     icon: "⭐",
     rarity: "특별",
+    rarityClass: "special",
     color: 0xf3d47b,
     earColor: 0xf1bd62,
-    rate: 4,
-    duplicateCoins: 50,
-    fragmentNeed: 20
+    rate: 0.5,
+    duplicateCoins: 150,
+    fragmentNeed: 30
   }
 };
 
 const PET_LIST = Object.values(PETS);
+
+
+/* =========================================================
+   희귀도별 확률 정보
+========================================================= */
+
+const PET_RARITIES = [
+  {
+    id: "common",
+    name: "일반",
+    rate: 50,
+    icon: "●"
+  },
+  {
+    id: "rare",
+    name: "희귀",
+    rate: 31,
+    icon: "◆"
+  },
+  {
+    id: "super",
+    name: "초희귀",
+    rate: 12,
+    icon: "✦"
+  },
+  {
+    id: "legend",
+    name: "전설",
+    rate: 6,
+    icon: "★"
+  },
+  {
+    id: "special",
+    name: "특별",
+    rate: 1,
+    icon: "🌟"
+  }
+];
 
 /* =========================================================
    펫 액세서리
