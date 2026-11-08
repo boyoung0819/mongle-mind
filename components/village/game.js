@@ -3747,10 +3747,15 @@ function handlePetClick(e) {
   const action =
     target.dataset.petAction;
 
-  if (action === "draw") {
-    drawPet();
-    return;
-  }
+if (action === "draw") {
+  drawPet();
+  return;
+}
+
+if (action === "drawFive") {
+  drawPetFive();
+  return;
+}
 
   if (action === "select") {
     const id =
