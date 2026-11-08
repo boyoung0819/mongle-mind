@@ -3439,18 +3439,44 @@ function renderPetUI() {
         중복된 펫이 나오면 자동으로 펫 코인으로 바뀌어요.
       </div>
 
-      <button
-        class="mm-pet-button"
-        data-pet-action="draw"
-        ${state.petCurrency < 1 ? "disabled" : ""}
-      >
-        ✨ 별빛 1개로 뽑기
-      </button>
+<div style="
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+">
 
-      <div
-        class="mm-gacha-result"
-        id="petGachaResult"
-      ></div>
+  <button
+    class="mm-pet-button"
+    data-pet-action="draw"
+    ${state.petCurrency < 5 ? "disabled" : ""}
+  >
+    ✨ 5개로 1회 뽑기
+  </button>
+
+  <button
+    class="mm-pet-button"
+    data-pet-action="drawFive"
+    ${state.petCurrency < 20 ? "disabled" : ""}
+  >
+    ✨ 20개로 5회 뽑기
+  </button>
+
+</div>
+
+<div style="
+  margin-top:8px;
+  font-size:11px;
+  opacity:.55;
+  text-align:center;
+">
+  별빛을 모아 새로운 친구를 만나 보세요.
+</div>
+
+<div
+  class="mm-gacha-result"
+  id="petGachaResult"
+></div>
     </div>
 
     <div class="mm-pet-section">
