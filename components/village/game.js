@@ -12631,6 +12631,30 @@ mindCareStyle.textContent = `
     }
   }
 
+  @keyframes pondRipple {
+
+    0% {
+      transform:
+        translate(-50%, -50%)
+        scale(.6);
+
+      opacity:.75;
+    }
+
+    70% {
+      opacity:.2;
+    }
+
+    100% {
+      transform:
+        translate(-50%, -50%)
+        scale(2.8);
+
+      opacity:0;
+    }
+
+  }
+
   .mind-care-action {
     transition:
       transform .2s ease,
