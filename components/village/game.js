@@ -12917,6 +12917,7 @@ setTimeout(
 
           addMindCareXP(2);
 
+completeMindCareToday("color");
         }
       );
 
