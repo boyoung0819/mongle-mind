@@ -11722,6 +11722,8 @@ function openRainRest() {
         `;
 
         addMindCareXP(3);
+   
+      completeMindCareToday("rain");
 
       }
     );
