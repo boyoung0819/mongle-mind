@@ -2726,6 +2726,32 @@ scene.add(pet);
 
 let petBodyGroup = null;
 
+/* =========================================================
+   마을 펫 모델 동기화
+========================================================= */
+
+let renderedPetKey = "";
+
+function getPetRenderKey() {
+
+  const petId =
+    state.selectedPet || "bunny";
+
+  const acc =
+    state.petAccessories[petId] || {
+      hat: "none",
+      outfit: "none"
+    };
+
+  return (
+    petId +
+    "|" +
+    acc.hat +
+    "|" +
+    acc.outfit
+  );
+}
+
 function clearGroup(group) {
   while (group.children.length) {
     const child = group.children.pop();
@@ -2916,8 +2942,11 @@ function createPetModel(petId) {
   /* 액세서리 */
 
   applyPetAccessories();
-}
 
+  renderedPetKey =
+    getPetRenderKey();
+}
+   
 function applyPetAccessories() {
   if (!petBodyGroup) return;
 
