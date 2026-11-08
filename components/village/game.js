@@ -12623,7 +12623,10 @@ function openMongleCloud() {
 
       cloud.style.position =
         "absolute";
-
+       
+cloud.style.zIndex =
+  "5";
+       
 cloud.style.left =
   `${50 + (Math.random() * 20 - 10)}%`;
 
