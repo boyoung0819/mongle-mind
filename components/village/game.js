@@ -12624,8 +12624,8 @@ function openMongleCloud() {
       cloud.style.position =
         "absolute";
 
-      cloud.style.left =
-        `${18 + Math.random() * 64}%`;
+cloud.style.left =
+  `${50 + (Math.random() * 20 - 10)}%`;
 
       cloud.style.bottom =
         "-45px";
