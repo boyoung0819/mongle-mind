@@ -12541,7 +12541,226 @@ function openMindColor() {
               rgba(100,110,150,.18)
             `;
 
+/* =====================================================
+   🌸 마음 색 선택 효과
+===================================================== */
 
+const effectLayer =
+  document.createElement("div");
+
+effectLayer.style.position =
+  "absolute";
+
+effectLayer.style.inset =
+  "0";
+
+effectLayer.style.overflow =
+  "hidden";
+
+effectLayer.style.pointerEvents =
+  "none";
+
+effectLayer.style.zIndex =
+  "10";
+
+space.appendChild(
+  effectLayer
+);
+
+
+/* -----------------------------------------------------
+   ✨ 빛 알갱이
+----------------------------------------------------- */
+
+for (
+  let i = 0;
+  i < 14;
+  i++
+) {
+
+  const sparkle =
+    document.createElement("span");
+
+  sparkle.textContent =
+    i % 3 === 0
+      ? "✦"
+      : "·";
+
+  sparkle.style.position =
+    "absolute";
+
+  sparkle.style.left =
+    "50%";
+
+  sparkle.style.top =
+    "45%";
+
+  sparkle.style.color =
+    "rgba(255,255,255,.9)";
+
+  sparkle.style.fontSize =
+    `${10 + Math.random() * 12}px`;
+
+  sparkle.style.opacity =
+    "0";
+
+  sparkle.style.transform =
+    "translate(-50%,-50%) scale(.4)";
+
+  sparkle.style.transition =
+    `
+      transform 1.5s ease-out,
+      opacity .6s ease
+    `;
+
+  effectLayer.appendChild(
+    sparkle
+  );
+
+
+  requestAnimationFrame(
+    () => {
+
+      sparkle.style.opacity =
+        "1";
+
+      sparkle.style.transform =
+        `
+          translate(
+            ${-170 + Math.random() * 340}px,
+            ${-130 + Math.random() * 260}px
+          )
+          scale(
+            ${.6 + Math.random() * .9}
+          )
+        `;
+
+    }
+  );
+
+
+  setTimeout(
+    () => {
+
+      sparkle.style.opacity =
+        "0";
+
+    },
+    700
+  );
+
+
+  setTimeout(
+    () => {
+
+      sparkle.remove();
+
+    },
+    1700
+  );
+
+}
+
+
+/* -----------------------------------------------------
+   🌸 작은 꽃잎
+----------------------------------------------------- */
+
+for (
+  let i = 0;
+  i < 6;
+  i++
+) {
+
+  const petal =
+    document.createElement("span");
+
+  petal.textContent =
+    "🌸";
+
+  petal.style.position =
+    "absolute";
+
+  petal.style.left =
+    "50%";
+
+  petal.style.top =
+    "45%";
+
+  petal.style.fontSize =
+    `${12 + Math.random() * 7}px`;
+
+  petal.style.opacity =
+    "0";
+
+  petal.style.transition =
+    `
+      transform 2.4s ease-out,
+      opacity .8s ease
+    `;
+
+  effectLayer.appendChild(
+    petal
+  );
+
+
+  requestAnimationFrame(
+    () => {
+
+      petal.style.opacity =
+        ".75";
+
+      petal.style.transform =
+        `
+          translate(
+            ${-200 + Math.random() * 400}px,
+            ${-100 + Math.random() * 230}px
+          )
+          rotate(
+            ${-120 + Math.random() * 240}deg
+          )
+        `;
+
+    }
+  );
+
+
+  setTimeout(
+    () => {
+
+      petal.style.opacity =
+        "0";
+
+    },
+    1300
+  );
+
+
+  setTimeout(
+    () => {
+
+      petal.remove();
+
+    },
+    2600
+  );
+
+}
+
+
+/* -----------------------------------------------------
+   ✨ 효과 레이어 정리
+----------------------------------------------------- */
+
+setTimeout(
+  () => {
+
+    effectLayer.remove();
+
+  },
+  2800
+);
+           
           /* -------------------------------------------
              결과
           ------------------------------------------- */
